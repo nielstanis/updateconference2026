@@ -1,0 +1,20 @@
+{
+  "id": "f006",
+  "source": "TRIAGE.json#4",
+  "title": "CreateOrder trusts UserId and UserName from the request body",
+  "file": "src/Ordering.API/Apis/OrdersApi.cs",
+  "line": 111,
+  "category": "Identity spoofing / mass assignment",
+  "severity": "MEDIUM",
+  "owner_hint": "top committers: Aditya Mandaleeka, Chris Martinez, David Fowler (1/4 each); no CODEOWNERS entry",
+  "mode": "static",
+  "verified": "static_review_only",
+  "review": "ACCEPT",
+  "style_score": 7,
+  "out_of_scope_hunks": [],
+  "rationale": "Root cause is src/Ordering.API/Apis/OrdersApi.cs:141, where CreateOrderAsync builds CreateOrderCommand from request.UserId and request.UserName in the body. It is a trust-boundary failure at the API layer, because the body is attacker-controlled and the authenticated sub is available from IIdentityService. The change reads the user id with services.IdentityService.GetUserIdentity() (the sub claim, as GetOrdersByUserAsync does) and returns 400 if it is empty. That id is the only one passed into the command, so the handler's Order, Buyer and OrderStartedIntegrationEvent (which clears the basket) all use the caller's identity. UserName comes from GetUserName(), with the body value only as a fallback when the name claim is absent. CreateOrderDraftAsync (line 106) now overwrites command.BuyerId with the authenticated identity using a record `with` expression. Legitimate clients (basket checkout) already send their own sub, so the change should not break them. [Likely 🟡] Not built or run, so the test and the `with` expression are untested. [Guessing 🟠]",
+  "variants_checked": "OrdersApi.cs:CreateOrderDraftAsync, which takes a client BuyerId and was fixed (low impact, since the draft only computes totals, but it is the same pattern). OrdersApi.cs:CancelOrderAsync and ShipOrderAsync take only an OrderNumber and carry no identity field. They have an object-level authorization gap, which is a separate finding outside this one, and I did not patch it. GetOrdersByUserAsync already uses the identity service and needs no change. I did not grep every other .cs file for the same pattern. The only other Ordering endpoints are the ones in this file. [Likely 🟡]",
+  "bypass_considered": "An attacker could send a victim's id in the body UserId, in the draft BuyerId, or in the IdentifiedCommand wrapper. The body values are never read after the change, and the command is built only in this handler with the claim-derived id. An attacker with no sub claim gets 400. Spoofing UserName alone only changes a display name, and it is overridden whenever the name claim exists. Spoofing the sub claim itself would need a forged token, which is outside this finding. The Buyer record's user name could still come from the body if the name claim is missing, which is a minor residual. [Likely 🟡]",
+  "test_note": "Added Create_order_ignores_body_UserId_and_uses_authenticated_identity to /home/tanis/github/depj-proj/eShop/tests/Ordering.UnitTests/Application/OrdersWebApiTest.cs. It sends a body UserId of \"victim-sub\" with the identity mock returning \"attacker-sub\", and asserts the mediator receives a command with UserId \"attacker-sub\". It would fail before the change, because the command carried \"victim-sub\". It was not run.",
+  "review_reason": "Hunk 1 (`command with { BuyerId = GetUserIdentity() }`) fixes the root cause at OrdersApi.cs:106-116. `CreateOrderDraftCommand` is a positional record, so `with` is valid. Hunk 2 applies the same fix to the sibling `CreateOrderAsync`, which took `request.UserId` from the body, and rejects an empty identity. The remaining weaknesses are small: the `?? request.UserName` fallback and the missing null check on the draft path. All members the diff uses exist with the expected signatures, and the added unit test constructs `CreateOrderRequest` and `OrderServices` correctly."
+}

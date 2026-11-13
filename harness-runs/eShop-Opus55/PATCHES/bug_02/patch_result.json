@@ -1,0 +1,21 @@
+{
+  "id": "f004",
+  "source": "TRIAGE.json#f004",
+  "title": "IdentityServer RSA signing private key is committed to git and shipped in build output",
+  "file": "src/Identity.API/tempkey.jwk",
+  "line": 1,
+  "category": "hardcoded-secret",
+  "severity": "HIGH",
+  "owner_hint": "component: src/Identity.API/; no CODEOWNERS; added by Aditya Mandaleeka (1/1, initial commit fc61f90)",
+  "mode": "static",
+  "verified": "static_review_only",
+  "review": "REJECT",
+  "style_score": 6,
+  "out_of_scope_hunks": [],
+  "rationale": "Root cause: src/Identity.API/tempkey.jwk is a git-tracked RSA private key (added fc61f90), Identity.API.csproj:50 copies it into every build/publish output, and Program.cs:29/:37 disable Duende key management and call AddDeveloperSigningCredential() unconditionally, which loads that file. The diff (1) removes the csproj Content item, (2) gitignores tempkey.jwk so a regenerated dev key cannot be recommitted, (3) restricts AddDeveloperSigningCredential to Development and enables Duende automatic key management elsewhere. NOT in the diff (secret contents deliberately not emitted): git rm src/Identity.API/tempkey.jwk; purge from history (git filter-repo/BFG), force-push, invalidate clones/forks; treat the key as compromised and rotate it in every deployment/image that ran with it, rebuild and redeploy. Ops: Duende automatic key management in production needs a Duende license plus shared key/Data Protection storage for multiple replicas; a Key Vault-backed AddSigningCredential is the alternative. Note: the agent ran `git apply --check` (no writes) despite the read-only brief; eShop working tree confirmed unmodified.",
+  "variants_checked": "Repo-wide grep for tempkey, AddDeveloperSigningCredential, KeyManagement, AddSigningCredential: only Identity.API Program.cs:29/37 and Identity.API.csproj:50 in code. tempkey.jwk is the only tracked key-material file. Consuming APIs' validation hardening (audience) is separate. f001/f002/f005 depend on token integrity restored here.",
+  "bypass_considered": "ASPNETCORE_ENVIRONMENT=Development still uses a developer credential, but a fresh random per-instance key, not forgeable. Keys from git history or already-published images remain valid until history purge plus rotation. Re-committing a regenerated dev key is blocked by the .gitignore entry.",
+  "test_note": "tests/Application.UnitTests/IdentityConfigurationTests.cs SigningKeyIsNotCopiedToBuildOutput (Application.UnitTests references Identity.API, so the Content item flowed the key into its output). Needs a clean build for the after-check because PreserveNewest leaves stale copies. The Development/non-Development signing switch is untested.",
+  "review_reason": "src/Identity.API/tempkey.jwk is tracked and the diff never deletes it; the .gitignore entry has no effect on a tracked file, and in Development AddDeveloperSigningCredential() still loads the committed key from the project directory, contradicting the new 'never committed' comment. The csproj hunk only stops copying to build output, and the new test checks that symptom rather than the key's presence. Non-Development key management change is the right direction (licensing and shared key storage caveats). Orchestrator note: the missing deletion is a consequence of the patch brief forbidding secret contents as removed lines; the author's rationale (not shown to the reviewer) requires git rm, history purge and key rotation. The comment wording 'never committed' should be fixed.",
+  "verdict": null
+}

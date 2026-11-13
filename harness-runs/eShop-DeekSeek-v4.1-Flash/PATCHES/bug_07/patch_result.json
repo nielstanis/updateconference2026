@@ -1,0 +1,23 @@
+{
+  "id": "f008",
+  "bug_nn": "bug_07",
+  "source": "TRIAGE.json#bug_07",
+  "title": "Any authenticated user can cancel any other user's order",
+  "file": "src/Ordering.API/Apis/OrdersApi.cs",
+  "line": 22,
+  "category": "idor",
+  "severity": "MEDIUM",
+  "owner_hint": "top committer: Rob Conery (1 of 1 recent commit); no CODEOWNERS entry",
+  "mode": "static",
+  "verified": "static_review_only",
+  "status": "patch",
+  "review": "ACCEPT",
+  "style_score": 8,
+  "out_of_scope_hunks": [],
+  "rationale": "Cancel loads the order by the body-supplied number and cancels it without comparing the caller's sub. The diff adds an ownership gate in CancelOrderAsync using IIdentityService and a new OrderBelongsToUserAsync predicate on Buyer.IdentityGuid, returning a uniform 404 before the command is dispatched. The shared handler is deliberately untouched because the payment-failure broker path also cancels orders with no user context.",
+  "variants_checked": "Cancel fixed; GetOrderAsync and ShipOrderAsync are separate findings; the broker-driven cancel path stays functional; the new predicate mirrors GetOrdersFromUserAsync.",
+  "bypass_considered": "Spoofing buyer fields is impossible because the command carries only OrderNumber and identity comes from the sub claim; replaying an x-requestid does not re-dispatch.",
+  "test_note": "Added Cancel_order_owned_by_another_user_returns_not_found and updated the functional expectation from 500 to 404.",
+  "review_reason": "The guard runs before command construction and authorizes on the server-derived sub via a predicate that reuses the same Buyer.IdentityGuid join as the list query. Leaving the shared handler untouched is correct because the broker path cancels without a user. Only nits are a ProblemHttpResult instead of a typed NotFound and no log on the denied branch.",
+  "verdict": null
+}

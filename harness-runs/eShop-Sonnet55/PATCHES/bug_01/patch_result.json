@@ -1,0 +1,20 @@
+{
+  "id": "f004",
+  "source": "TRIAGE.json#1",
+  "title": "Mobile BFF YARP routes have no HTTP method restriction, so unauthenticated catalog create/update/delete is reachable from the internet",
+  "file": "src/eShop.AppHost/Extensions.cs",
+  "line": 71,
+  "category": "broken_access_control",
+  "severity": "HIGH",
+  "owner_hint": "top committer: Eric Erhardt (6/13 recent commits); no CODEOWNERS entry",
+  "mode": "static",
+  "verified": "static_review_only",
+  "review": "ACCEPT",
+  "style_score": 7,
+  "out_of_scope_hunks": [],
+  "rationale": "Root cause is src/eShop.AppHost/Extensions.cs:97-143 (ConfigureMobileBffRoutes). All 12 catalog routes match only on path and the api-version query parameter, so YARP forwards any HTTP method to catalog-api. The patch adds `.WithMatchMethods(\"GET\", \"HEAD\")` to every catalog route. YARP then matches only read methods, and POST/PUT/DELETE/PATCH on these paths get no route and return 404 at the BFF without reaching catalog-api. The mobile client only reads the catalog. I did not check client code for catalog writes, but the finding says it needs read access only. I did not compile this. WithMatchMethods is the Aspire.Hosting.Yarp route extension I expect to exist, but I could not verify it offline. If the installed package version lacks it, set `Match.Methods = [\"GET\",\"HEAD\"]` on the route config instead.",
+  "variants_checked": "Extensions.cs:ConfigureMobileBffRoutes is the only YARP route definition (grep for ConfigureMobileBffRoutes, WithMatchMethods, MatchMethods). All 12 catalog routes are fixed, including the /api/catalog/{*any} catch-all. The ordering route (/api/orders/{*any}) and identity route (/identity/{*any}) are also method-unrestricted. I left them out of scope because the mobile client legitimately needs POST/PUT/DELETE for orders and authentication, and those services have their own authorization. The root cause for catalog write access (no authorization in Catalog.API) is tracked as f001.",
+  "bypass_considered": "An attacker could use method override headers (X-HTTP-Method-Override) on a GET or POST. YARP forwards the original method and Catalog.API has no override middleware, so this does not change the method. A POST to a catch-all subpath is no longer matched. The catch-all is now GET/HEAD only, so a path-variation attack such as /api/catalog/items with PUT is also unmatched. Residual gaps are the ordering and identity routes (out of scope, see above) and any other externally exposed path to catalog-api, which f001 covers at the service level.",
+  "test_note": "No test added. AppHostConfigurationTests.cs exists in tests/eShop.AppHost.UnitTests. However, the YARP route configuration is held in callbacks inside the Aspire resource annotations, and I could not confirm an accessible way to read the resulting RouteConfig.Match.Methods without building or running the code. A test written blind could fail to compile, so I omitted it.",
+  "review_reason": "The patch adds `.WithMatchMethods(\"GET\", \"HEAD\")` to all 12 catalog routes in `ConfigureMobileBffRoutes`, including the `/api/catalog/{*any}` catch-all. This stops the public mobile BFF from forwarding PUT, POST and DELETE to the unauthenticated Catalog.API write endpoints (CatalogApi.cs:100-114). `WithMatchMethods` exists in Aspire.Hosting.Yarp and chains like the file's existing builder calls. The cited line 71 (`AddOllama`) does not match the YARP routes, so the location looks stale, but the patch addresses the access-control gap in the right function."
+}

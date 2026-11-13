@@ -1,0 +1,26 @@
+{
+  "id": "f013",
+  "bug_nn": "bug_05",
+  "source": "TRIAGE.json#bug_05",
+  "title": "Unauthenticated /add-webhook page renders the configured webhook validation token into the HTML",
+  "file": "src/WebhookClient/Components/Pages/AddWebhook.razor",
+  "line": 30,
+  "category": "sensitive-data-exposure",
+  "severity": "HIGH",
+  "owner_hint": "top committer: Steve Sanderson (1 of 1 recent commit); no CODEOWNERS entry",
+  "mode": "static",
+  "verified": "static_review_only",
+  "status": "patch",
+  "review": "REJECT",
+  "style_score": 7,
+  "out_of_scope_hunks": [
+    "src/WebhookClient/Components/Pages/AddWebhook.razor:2",
+    "src/WebhookClient/Components/Pages/AddWebhook.razor:8"
+  ],
+  "rationale": "OnInitialized copies WebhookClientOptions.Token into a field bound to an input, so it is emitted during prerender to anonymous visitors. The diff removes that assignment and resolves the token server-side inside RegisterAsync, keeping it out of component state and the DOM.",
+  "variants_checked": "AddWebhook fixed; RegisteredHooks and ReceivedMessages are separate render sites; endpoints use the token server-side only.",
+  "bypass_considered": "Even if the page were reachable, the configured token is no longer held in a bound field or rendered, so the HTML cannot disclose it.",
+  "test_note": "No test added: no WebhookClient test project exists and the change is a one-field removal.",
+  "review_reason": "The token-removal hunks are correct root-cause fixes, but the patch also adds [Authorize], an unrelated policy change that is inert anyway because Routes.razor uses RouteView instead of AuthorizeRouteView. Drop that hunk or ship it with the router change.",
+  "verdict": null
+}

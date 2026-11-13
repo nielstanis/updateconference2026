@@ -1,0 +1,29 @@
+{
+  "name": ".NET 10 + Copilot CLI",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "features": {
+    "ghcr.io/devcontainers/features/copilot-cli:1": {}
+  },
+  "runArgs": ["--cap-add=NET_ADMIN", "--cap-add=NET_RAW"],
+  "mounts": [
+    "source=copilot-cli-config,target=/home/vscode/.copilot,type=volume",
+    "source=${localWorkspaceFolder}/.devcontainer,target=${containerWorkspaceFolder}/.devcontainer,type=bind,readonly"
+  ],
+  "postStartCommand": "sudo /usr/local/bin/init-firewall.sh",
+  "waitFor": "postStartCommand",
+  "remoteEnv": {
+    "SSH_AUTH_SOCK": ""
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": ["ms-dotnettools.csdevkit"],
+      "settings": {
+        "dev.containers.copyGitConfig": false,
+        "dev.containers.gitCredentialHelperConfigLocation": "none"
+      }
+    }
+  },
+  "remoteUser": "vscode"
+}

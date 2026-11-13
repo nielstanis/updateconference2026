@@ -1,0 +1,122 @@
+--- a/src/Identity.API/Services/ProfileService.cs
++++ b/src/Identity.API/Services/ProfileService.cs
+@@ -16,11 +16,18 @@
+             var subjectId = subject.Claims.Where(x => x.Type == "sub").FirstOrDefault()?.Value;
+ 
+             var user = await _userManager.FindByIdAsync(subjectId);
+             if (user == null)
+                 throw new ArgumentException("Invalid subject identifier");
+ 
+             var claims = GetClaimsFromUser(user);
+-            context.IssuedClaims = claims.ToList();
++
++            var requestedTypes = context.RequestedClaimTypes;
++            if (requestedTypes != null && requestedTypes.Any())
++            {
++                claims = claims.Where(claim => requestedTypes.Contains(claim.Type));
++            }
++
++            context.IssuedClaims = claims.ToList();
+         }
+ 
+         public async Task IsActiveAsync(IsActiveContext context)
+@@ -66,18 +66,21 @@
+             if (!string.IsNullOrWhiteSpace(user.LastName))
+                 claims.Add(new Claim("last_name", user.LastName));
+ 
+-            if (!string.IsNullOrWhiteSpace(user.CardNumber))
+-                claims.Add(new Claim("card_number", user.CardNumber));
+-
+-            if (!string.IsNullOrWhiteSpace(user.CardHolderName))
+-                claims.Add(new Claim("card_holder", user.CardHolderName));
+-
+-            if (!string.IsNullOrWhiteSpace(user.SecurityNumber))
+-                claims.Add(new Claim("card_security_number", user.SecurityNumber));
+-
+-            if (!string.IsNullOrWhiteSpace(user.Expiration))
+-                claims.Add(new Claim("card_expiration", user.Expiration));
+-
++            // Payment-card data (number, holder, CVV, expiration) must never be emitted as
++            // profile claims: no API consumes card claims from tokens and PCI DSS forbids
++            // storing the security number, let alone shipping it in id/access tokens.
+             if (!string.IsNullOrWhiteSpace(user.City))
+                 claims.Add(new Claim("address_city", user.City));
+ 
+--- /dev/null
++++ b/tests/Application.UnitTests/ProfileServiceTests.cs
+@@ -0,0 +1,75 @@
++using System.Security.Claims;
++using Duende.IdentityServer.Models;
++using eShop.Identity.API.Models;
++using eShop.Identity.API.Services;
++using Microsoft.AspNetCore.Identity;
++
++namespace eShop.Application.UnitTests;
++
++[TestClass]
++public class ProfileServiceTests
++{
++    private static ApplicationUser CreateUserWithPaymentCardData()
++    {
++        return new ApplicationUser
++        {
++            Id = "1",
++            UserName = "alice@example.com",
++            Name = "Alice",
++            LastName = "Smith",
++            CardNumber = "XXXXXXXXXXXX1881",
++            CardHolderName = "Alice Smith",
++            SecurityNumber = "123",
++            Expiration = "12/24",
++            City = "Redmond",
++            Country = "U.S.",
++            State = "WA",
++            Street = "15703 NE 61st Ct",
++            ZipCode = "98052"
++        };
++    }
++
++    private static ProfileService CreateProfileService(ApplicationUser user)
++    {
++        var userStore = Substitute.For<IUserStore<ApplicationUser>>();
++        userStore.FindByIdAsync(user.Id, Arg.Any<CancellationToken>()).Returns(user);
++
++        return new ProfileService(new UserManager<ApplicationUser>(
++            userStore, null, null, null, null, null, null, null, null));
++    }
++
++    [TestMethod]
++    public async Task GetProfileDataAsyncNeverIssuesPaymentCardClaims()
++    {
++        var profileService = CreateProfileService(CreateUserWithPaymentCardData());
++        var context = new ProfileDataRequestContext
++        {
++            Subject = new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim("sub", "1") }, "Test")),
++            RequestedClaimTypes = null
++        };
++
++        await profileService.GetProfileDataAsync(context);
++
++        Assert.IsNotNull(context.IssuedClaims);
++        Assert.IsTrue(context.IssuedClaims.Any(claim => claim.Type == "name"));
++        Assert.IsFalse(context.IssuedClaims.Any(claim => claim.Type.StartsWith("card_", StringComparison.OrdinalIgnoreCase)));
++    }
++
++    [TestMethod]
++    public async Task GetProfileDataAsyncFiltersIssuedClaimsToRequestedClaimTypes()
++    {
++        var profileService = CreateProfileService(CreateUserWithPaymentCardData());
++        var context = new ProfileDataRequestContext
++        {
++            Subject = new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim("sub", "1") }, "Test")),
++            RequestedClaimTypes = new[] { "name", "address_city" }
++        };
++
++        await profileService.GetProfileDataAsync(context);
++
++        Assert.IsNotNull(context.IssuedClaims);
++        CollectionAssert.AreEquivalent(
++            new[] { "name", "address_city" },
++            context.IssuedClaims.Select(claim => claim.Type).ToArray());
++    }
++}

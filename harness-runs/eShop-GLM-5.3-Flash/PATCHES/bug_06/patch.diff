@@ -1,0 +1,72 @@
+--- a/src/Ordering.API/Application/Commands/CreateOrderCommandHandler.cs
++++ b/src/Ordering.API/Application/Commands/CreateOrderCommandHandler.cs
+@@ -29,12 +29,23 @@
+     public async Task<bool> Handle(CreateOrderCommand message, CancellationToken cancellationToken)
+     {
++        // SECURITY: identity must be derived from the authenticated request, never from the
++        // command body: CreateOrderRequest.UserId/UserName is client-controlled.
++        var userId = _identityService.GetUserIdentity();
++        var userName = _identityService.GetUserName();
++
++        if (string.IsNullOrEmpty(userId))
++        {
++            _logger.LogWarning("CreateOrderCommand rejected: no authenticated user identity was found on the request.");
++            return false;
++        }
++
+         // Add Integration event to clean the basket
+-        var orderStartedIntegrationEvent = new OrderStartedIntegrationEvent(message.UserId);
++        var orderStartedIntegrationEvent = new OrderStartedIntegrationEvent(userId);
+         await _orderingIntegrationEventService.AddAndSaveEventAsync(orderStartedIntegrationEvent);
+ 
+         // Add/Update the Buyer AggregateRoot
+         // DDD patterns comment: Add child entities and value-objects through the Order Aggregate-Root
+         // methods and constructor so validations, invariants and business logic 
+         // make sure that consistency is preserved across the whole aggregate
+         var address = new Address(message.Street, message.City, message.State, message.Country, message.ZipCode);
+-        var order = new Order(message.UserId, message.UserName, address, message.CardTypeId, message.CardNumber, message.CardSecurityNumber, message.CardHolderName, message.CardExpiration);
++        var order = new Order(userId, userName, address, message.CardTypeId, message.CardNumber, message.CardSecurityNumber, message.CardHolderName, message.CardExpiration);
+ 
+         foreach (var item in message.OrderItems)
+         {
+--- a/tests/Ordering.UnitTests/Application/NewOrderCommandHandlerTest.cs
++++ b/tests/Ordering.UnitTests/Application/NewOrderCommandHandlerTest.cs
+@@ -44,8 +44,38 @@
+         var result = await handler.Handle(fakeOrderCmd, cltToken);
+ 
+         //Assert
+         Assert.IsFalse(result);
+     }
+ 
++    [TestMethod]
++    public async Task Handle_creates_order_for_identity_service_user_not_body_user()
++    {
++        var identityUserId = "identity-user-id";
++
++        _identityServiceMock.GetUserIdentity().Returns(identityUserId);
++
++        // The command body carries client-controlled identity values that must be ignored.
++        var fakeOrderCmd = FakeOrderRequestWithBuyer(new Dictionary<string, object>
++        {
++            ["cardExpiration"] = DateTime.UtcNow.AddYears(1),
++            ["userId"] = "attacker-chosen-id",
++            ["userName"] = "attacker-chosen-name"
++        });
++
++        var LoggerMock = Substitute.For<ILogger<CreateOrderCommandHandler>>();
++
++        var handler = new CreateOrderCommandHandler(_mediator, _orderingIntegrationEventService, _orderRepositoryMock, _identityServiceMock, LoggerMock);
++
++        //Act
++        await handler.Handle(fakeOrderCmd, new CancellationToken());
++
++        //Assert
++        _orderRepositoryMock.Received().Add(Arg.Is<Order>(order =>
++            order.DomainEvents.OfType<OrderStartedDomainEvent>().Single().UserId == identityUserId));
++
++        await _orderingIntegrationEventService.Received().AddAndSaveEventAsync(Arg.Is<OrderStartedIntegrationEvent>(e =>
++            e.UserId == identityUserId));
++    }
++
+     [TestMethod]
+     public void Handle_throws_exception_when_no_buyerId()

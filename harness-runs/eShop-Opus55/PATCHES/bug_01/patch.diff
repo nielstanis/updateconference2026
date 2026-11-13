@@ -1,0 +1,197 @@
+--- a/src/Catalog.API/Apis/CatalogApi.cs
++++ b/src/Catalog.API/Apis/CatalogApi.cs
+@@ -1,5 +1,6 @@
+ using System.ComponentModel;
+ using System.ComponentModel.DataAnnotations;
++using Microsoft.AspNetCore.Authorization;
+ using Microsoft.AspNetCore.Http.HttpResults;
+ using Microsoft.AspNetCore.Mvc;
+ using Microsoft.AspNetCore.Mvc.Infrastructure;
+@@ -96,25 +97,30 @@
+             .WithDescription("Get a list of the brands of catalog items")
+             .WithTags("Brands");
+
+-        // Routes for modifying catalog items.
++        // Routes for modifying catalog items. Only catalog administrators may change the catalog.
++        Action<AuthorizationPolicyBuilder> requireCatalogAdmin = policy => policy.RequireRole("Admin");
+         v1.MapPut("/items", UpdateItemV1)
+             .WithName("UpdateItem")
+             .WithSummary("Create or replace a catalog item")
+             .WithDescription("Create or replace a catalog item")
+-            .WithTags("Items");
++            .WithTags("Items")
++            .RequireAuthorization(requireCatalogAdmin);
+         v2.MapPut("/items/{id:int}", UpdateItem)
+             .WithName("UpdateItem-V2")
+             .WithSummary("Create or replace a catalog item")
+             .WithDescription("Create or replace a catalog item")
+-            .WithTags("Items");
++            .WithTags("Items")
++            .RequireAuthorization(requireCatalogAdmin);
+         api.MapPost("/items", CreateItem)
+             .WithName("CreateItem")
+             .WithSummary("Create a catalog item")
+-            .WithDescription("Create a new item in the catalog");
++            .WithDescription("Create a new item in the catalog")
++            .RequireAuthorization(requireCatalogAdmin);
+         api.MapDelete("/items/{id:int}", DeleteItemById)
+             .WithName("DeleteItem")
+             .WithSummary("Delete catalog item")
+-            .WithDescription("Delete the specified catalog item");
++            .WithDescription("Delete the specified catalog item")
++            .RequireAuthorization(requireCatalogAdmin);
+
+         return app;
+     }
+--- a/src/Catalog.API/Extensions/Extensions.cs
++++ b/src/Catalog.API/Extensions/Extensions.cs
+@@ -4,6 +4,9 @@
+ {
+     public static void AddApplicationServices(this IHostApplicationBuilder builder)
+     {
++        // Add the authentication services to DI
++        builder.AddDefaultAuthentication();
++
+         // Avoid loading full database config and migrations if startup
+         // is being invoked from build-time OpenAPI generation
+         if (builder.Environment.IsBuild())
+--- a/src/eShop.AppHost/AppHost.cs
++++ b/src/eShop.AppHost/AppHost.cs
+@@ -37,7 +37,10 @@
+
+ var catalogApi = builder.AddDotnetProject("catalog-api", "../Catalog.API")
+     .WithReference(rabbitMq).WaitFor(rabbitMq)
+-    .WithReference(catalogDb);
++    .WithReference(catalogDb)
++    .WithEnvironment("Identity__Url", identityEndpoint)
++    .WithEnvironment("Identity__Audience", "catalog")
++    .WithEnvironment("Identity__Scopes__catalog", "Catalog API");
+
+ var orderingApi = builder.AddDotnetProject("ordering-api", "../Ordering.API")
+     .WithReference(rabbitMq).WaitFor(rabbitMq)
+--- a/tests/Catalog.FunctionalTests/CatalogApiFixture.cs
++++ b/tests/Catalog.FunctionalTests/CatalogApiFixture.cs
+@@ -1,14 +1,21 @@
+ ﻿using System.Reflection;
++using System.Security.Claims;
+
+ using Aspire.Hosting;
+ using Aspire.Hosting.ApplicationModel;
+
++using Microsoft.AspNetCore.Builder;
++using Microsoft.AspNetCore.Http;
+ using Microsoft.AspNetCore.Mvc.Testing;
++using Microsoft.Extensions.DependencyInjection;
+
+ namespace eShop.Catalog.FunctionalTests;
+
+ public sealed class CatalogApiFixture : WebApplicationFactory<Program>, IAsyncLifetime
+ {
++    public const string TestRoleHeader = "X-Test-Role";
++    public const string AdminRole = "Admin";
++
+     private readonly IHost _app;
+
+     public IResourceBuilder<PostgresServerResource> Postgres { get; private set; }
+@@ -31,7 +38,14 @@
+             config.AddInMemoryCollection(new Dictionary<string, string>
+             {
+                 { $"ConnectionStrings:{Postgres.Resource.Name}", _postgresConnectionString },
++                { "Identity:Url", "http://localhost" },
++                { "Identity:Audience", "catalog" },
++                { "Identity:Scopes:catalog", "Catalog API" },
+                 });
++        });
++        builder.ConfigureServices(services =>
++        {
++            services.AddSingleton<IStartupFilter>(new TestRoleStartupFilter());
+         });
+         return base.CreateHost(builder);
+     }
+@@ -55,4 +69,28 @@
+         await _app.StartAsync();
+         _postgresConnectionString = await Postgres.Resource.GetConnectionStringAsync();
+     }
++
++    // Signs the request in with the role named in the X-Test-Role header; requests without it stay anonymous.
++    private class TestRoleStartupFilter : IStartupFilter
++    {
++        public Action<IApplicationBuilder> Configure(Action<IApplicationBuilder> next)
++        {
++            return builder =>
++            {
++                builder.Use(async (HttpContext httpContext, Func<Task> nextMiddleware) =>
++                {
++                    if (httpContext.Request.Headers.TryGetValue(TestRoleHeader, out var role))
++                    {
++                        var identity = new ClaimsIdentity("test");
++                        identity.AddClaim(new Claim("sub", "catalog-test-user"));
++                        identity.AddClaim(new Claim(ClaimTypes.Role, role.ToString()));
++                        httpContext.User.AddIdentity(identity);
++                    }
++
++                    await nextMiddleware();
++                });
++                next(builder);
++            };
++        }
++    }
+ }
+--- a/tests/Catalog.FunctionalTests/CatalogApiTests.cs
++++ b/tests/Catalog.FunctionalTests/CatalogApiTests.cs
+@@ -20,10 +20,15 @@
+         _webApplicationFactory = fixture;
+     }
+
+-    private HttpClient CreateHttpClient(ApiVersion apiVersion)
++    private HttpClient CreateHttpClient(ApiVersion apiVersion, string role = CatalogApiFixture.AdminRole)
+     {
+         var handler = new ApiVersionHandler(new QueryStringApiVersionWriter(), apiVersion);
+-        return _webApplicationFactory.CreateDefaultClient(handler);
++        var httpClient = _webApplicationFactory.CreateDefaultClient(handler);
++        if (role is not null)
++        {
++            httpClient.DefaultRequestHeaders.Add(CatalogApiFixture.TestRoleHeader, role);
++        }
++        return httpClient;
+     }
+
+     [Theory]
+@@ -460,6 +465,37 @@
+     }
+
+     [Theory]
++    [InlineData(1.0, null, HttpStatusCode.Unauthorized)]
++    [InlineData(2.0, null, HttpStatusCode.Unauthorized)]
++    [InlineData(1.0, "customer", HttpStatusCode.Forbidden)]
++    [InlineData(2.0, "customer", HttpStatusCode.Forbidden)]
++    public async Task CatalogItemWriteEndpointsRequireAdminRole(double version, string role, HttpStatusCode expectedStatus)
++    {
++        using var httpClient = CreateHttpClient(new ApiVersion(version), role);
++        var cancellationToken = TestContext.Current.CancellationToken;
++        var item = new CatalogItem("Unauthorized write test")
++        {
++            Id = 99903,
++            Price = 0.01m,
++            CatalogTypeId = 1,
++            CatalogBrandId = 1
++        };
++
++        var putResponse = version switch
++        {
++            1.0 => await httpClient.PutAsJsonAsync("/api/catalog/items", item, cancellationToken),
++            2.0 => await httpClient.PutAsJsonAsync($"/api/catalog/items/{item.Id}", item, cancellationToken),
++            _ => throw new ArgumentOutOfRangeException(nameof(version), version, null)
++        };
++        var postResponse = await httpClient.PostAsJsonAsync("/api/catalog/items", item, cancellationToken);
++        var deleteResponse = await httpClient.DeleteAsync($"/api/catalog/items/{item.Id}", cancellationToken);
++
++        Assert.Equal(expectedStatus, putResponse.StatusCode);
++        Assert.Equal(expectedStatus, postResponse.StatusCode);
++        Assert.Equal(expectedStatus, deleteResponse.StatusCode);
++    }
++
++    [Theory]
+     [InlineData(1.0)]
+     [InlineData(2.0)]
+     public async Task GetCatalogItemRejectsInvalidId(double version)

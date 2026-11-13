@@ -1,0 +1,26 @@
+{
+  "id": "f001",
+  "bug_nn": "bug_01",
+  "source": "TRIAGE.json#bug_01",
+  "title": "Catalog write endpoints (POST/PUT/DELETE) are completely unauthenticated and reachable through the external mobile BFF",
+  "file": "src/Catalog.API/Apis/CatalogApi.cs",
+  "line": 100,
+  "category": "auth-bypass",
+  "severity": "HIGH",
+  "owner_hint": "top committer: Mike Kistler (3 of 3 recent commits); no CODEOWNERS entry",
+  "mode": "static",
+  "verified": "static_review_only",
+  "status": "patch",
+  "review": "REJECT",
+  "style_score": 6,
+  "out_of_scope_hunks": [
+    "src/eShop.ServiceDefaults/OpenApi.Extensions.cs:55",
+    "src/eShop.ServiceDefaults/OpenApiOptionsExtensions.cs:170"
+  ],
+  "rationale": "Root cause is Catalog.API never calling AddDefaultAuthentication (Program.cs) and mapping the four write endpoints without RequireAuthorization (CatalogApi.cs:100,105,110,114); the BFF merely exposes it. The diff registers AddDefaultAuthentication, adds the required Identity:Audience plus Identity__Url from AppHost, attaches RequireAuthorization to exactly the PUT/POST/DELETE endpoints, and relaxes two OpenAPI GetRequiredSection(\"Scopes\") calls so the service can boot without a per-API Scopes map. Reads stay anonymous.",
+  "variants_checked": "All four catalog write mappings fixed; Ordering/Webhooks groups already gated; Basket gRPC out of this surface; BFF route left as a forwarder because the resource now returns 401.",
+  "bypass_considered": "Anonymous PUT/POST/DELETE via the BFF now hits authorization middleware before model binding and returns 401; only a valid low-privilege JWT remains (audience validation is a separate finding).",
+  "test_note": "Added CatalogWriteEndpointsRejectAnonymousRequests (expects 401) plus a test-only AutoAuthorizeMiddleware so existing happy-path write tests still authenticate.",
+  "review_reason": "Core fix is correct and well-scoped, but both ServiceDefaults hunks are off the call path and delete a fail-fast config check for all services; adding a Scopes section to Catalog appsettings would keep the guard. The test shim also authenticates by default, so the new test only checks endpoint metadata.",
+  "verdict": null
+}

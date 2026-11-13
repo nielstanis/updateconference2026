@@ -1,0 +1,66 @@
+--- a/src/Ordering.API/Apis/OrdersApi.cs
++++ b/src/Ordering.API/Apis/OrdersApi.cs
+@@ -9,7 +9,7 @@ public static class OrdersApi
+         var api = app.MapGroup("api/orders").HasApiVersion(1.0);
+
+         api.MapPut("/cancel", CancelOrderAsync);
+-        api.MapPut("/ship", ShipOrderAsync);
++        api.MapPut("/ship", ShipOrderAsync).RequireAuthorization(policy => policy.RequireRole("Admin"));
+         api.MapGet("{orderId:int}", GetOrderAsync);
+         api.MapGet("/", GetOrdersByUserAsync);
+         api.MapGet("/cardtypes", GetCardTypesAsync);
+--- a/tests/Ordering.FunctionalTests/AutoAuthorizeMiddleware.cs
++++ b/tests/Ordering.FunctionalTests/AutoAuthorizeMiddleware.cs
+@@ -18,6 +18,11 @@ class AutoAuthorizeMiddleware
+         identity.AddClaim(new Claim("sub", IDENTITY_ID));
+         identity.AddClaim(new Claim("unique_name", IDENTITY_ID));
+         identity.AddClaim(new Claim(ClaimTypes.Name, IDENTITY_ID));
++
++        if (httpContext.Request.Headers.TryGetValue("x-test-role", out var role))
++        {
++            identity.AddClaim(new Claim(ClaimTypes.Role, role.ToString()));
++        }
+
+         httpContext.User.AddIdentity(identity);
+
+--- a/tests/Ordering.FunctionalTests/OrderingApiTests.cs
++++ b/tests/Ordering.FunctionalTests/OrderingApiTests.cs
+@@ -71,7 +71,7 @@ public sealed class OrderingApiTests : IClassFixture<OrderingApiFixture>
+         // Act
+         var content = new StringContent(BuildOrder(), UTF8Encoding.UTF8, "application/json")
+         {
+-            Headers = { { "x-requestid", Guid.Empty.ToString() } }
++            Headers = { { "x-requestid", Guid.Empty.ToString() }, { "x-test-role", "Admin" } }
+         };
+         var response = await _httpClient.PutAsync("api/orders/ship", content, TestContext.Current.CancellationToken);
+         var s = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+@@ -86,14 +86,28 @@ public sealed class OrderingApiTests : IClassFixture<OrderingApiFixture>
+         // Act
+         var content = new StringContent(BuildOrder(), UTF8Encoding.UTF8, "application/json")
+         {
+-            Headers = { { "x-requestid", Guid.NewGuid().ToString() } }
++            Headers = { { "x-requestid", Guid.NewGuid().ToString() }, { "x-test-role", "Admin" } }
+         };
+         var response = await _httpClient.PutAsync("api/orders/ship", content, TestContext.Current.CancellationToken);
+
+         // Assert
+         Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
+     }
+
++    [Fact]
++    public async Task ShipWithoutAdminRoleIsForbidden()
++    {
++        // Act
++        var content = new StringContent(BuildOrder(), UTF8Encoding.UTF8, "application/json")
++        {
++            Headers = { { "x-requestid", Guid.NewGuid().ToString() } }
++        };
++        var response = await _httpClient.PutAsync("api/orders/ship", content, TestContext.Current.CancellationToken);
++
++        // Assert
++        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
++    }
++
+     [Fact]
+     public async Task GetAllOrdersCardType()
+     {

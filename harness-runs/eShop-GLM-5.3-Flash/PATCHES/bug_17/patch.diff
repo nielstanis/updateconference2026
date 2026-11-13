@@ -1,0 +1,10 @@
+--- a/src/eShop.ServiceDefaults/AuthenticationExtensions.cs
++++ b/src/eShop.ServiceDefaults/AuthenticationExtensions.cs
+@@ -46,7 +46,6 @@
+             options.TokenValidationParameters.ValidIssuers = [identityUrl];
+ #endif
+             
+-            options.TokenValidationParameters.ValidateAudience = false;
+         });
+ 
+         services.AddAuthorization();

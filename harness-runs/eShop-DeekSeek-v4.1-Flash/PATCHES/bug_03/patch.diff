@@ -1,0 +1,78 @@
+--- a/src/Ordering.API/Program.cs
++++ b/src/Ordering.API/Program.cs
+@@ -3,8 +3,12 @@
+ builder.AddServiceDefaults();
+ builder.AddApplicationServices();
+ builder.Services.AddProblemDetails();
+ 
++// Shipping is an administrator action; RequireAuthorization() alone only proves the caller is authenticated.
++builder.Services.AddAuthorization(options =>
++    options.AddPolicy("AdminOnly", policy => policy.RequireRole("admin")));
++
+ var withApiVersioning = builder.Services.AddApiVersioning(options =>
+ {
+     // Include "api-supported-versions" and "api-deprecated-versions" headers in all responses
+     options.ReportApiVersions = true;
+--- a/src/Ordering.API/Apis/OrdersApi.cs
++++ b/src/Ordering.API/Apis/OrdersApi.cs
+@@ -9,7 +9,7 @@
+         var api = app.MapGroup("api/orders").HasApiVersion(1.0);
+ 
+         api.MapPut("/cancel", CancelOrderAsync);
+-        api.MapPut("/ship", ShipOrderAsync);
++        api.MapPut("/ship", ShipOrderAsync).RequireAuthorization("AdminOnly");
+         api.MapGet("{orderId:int}", GetOrderAsync);
+         api.MapGet("/", GetOrdersByUserAsync);
+         api.MapGet("/cardtypes", GetCardTypesAsync);
+--- a/tests/Ordering.FunctionalTests/AutoAuthorizeMiddleware.cs
++++ b/tests/Ordering.FunctionalTests/AutoAuthorizeMiddleware.cs
+@@ -16,9 +16,15 @@
+         var identity = new ClaimsIdentity("cookies");
+ 
+         identity.AddClaim(new Claim("sub", IDENTITY_ID));
+         identity.AddClaim(new Claim("unique_name", IDENTITY_ID));
+         identity.AddClaim(new Claim(ClaimTypes.Name, IDENTITY_ID));
++
++        // Default to admin so existing tests exercise the endpoint; a test can opt out.
++        var role = httpContext.Request.Headers.TryGetValue("x-test-role", out var testRole)
++            ? testRole.ToString()
++            : "admin";
++        identity.AddClaim(new Claim(ClaimTypes.Role, role));
+ 
+         httpContext.User.AddIdentity(identity);
+ 
+         await _next.Invoke(httpContext);
+--- a/tests/Ordering.FunctionalTests/OrderingApiTests.cs
++++ b/tests/Ordering.FunctionalTests/OrderingApiTests.cs
+@@ -83,13 +83,31 @@
+     [Fact]
+     public async Task ShipNonExistentOrderFails()
+     {
+         // Act
+         var content = new StringContent(BuildOrder(), UTF8Encoding.UTF8, "application/json")
+         {
+             Headers = { { "x-requestid", Guid.NewGuid().ToString() } }
+         };
+         var response = await _httpClient.PutAsync("api/orders/ship", content, TestContext.Current.CancellationToken);
+ 
+         // Assert
+         Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
+     }
++
++    [Fact]
++    public async Task ShipOrderRequiresAdminRole()
++    {
++        // Act
++        var content = new StringContent(BuildOrder(), UTF8Encoding.UTF8, "application/json")
++        {
++            Headers =
++            {
++                { "x-requestid", Guid.NewGuid().ToString() },
++                { "x-test-role", "customer" }
++            }
++        };
++        var response = await _httpClient.PutAsync("api/orders/ship", content, TestContext.Current.CancellationToken);
++
++        // Assert
++        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
++    }

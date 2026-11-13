@@ -1,0 +1,2599 @@
+{
+  "summary": {
+    "total": 83,
+    "byKind": {
+      "ConsoleMain": 10,
+      "GrpcService": 3,
+      "Validation": 2,
+      "MinimalApi": 32,
+      "HostedService": 2,
+      "Controller": 19,
+      "MessageConsumer": 15
+    },
+    "byDetector": {
+      "dotnet.main": 10,
+      "grpc.service": 3,
+      "aspnetcore.callback": 2,
+      "aspnetcore.minimalapi": 32,
+      "hosting.service": 2,
+      "aspnetcore.controller": 19,
+      "messaging.consumer": 15
+    },
+    "projectsScanned": 19,
+    "projectsWithoutEntryPoints": 7,
+    "projectsWithGeneratorOutput": [
+      "Basket.API",
+      "Catalog.API",
+      "ClientApp(net10.0-maccatalyst)",
+      "eShop.AppHost",
+      "eShop.ServiceDefaults",
+      "EventBusRabbitMQ",
+      "HybridApp(net10.0-maccatalyst)",
+      "Identity.API",
+      "Ordering.API",
+      "OrderProcessor",
+      "PaymentProcessor",
+      "WebApp",
+      "WebAppComponents",
+      "WebhookClient",
+      "Webhooks.API"
+    ],
+    "elapsedMs": 339
+  },
+  "entryPoints": [
+    {
+      "id": "M:Program.{Main}$(System.String[])",
+      "kind": "ConsoleMain",
+      "detector": "dotnet.main",
+      "display": "\u003Ctop-level-statements-entry-point\u003E",
+      "project": "Basket.API",
+      "route": null,
+      "routeComplete": null,
+      "httpMethod": null,
+      "declaredAuthorization": null,
+      "authorization": {
+        "posture": "Undeclared",
+        "origin": "None",
+        "declaredOn": null,
+        "attribute": null
+      },
+      "trustContext": "external",
+      "taintsInstanceFields": false,
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/Basket.API/Program.cs",
+      "line": 1,
+      "tainted": [
+        {
+          "Name": "args",
+          "Ordinal": 0,
+          "Type": "string[]",
+          "source": "CommandLine"
+        }
+      ]
+    },
+    {
+      "id": "M:eShop.Basket.API.Grpc.BasketService.DeleteBasket(eShop.Basket.API.Grpc.DeleteBasketRequest,Grpc.Core.ServerCallContext)",
+      "kind": "GrpcService",
+      "detector": "grpc.service",
+      "display": "eShop.Basket.API.Grpc.BasketService.DeleteBasket(eShop.Basket.API.Grpc.DeleteBasketRequest, Grpc.Core.ServerCallContext)",
+      "project": "Basket.API",
+      "route": null,
+      "routeComplete": null,
+      "httpMethod": null,
+      "declaredAuthorization": null,
+      "authorization": {
+        "posture": "Undeclared",
+        "origin": "None",
+        "declaredOn": null,
+        "attribute": null
+      },
+      "trustContext": "external",
+      "taintsInstanceFields": false,
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/Basket.API/Grpc/BasketService.cs",
+      "line": 59,
+      "tainted": [
+        {
+          "Name": "request",
+          "Ordinal": 0,
+          "Type": "eShop.Basket.API.Grpc.DeleteBasketRequest",
+          "source": "Message"
+        }
+      ]
+    },
+    {
+      "id": "M:eShop.Basket.API.Grpc.BasketService.GetBasket(eShop.Basket.API.Grpc.GetBasketRequest,Grpc.Core.ServerCallContext)",
+      "kind": "GrpcService",
+      "detector": "grpc.service",
+      "display": "eShop.Basket.API.Grpc.BasketService.GetBasket(eShop.Basket.API.Grpc.GetBasketRequest, Grpc.Core.ServerCallContext)",
+      "project": "Basket.API",
+      "route": null,
+      "routeComplete": null,
+      "httpMethod": null,
+      "declaredAuthorization": null,
+      "authorization": {
+        "posture": "Anonymous",
+        "origin": "Action",
+        "declaredOn": null,
+        "attribute": "AllowAnonymousAttribute"
+      },
+      "trustContext": "external",
+      "taintsInstanceFields": false,
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/Basket.API/Grpc/BasketService.cs",
+      "line": 13,
+      "tainted": [
+        {
+          "Name": "request",
+          "Ordinal": 0,
+          "Type": "eShop.Basket.API.Grpc.GetBasketRequest",
+          "source": "Message"
+        }
+      ]
+    },
+    {
+      "id": "M:eShop.Basket.API.Grpc.BasketService.UpdateBasket(eShop.Basket.API.Grpc.UpdateBasketRequest,Grpc.Core.ServerCallContext)",
+      "kind": "GrpcService",
+      "detector": "grpc.service",
+      "display": "eShop.Basket.API.Grpc.BasketService.UpdateBasket(eShop.Basket.API.Grpc.UpdateBasketRequest, Grpc.Core.ServerCallContext)",
+      "project": "Basket.API",
+      "route": null,
+      "routeComplete": null,
+      "httpMethod": null,
+      "declaredAuthorization": null,
+      "authorization": {
+        "posture": "Undeclared",
+        "origin": "None",
+        "declaredOn": null,
+        "attribute": null
+      },
+      "trustContext": "external",
+      "taintsInstanceFields": false,
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/Basket.API/Grpc/BasketService.cs",
+      "line": 36,
+      "tainted": [
+        {
+          "Name": "request",
+          "Ordinal": 0,
+          "Type": "eShop.Basket.API.Grpc.UpdateBasketRequest",
+          "source": "Message"
+        }
+      ]
+    },
+    {
+      "id": "M:eShop.Basket.API.Model.BasketItem.Validate(System.ComponentModel.DataAnnotations.ValidationContext)",
+      "kind": "Validation",
+      "detector": "aspnetcore.callback",
+      "display": "eShop.Basket.API.Model.BasketItem.Validate(System.ComponentModel.DataAnnotations.ValidationContext)",
+      "project": "Basket.API",
+      "route": null,
+      "routeComplete": null,
+      "httpMethod": null,
+      "declaredAuthorization": null,
+      "authorization": {
+        "posture": "Undeclared",
+        "origin": "None",
+        "declaredOn": null,
+        "attribute": null
+      },
+      "trustContext": "external",
+      "taintsInstanceFields": true,
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/Basket.API/Model/BasketItem.cs",
+      "line": 13,
+      "tainted": []
+    },
+    {
+      "id": "M:Program.{Main}$(System.String[])",
+      "kind": "ConsoleMain",
+      "detector": "dotnet.main",
+      "display": "\u003Ctop-level-statements-entry-point\u003E",
+      "project": "Catalog.API",
+      "route": null,
+      "routeComplete": null,
+      "httpMethod": null,
+      "declaredAuthorization": null,
+      "authorization": {
+        "posture": "Undeclared",
+        "origin": "None",
+        "declaredOn": null,
+        "attribute": null
+      },
+      "trustContext": "external",
+      "taintsInstanceFields": false,
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/Catalog.API/Program.cs",
+      "line": 1,
+      "tainted": [
+        {
+          "Name": "args",
+          "Ordinal": 0,
+          "Type": "string[]",
+          "source": "CommandLine"
+        }
+      ]
+    },
+    {
+      "id": "M:eShop.Catalog.API.CatalogApi.CreateItem(CatalogServices,eShop.Catalog.API.Model.CatalogItem)",
+      "kind": "MinimalApi",
+      "detector": "aspnetcore.minimalapi",
+      "display": "eShop.Catalog.API.CatalogApi.CreateItem(CatalogServices, eShop.Catalog.API.Model.CatalogItem)",
+      "project": "Catalog.API",
+      "route": "/api/catalog/items",
+      "routeComplete": null,
+      "httpMethod": "POST",
+      "declaredAuthorization": null,
+      "authorization": {
+        "posture": "Undeclared",
+        "origin": "None",
+        "declaredOn": null,
+        "attribute": null
+      },
+      "trustContext": "external",
+      "taintsInstanceFields": false,
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/Catalog.API/Apis/CatalogApi.cs",
+      "line": 415,
+      "tainted": [
+        {
+          "Name": "services",
+          "Ordinal": 0,
+          "Type": "CatalogServices",
+          "source": "Body"
+        },
+        {
+          "Name": "product",
+          "Ordinal": 1,
+          "Type": "eShop.Catalog.API.Model.CatalogItem",
+          "source": "Body"
+        }
+      ]
+    },
+    {
+      "id": "M:eShop.Catalog.API.CatalogApi.DeleteItemById(CatalogServices,System.Int32)",
+      "kind": "MinimalApi",
+      "detector": "aspnetcore.minimalapi",
+      "display": "eShop.Catalog.API.CatalogApi.DeleteItemById(CatalogServices, int)",
+      "project": "Catalog.API",
+      "route": "/api/catalog/items/{id:int}",
+      "routeComplete": null,
+      "httpMethod": "DELETE",
+      "declaredAuthorization": null,
+      "authorization": {
+        "posture": "Undeclared",
+        "origin": "None",
+        "declaredOn": null,
+        "attribute": null
+      },
+      "trustContext": "external",
+      "taintsInstanceFields": false,
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/Catalog.API/Apis/CatalogApi.cs",
+      "line": 439,
+      "tainted": [
+        {
+          "Name": "services",
+          "Ordinal": 0,
+          "Type": "CatalogServices",
+          "source": "Body"
+        },
+        {
+          "Name": "id",
+          "Ordinal": 1,
+          "Type": "int",
+          "source": "Route"
+        }
+      ]
+    },
+    {
+      "id": "M:eShop.Catalog.API.CatalogApi.GetAllItems(eShop.Catalog.API.Model.PaginationRequest,CatalogServices,System.String,System.Int32[],System.Int32[])",
+      "kind": "MinimalApi",
+      "detector": "aspnetcore.minimalapi",
+      "display": "eShop.Catalog.API.CatalogApi.GetAllItems(eShop.Catalog.API.Model.PaginationRequest, CatalogServices, string?, int[]?, int[]?)",
+      "project": "Catalog.API",
+      "route": "/api/catalog/items",
+      "routeComplete": null,
+      "httpMethod": "GET",
+      "declaredAuthorization": null,
+      "authorization": {
+        "posture": "Undeclared",
+        "origin": "None",
+        "declaredOn": null,
+        "attribute": null
+      },
+      "trustContext": "external",
+      "taintsInstanceFields": false,
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/Catalog.API/Apis/CatalogApi.cs",
+      "line": 131,
+      "tainted": [
+        {
+          "Name": "paginationRequest",
+          "Ordinal": 0,
+          "Type": "eShop.Catalog.API.Model.PaginationRequest",
+          "source": "Body"
+        },
+        {
+          "Name": "services",
+          "Ordinal": 1,
+          "Type": "CatalogServices",
+          "source": "Body"
+        },
+        {
+          "Name": "name",
+          "Ordinal": 2,
+          "Type": "string?",
+          "source": "Query"
+        },
+        {
+          "Name": "type",
+          "Ordinal": 3,
+          "Type": "int[]?",
+          "source": "Body"
+        },
+        {
+          "Name": "brand",
+          "Ordinal": 4,
+          "Type": "int[]?",
+          "source": "Body"
+        }
+      ]
+    },
+    {
+      "id": "M:eShop.Catalog.API.CatalogApi.GetAllItemsV1(eShop.Catalog.API.Model.PaginationRequest,CatalogServices)",
+      "kind": "MinimalApi",
+      "detector": "aspnetcore.minimalapi",
+      "display": "eShop.Catalog.API.CatalogApi.GetAllItemsV1(eShop.Catalog.API.Model.PaginationRequest, CatalogServices)",
+      "project": "Catalog.API",
+      "route": "/api/catalog/items",
+      "routeComplete": null,
+      "httpMethod": "GET",
+      "declaredAuthorization": null,
+      "authorization": {
+        "posture": "Undeclared",
+        "origin": "None",
+        "declaredOn": null,
+        "attribute": null
+      },
+      "trustContext": "external",
+      "taintsInstanceFields": false,
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/Catalog.API/Apis/CatalogApi.cs",
+      "line": 123,
+      "tainted": [
+        {
+          "Name": "paginationRequest",
+          "Ordinal": 0,
+          "Type": "eShop.Catalog.API.Model.PaginationRequest",
+          "source": "Body"
+        },
+        {
+          "Name": "services",
+          "Ordinal": 1,
+          "Type": "CatalogServices",
+          "source": "Body"
+        }
+      ]
+    },
+    {
+      "id": "M:eShop.Catalog.API.CatalogApi.GetCatalogFacets(CatalogServices,System.Int32[],System.Int32[])",
+      "kind": "MinimalApi",
+      "detector": "aspnetcore.minimalapi",
+      "display": "eShop.Catalog.API.CatalogApi.GetCatalogFacets(CatalogServices, int[]?, int[]?)",
+      "project": "Catalog.API",
+      "route": "/api/catalog/items/facets",
+      "routeComplete": null,
+      "httpMethod": "GET",
+      "declaredAuthorization": null,
+      "authorization": {
+        "posture": "Undeclared",
+        "origin": "None",
+        "declaredOn": null,
+        "attribute": null
+      },
+      "trustContext": "external",
+      "taintsInstanceFields": false,
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/Catalog.API/Apis/CatalogApi.cs",
+      "line": 169,
+      "tainted": [
+        {
+          "Name": "services",
+          "Ordinal": 0,
+          "Type": "CatalogServices",
+          "source": "Body"
+        },
+        {
+          "Name": "type",
+          "Ordinal": 1,
+          "Type": "int[]?",
+          "source": "Body"
+        },
+        {
+          "Name": "brand",
+          "Ordinal": 2,
+          "Type": "int[]?",
+          "source": "Body"
+        }
+      ]
+    },
+    {
+      "id": "M:eShop.Catalog.API.CatalogApi.GetItemById(Microsoft.AspNetCore.Http.HttpContext,CatalogServices,System.Int32)",
+      "kind": "MinimalApi",
+      "detector": "aspnetcore.minimalapi",
+      "display": "eShop.Catalog.API.CatalogApi.GetItemById(Microsoft.AspNetCore.Http.HttpContext, CatalogServices, int)",
+      "project": "Catalog.API",
+      "route": "/api/catalog/items/{id:int}",
+      "routeComplete": null,
+      "httpMethod": "GET",
+      "declaredAuthorization": null,
+      "authorization": {
+        "posture": "Undeclared",
+        "origin": "None",
+        "declaredOn": null,
+        "attribute": null
+      },
+      "trustContext": "external",
+      "taintsInstanceFields": false,
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/Catalog.API/Apis/CatalogApi.cs",
+      "line": 217,
+      "tainted": [
+        {
+          "Name": "services",
+          "Ordinal": 1,
+          "Type": "CatalogServices",
+          "source": "Body"
+        },
+        {
+          "Name": "id",
+          "Ordinal": 2,
+          "Type": "int",
+          "source": "Route"
+        }
+      ]
+    },
+    {
+      "id": "M:eShop.Catalog.API.CatalogApi.GetItemPictureById(eShop.Catalog.API.Infrastructure.CatalogContext,Microsoft.Extensions.FileProviders.IFileProvider,System.Int32)",
+      "kind": "MinimalApi",
+      "detector": "aspnetcore.minimalapi",
+      "display": "eShop.Catalog.API.CatalogApi.GetItemPictureById(eShop.Catalog.API.Infrastructure.CatalogContext, Microsoft.Extensions.FileProviders.IFileProvider, int)",
+      "project": "Catalog.API",
+      "route": "/api/catalog/items/{id:int}/pic",
+      "routeComplete": null,
+      "httpMethod": "GET",
+      "declaredAuthorization": null,
+      "authorization": {
+        "posture": "Undeclared",
+        "origin": "None",
+        "declaredOn": null,
+        "attribute": null
+      },
+      "trustContext": "external",
+      "taintsInstanceFields": false,
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/Catalog.API/Apis/CatalogApi.cs",
+      "line": 251,
+      "tainted": [
+        {
+          "Name": "id",
+          "Ordinal": 2,
+          "Type": "int",
+          "source": "Route"
+        }
+      ]
+    },
+    {
+      "id": "M:eShop.Catalog.API.CatalogApi.GetItemsByBrandAndTypeId(eShop.Catalog.API.Model.PaginationRequest,CatalogServices,System.Int32,System.Nullable{System.Int32})",
+      "kind": "MinimalApi",
+      "detector": "aspnetcore.minimalapi",
+      "display": "eShop.Catalog.API.CatalogApi.GetItemsByBrandAndTypeId(eShop.Catalog.API.Model.PaginationRequest, CatalogServices, int, int?)",
+      "project": "Catalog.API",
+      "route": "/api/catalog/items/type/{typeId}/brand/{brandId?}",
+      "routeComplete": null,
+      "httpMethod": "GET",
+      "declaredAuthorization": null,
+      "authorization": {
+        "posture": "Undeclared",
+        "origin": "None",
+        "declaredOn": null,
+        "attribute": null
+      },
+      "trustContext": "external",
+      "taintsInstanceFields": false,
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/Catalog.API/Apis/CatalogApi.cs",
+      "line": 341,
+      "tainted": [
+        {
+          "Name": "paginationRequest",
+          "Ordinal": 0,
+          "Type": "eShop.Catalog.API.Model.PaginationRequest",
+          "source": "Body"
+        },
+        {
+          "Name": "services",
+          "Ordinal": 1,
+          "Type": "CatalogServices",
+          "source": "Body"
+        },
+        {
+          "Name": "typeId",
+          "Ordinal": 2,
+          "Type": "int",
+          "source": "Route"
+        },
+        {
+          "Name": "brandId",
+          "Ordinal": 3,
+          "Type": "int?",
+          "source": "Route"
+        }
+      ]
+    },
+    {
+      "id": "M:eShop.Catalog.API.CatalogApi.GetItemsByBrandId(eShop.Catalog.API.Model.PaginationRequest,CatalogServices,System.Nullable{System.Int32})",
+      "kind": "MinimalApi",
+      "detector": "aspnetcore.minimalapi",
+      "display": "eShop.Catalog.API.CatalogApi.GetItemsByBrandId(eShop.Catalog.API.Model.PaginationRequest, CatalogServices, int?)",
+      "project": "Catalog.API",
+      "route": "/api/catalog/items/type/all/brand/{brandId:int?}",
+      "routeComplete": null,
+      "httpMethod": "GET",
+      "declaredAuthorization": null,
+      "authorization": {
+        "posture": "Undeclared",
+        "origin": "None",
+        "declaredOn": null,
+        "attribute": null
+      },
+      "trustContext": "external",
+      "taintsInstanceFields": false,
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/Catalog.API/Apis/CatalogApi.cs",
+      "line": 351,
+      "tainted": [
+        {
+          "Name": "paginationRequest",
+          "Ordinal": 0,
+          "Type": "eShop.Catalog.API.Model.PaginationRequest",
+          "source": "Body"
+        },
+        {
+          "Name": "services",
+          "Ordinal": 1,
+          "Type": "CatalogServices",
+          "source": "Body"
+        },
+        {
+          "Name": "brandId",
+          "Ordinal": 2,
+          "Type": "int?",
+          "source": "Route"
+        }
+      ]
+    },
+    {
+      "id": "M:eShop.Catalog.API.CatalogApi.GetItemsByIds(CatalogServices,System.Int32[])",
+      "kind": "MinimalApi",
+      "detector": "aspnetcore.minimalapi",
+      "display": "eShop.Catalog.API.CatalogApi.GetItemsByIds(CatalogServices, int[])",
+      "project": "Catalog.API",
+      "route": "/api/catalog/items/by",
+      "routeComplete": null,
+      "httpMethod": "GET",
+      "declaredAuthorization": null,
+      "authorization": {
+        "posture": "Undeclared",
+        "origin": "None",
+        "declaredOn": null,
+        "attribute": null
+      },
+      "trustContext": "external",
+      "taintsInstanceFields": false,
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/Catalog.API/Apis/CatalogApi.cs",
+      "line": 208,
+      "tainted": [
+        {
+          "Name": "services",
+          "Ordinal": 0,
+          "Type": "CatalogServices",
+          "source": "Body"
+        },
+        {
+          "Name": "ids",
+          "Ordinal": 1,
+          "Type": "int[]",
+          "source": "Body"
+        }
+      ]
+    },
+    {
+      "id": "M:eShop.Catalog.API.CatalogApi.GetItemsByName(eShop.Catalog.API.Model.PaginationRequest,CatalogServices,System.String)",
+      "kind": "MinimalApi",
+      "detector": "aspnetcore.minimalapi",
+      "display": "eShop.Catalog.API.CatalogApi.GetItemsByName(eShop.Catalog.API.Model.PaginationRequest, CatalogServices, string)",
+      "project": "Catalog.API",
+      "route": "/api/catalog/items/by/{name:minlength(1)}",
+      "routeComplete": null,
+      "httpMethod": "GET",
+      "declaredAuthorization": null,
+      "authorization": {
+        "posture": "Undeclared",
+        "origin": "None",
+        "declaredOn": null,
+        "attribute": null
+      },
+      "trustContext": "external",
+      "taintsInstanceFields": false,
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/Catalog.API/Apis/CatalogApi.cs",
+      "line": 240,
+      "tainted": [
+        {
+          "Name": "paginationRequest",
+          "Ordinal": 0,
+          "Type": "eShop.Catalog.API.Model.PaginationRequest",
+          "source": "Body"
+        },
+        {
+          "Name": "services",
+          "Ordinal": 1,
+          "Type": "CatalogServices",
+          "source": "Body"
+        },
+        {
+          "Name": "name",
+          "Ordinal": 2,
+          "Type": "string",
+          "source": "Route"
+        }
+      ]
+    },
+    {
+      "id": "M:eShop.Catalog.API.CatalogApi.GetItemsBySemanticRelevance(eShop.Catalog.API.Model.PaginationRequest,CatalogServices,System.String)",
+      "kind": "MinimalApi",
+      "detector": "aspnetcore.minimalapi",
+      "display": "eShop.Catalog.API.CatalogApi.GetItemsBySemanticRelevance(eShop.Catalog.API.Model.PaginationRequest, CatalogServices, string)",
+      "project": "Catalog.API",
+      "route": "/api/catalog/items/withsemanticrelevance",
+      "routeComplete": null,
+      "httpMethod": "GET",
+      "declaredAuthorization": null,
+      "authorization": {
+        "posture": "Undeclared",
+        "origin": "None",
+        "declaredOn": null,
+        "attribute": null
+      },
+      "trustContext": "external",
+      "taintsInstanceFields": false,
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/Catalog.API/Apis/CatalogApi.cs",
+      "line": 286,
+      "tainted": [
+        {
+          "Name": "paginationRequest",
+          "Ordinal": 0,
+          "Type": "eShop.Catalog.API.Model.PaginationRequest",
+          "source": "Body"
+        },
+        {
+          "Name": "services",
+          "Ordinal": 1,
+          "Type": "CatalogServices",
+          "source": "Body"
+        },
+        {
+          "Name": "text",
+          "Ordinal": 2,
+          "Type": "string",
+          "source": "Query"
+        }
+      ]
+    },
+    {
+      "id": "M:eShop.Catalog.API.CatalogApi.GetItemsBySemanticRelevanceV1(eShop.Catalog.API.Model.PaginationRequest,CatalogServices,System.String)",
+      "kind": "MinimalApi",
+      "detector": "aspnetcore.minimalapi",
+      "display": "eShop.Catalog.API.CatalogApi.GetItemsBySemanticRelevanceV1(eShop.Catalog.API.Model.PaginationRequest, CatalogServices, string)",
+      "project": "Catalog.API",
+      "route": "/api/catalog/items/withsemanticrelevance/{text:minlength(1)}",
+      "routeComplete": null,
+      "httpMethod": "GET",
+      "declaredAuthorization": null,
+      "authorization": {
+        "posture": "Undeclared",
+        "origin": "None",
+        "declaredOn": null,
+        "attribute": null
+      },
+      "trustContext": "external",
+      "taintsInstanceFields": false,
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/Catalog.API/Apis/CatalogApi.cs",
+      "line": 276,
+      "tainted": [
+        {
+          "Name": "paginationRequest",
+          "Ordinal": 0,
+          "Type": "eShop.Catalog.API.Model.PaginationRequest",
+          "source": "Body"
+        },
+        {
+          "Name": "services",
+          "Ordinal": 1,
+          "Type": "CatalogServices",
+          "source": "Body"
+        },
+        {
+          "Name": "text",
+          "Ordinal": 2,
+          "Type": "string",
+          "source": "Route"
+        }
+      ]
+    },
+    {
+      "id": "M:eShop.Catalog.API.CatalogApi.MapCatalogApi(Microsoft.AspNetCore.Routing.IEndpointRouteBuilder)~CatalogApi.cs:85:13",
+      "kind": "MinimalApi",
+      "detector": "aspnetcore.minimalapi",
+      "display": "GET /api/catalog/catalogtypes",
+      "project": "Catalog.API",
+      "route": "/api/catalog/catalogtypes",
+      "routeComplete": null,
+      "httpMethod": "GET",
+      "declaredAuthorization": null,
+      "authorization": {
+        "posture": "Undeclared",
+        "origin": "None",
+        "declaredOn": null,
+        "attribute": null
+      },
+      "trustContext": "external",
+      "taintsInstanceFields": false,
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/Catalog.API/Apis/CatalogApi.cs",
+      "line": 85,
+      "tainted": []
+    },
+    {
+      "id": "M:eShop.Catalog.API.CatalogApi.MapCatalogApi(Microsoft.AspNetCore.Routing.IEndpointRouteBuilder)~CatalogApi.cs:92:13",
+      "kind": "MinimalApi",
+      "detector": "aspnetcore.minimalapi",
+      "display": "GET /api/catalog/catalogbrands",
+      "project": "Catalog.API",
+      "route": "/api/catalog/catalogbrands",
+      "routeComplete": null,
+      "httpMethod": "GET",
+      "declaredAuthorization": null,
+      "authorization": {
+        "posture": "Undeclared",
+        "origin": "None",
+        "declaredOn": null,
+        "attribute": null
+      },
+      "trustContext": "external",
+      "taintsInstanceFields": false,
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/Catalog.API/Apis/CatalogApi.cs",
+      "line": 92,
+      "tainted": []
+    },
+    {
+      "id": "M:eShop.Catalog.API.CatalogApi.UpdateItem(Microsoft.AspNetCore.Http.HttpContext,System.Int32,CatalogServices,eShop.Catalog.API.Model.CatalogItem)",
+      "kind": "MinimalApi",
+      "detector": "aspnetcore.minimalapi",
+      "display": "eShop.Catalog.API.CatalogApi.UpdateItem(Microsoft.AspNetCore.Http.HttpContext, int, CatalogServices, eShop.Catalog.API.Model.CatalogItem)",
+      "project": "Catalog.API",
+      "route": "/api/catalog/items/{id:int}",
+      "routeComplete": null,
+      "httpMethod": "PUT",
+      "declaredAuthorization": null,
+      "authorization": {
+        "posture": "Undeclared",
+        "origin": "None",
+        "declaredOn": null,
+        "attribute": null
+      },
+      "trustContext": "external",
+      "taintsInstanceFields": false,
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/Catalog.API/Apis/CatalogApi.cs",
+      "line": 373,
+      "tainted": [
+        {
+          "Name": "id",
+          "Ordinal": 1,
+          "Type": "int",
+          "source": "Route"
+        },
+        {
+          "Name": "services",
+          "Ordinal": 2,
+          "Type": "CatalogServices",
+          "source": "Body"
+        },
+        {
+          "Name": "productToUpdate",
+          "Ordinal": 3,
+          "Type": "eShop.Catalog.API.Model.CatalogItem",
+          "source": "Body"
+        }
+      ]
+    },
+    {
+      "id": "M:eShop.Catalog.API.CatalogApi.UpdateItemV1(Microsoft.AspNetCore.Http.HttpContext,CatalogServices,eShop.Catalog.API.Model.CatalogItem)",
+      "kind": "MinimalApi",
+      "detector": "aspnetcore.minimalapi",
+      "display": "eShop.Catalog.API.CatalogApi.UpdateItemV1(Microsoft.AspNetCore.Http.HttpContext, CatalogServices, eShop.Catalog.API.Model.CatalogItem)",
+      "project": "Catalog.API",
+      "route": "/api/catalog/items",
+      "routeComplete": null,
+      "httpMethod": "PUT",
+      "declaredAuthorization": null,
+      "authorization": {
+        "posture": "Undeclared",
+        "origin": "None",
+        "declaredOn": null,
+        "attribute": null
+      },
+      "trustContext": "external",
+      "taintsInstanceFields": false,
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/Catalog.API/Apis/CatalogApi.cs",
+      "line": 359,
+      "tainted": [
+        {
+          "Name": "services",
+          "Ordinal": 1,
+          "Type": "CatalogServices",
+          "source": "Body"
+        },
+        {
+          "Name": "productToUpdate",
+          "Ordinal": 2,
+          "Type": "eShop.Catalog.API.Model.CatalogItem",
+          "source": "Body"
+        }
+      ]
+    },
+    {
+      "id": "M:eShop.EventBusRabbitMQ.RabbitMQEventBus.StartAsync(System.Threading.CancellationToken)",
+      "kind": "HostedService",
+      "detector": "hosting.service",
+      "display": "eShop.EventBusRabbitMQ.RabbitMQEventBus.StartAsync(System.Threading.CancellationToken)",
+      "project": "EventBusRabbitMQ",
+      "route": null,
+      "routeComplete": null,
+      "httpMethod": null,
+      "declaredAuthorization": null,
+      "authorization": {
+        "posture": "Undeclared",
+        "origin": "None",
+        "declaredOn": null,
+        "attribute": null
+      },
+      "trustContext": "external",
+      "taintsInstanceFields": false,
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/EventBusRabbitMQ/RabbitMQEventBus.cs",
+      "line": 226,
+      "tainted": []
+    },
+    {
+      "id": "M:Program.{Main}$(System.String[])",
+      "kind": "ConsoleMain",
+      "detector": "dotnet.main",
+      "display": "\u003Ctop-level-statements-entry-point\u003E",
+      "project": "Identity.API",
+      "route": null,
+      "routeComplete": null,
+      "httpMethod": null,
+      "declaredAuthorization": null,
+      "authorization": {
+        "posture": "Undeclared",
+        "origin": "None",
+        "declaredOn": null,
+        "attribute": null
+      },
+      "trustContext": "external",
+      "taintsInstanceFields": false,
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/Identity.API/Program.cs",
+      "line": 1,
+      "tainted": [
+        {
+          "Name": "args",
+          "Ordinal": 0,
+          "Type": "string[]",
+          "source": "CommandLine"
+        }
+      ]
+    },
+    {
+      "id": "M:IdentityServerHost.Quickstart.UI.AccountController.AccessDenied",
+      "kind": "Controller",
+      "detector": "aspnetcore.controller",
+      "display": "IdentityServerHost.Quickstart.UI.AccountController.AccessDenied()",
+      "project": "Identity.API",
+      "route": null,
+      "routeComplete": null,
+      "httpMethod": "GET",
+      "declaredAuthorization": null,
+      "authorization": {
+        "posture": "Anonymous",
+        "origin": "DeclaringType",
+        "declaredOn": "IdentityServerHost.Quickstart.UI.AccountController",
+        "attribute": "AllowAnonymousAttribute"
+      },
+      "trustContext": "external",
+      "taintsInstanceFields": false,
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/Identity.API/Quickstart/Account/AccountController.cs",
+      "line": 197,
+      "tainted": []
+    },
+    {
+      "id": "M:IdentityServerHost.Quickstart.UI.AccountController.Login(IdentityServerHost.Quickstart.UI.LoginInputModel,System.String)",
+      "kind": "Controller",
+      "detector": "aspnetcore.controller",
+      "display": "IdentityServerHost.Quickstart.UI.AccountController.Login(IdentityServerHost.Quickstart.UI.LoginInputModel, string)",
+      "project": "Identity.API",
+      "route": null,
+      "routeComplete": null,
+      "httpMethod": "POST",
+      "declaredAuthorization": null,
+      "authorization": {
+        "posture": "Anonymous",
+        "origin": "DeclaringType",
+        "declaredOn": "IdentityServerHost.Quickstart.UI.AccountController",
+        "attribute": "AllowAnonymousAttribute"
+      },
+      "trustContext": "external",
+      "taintsInstanceFields": false,
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/Identity.API/Quickstart/Account/AccountController.cs",
+      "line": 61,
+      "tainted": [
+        {
+          "Name": "model",
+          "Ordinal": 0,
+          "Type": "IdentityServerHost.Quickstart.UI.LoginInputModel",
+          "source": "Body"
+        },
+        {
+          "Name": "button",
+          "Ordinal": 1,
+          "Type": "string",
+          "source": "Query"
+        }
+      ]
+    },
+    {
+      "id": "M:IdentityServerHost.Quickstart.UI.AccountController.Login(System.String)",
+      "kind": "Controller",
+      "detector": "aspnetcore.controller",
+      "display": "IdentityServerHost.Quickstart.UI.AccountController.Login(string)",
+      "project": "Identity.API",
+      "route": null,
+      "routeComplete": null,
+      "httpMethod": "GET",
+      "declaredAuthorization": null,
+      "authorization": {
+        "posture": "Anonymous",
+        "origin": "DeclaringType",
+        "declaredOn": "IdentityServerHost.Quickstart.UI.AccountController",
+        "attribute": "AllowAnonymousAttribute"
+      },
+      "trustContext": "external",
+      "taintsInstanceFields": false,
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/Identity.API/Quickstart/Account/AccountController.cs",
+      "line": 40,
+      "tainted": [
+        {
+          "Name": "returnUrl",
+          "Ordinal": 0,
+          "Type": "string",
+          "source": "Query"
+        }
+      ]
+    },
+    {
+      "id": "M:IdentityServerHost.Quickstart.UI.AccountController.Logout(IdentityServerHost.Quickstart.UI.LogoutInputModel)",
+      "kind": "Controller",
+      "detector": "aspnetcore.controller",
+      "display": "IdentityServerHost.Quickstart.UI.AccountController.Logout(IdentityServerHost.Quickstart.UI.LogoutInputModel)",
+      "project": "Identity.API",
+      "route": null,
+      "routeComplete": null,
+      "httpMethod": "POST",
+      "declaredAuthorization": null,
+      "authorization": {
+        "posture": "Anonymous",
+        "origin": "DeclaringType",
+        "declaredOn": "IdentityServerHost.Quickstart.UI.AccountController",
+        "attribute": "AllowAnonymousAttribute"
+      },
+      "trustContext": "external",
+      "taintsInstanceFields": false,
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/Identity.API/Quickstart/Account/AccountController.cs",
+      "line": 167,
+      "tainted": [
+        {
+          "Name": "model",
+          "Ordinal": 0,
+          "Type": "IdentityServerHost.Quickstart.UI.LogoutInputModel",
+          "source": "Body"
+        }
+      ]
+    },
+    {
+      "id": "M:IdentityServerHost.Quickstart.UI.AccountController.Logout(System.String)",
+      "kind": "Controller",
+      "detector": "aspnetcore.controller",
+      "display": "IdentityServerHost.Quickstart.UI.AccountController.Logout(string)",
+      "project": "Identity.API",
+      "route": null,
+      "routeComplete": null,
+      "httpMethod": "GET",
+      "declaredAuthorization": null,
+      "authorization": {
+        "posture": "Anonymous",
+        "origin": "DeclaringType",
+        "declaredOn": "IdentityServerHost.Quickstart.UI.AccountController",
+        "attribute": "AllowAnonymousAttribute"
+      },
+      "trustContext": "external",
+      "taintsInstanceFields": false,
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/Identity.API/Quickstart/Account/AccountController.cs",
+      "line": 147,
+      "tainted": [
+        {
+          "Name": "logoutId",
+          "Ordinal": 0,
+          "Type": "string",
+          "source": "Query"
+        }
+      ]
+    },
+    {
+      "id": "M:IdentityServerHost.Quickstart.UI.ConsentController.CreateScopeViewModel(Duende.IdentityServer.Validation.ParsedScopeValue,Duende.IdentityServer.Models.ApiScope,System.Boolean)",
+      "kind": "Controller",
+      "detector": "aspnetcore.controller",
+      "display": "IdentityServerHost.Quickstart.UI.ConsentController.CreateScopeViewModel(Duende.IdentityServer.Validation.ParsedScopeValue, Duende.IdentityServer.Models.ApiScope, bool)",
+      "project": "Identity.API",
+      "route": null,
+      "routeComplete": null,
+      "httpMethod": null,
+      "declaredAuthorization": null,
+      "authorization": {
+        "posture": "Authorized",
+        "origin": "DeclaringType",
+        "declaredOn": "IdentityServerHost.Quickstart.UI.ConsentController",
+        "attribute": "AuthorizeAttribute"
+      },
+      "trustContext": "external",
+      "taintsInstanceFields": false,
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/Identity.API/Quickstart/Consent/ConsentController.cs",
+      "line": 217,
+      "tainted": [
+        {
+          "Name": "parsedScopeValue",
+          "Ordinal": 0,
+          "Type": "Duende.IdentityServer.Validation.ParsedScopeValue",
+          "source": "Body"
+        },
+        {
+          "Name": "apiScope",
+          "Ordinal": 1,
+          "Type": "Duende.IdentityServer.Models.ApiScope",
+          "source": "Body"
+        },
+        {
+          "Name": "check",
+          "Ordinal": 2,
+          "Type": "bool",
+          "source": "Query"
+        }
+      ]
+    },
+    {
+      "id": "M:IdentityServerHost.Quickstart.UI.ConsentController.Index(IdentityServerHost.Quickstart.UI.ConsentInputModel)",
+      "kind": "Controller",
+      "detector": "aspnetcore.controller",
+      "display": "IdentityServerHost.Quickstart.UI.ConsentController.Index(IdentityServerHost.Quickstart.UI.ConsentInputModel)",
+      "project": "Identity.API",
+      "route": null,
+      "routeComplete": null,
+      "httpMethod": "POST",
+      "declaredAuthorization": null,
+      "authorization": {
+        "posture": "Authorized",
+        "origin": "DeclaringType",
+        "declaredOn": "IdentityServerHost.Quickstart.UI.ConsentController",
+        "attribute": "AuthorizeAttribute"
+      },
+      "trustContext": "external",
+      "taintsInstanceFields": false,
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/Identity.API/Quickstart/Consent/ConsentController.cs",
+      "line": 49,
+      "tainted": [
+        {
+          "Name": "model",
+          "Ordinal": 0,
+          "Type": "IdentityServerHost.Quickstart.UI.ConsentInputModel",
+          "source": "Body"
+        }
+      ]
+    },
+    {
+      "id": "M:IdentityServerHost.Quickstart.UI.ConsentController.Index(System.String)",
+      "kind": "Controller",
+      "detector": "aspnetcore.controller",
+      "display": "IdentityServerHost.Quickstart.UI.ConsentController.Index(string)",
+      "project": "Identity.API",
+      "route": null,
+      "routeComplete": null,
+      "httpMethod": "GET",
+      "declaredAuthorization": null,
+      "authorization": {
+        "posture": "Authorized",
+        "origin": "DeclaringType",
+        "declaredOn": "IdentityServerHost.Quickstart.UI.ConsentController",
+        "attribute": "AuthorizeAttribute"
+      },
+      "trustContext": "external",
+      "taintsInstanceFields": false,
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/Identity.API/Quickstart/Consent/ConsentController.cs",
+      "line": 33,
+      "tainted": [
+        {
+          "Name": "returnUrl",
+          "Ordinal": 0,
+          "Type": "string",
+          "source": "Query"
+        }
+      ]
+    },
+    {
+      "id": "M:IdentityServerHost.Quickstart.UI.DeviceController.Callback(IdentityServerHost.Quickstart.UI.DeviceAuthorizationInputModel)",
+      "kind": "Controller",
+      "detector": "aspnetcore.controller",
+      "display": "IdentityServerHost.Quickstart.UI.DeviceController.Callback(IdentityServerHost.Quickstart.UI.DeviceAuthorizationInputModel)",
+      "project": "Identity.API",
+      "route": null,
+      "routeComplete": null,
+      "httpMethod": "POST",
+      "declaredAuthorization": null,
+      "authorization": {
+        "posture": "Authorized",
+        "origin": "DeclaringType",
+        "declaredOn": "IdentityServerHost.Quickstart.UI.DeviceController",
+        "attribute": "AuthorizeAttribute"
+      },
+      "trustContext": "external",
+      "taintsInstanceFields": false,
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/Identity.API/Quickstart/Device/DeviceController.cs",
+      "line": 53,
+      "tainted": [
+        {
+          "Name": "model",
+          "Ordinal": 0,
+          "Type": "IdentityServerHost.Quickstart.UI.DeviceAuthorizationInputModel",
+          "source": "Body"
+        }
+      ]
+    },
+    {
+      "id": "M:IdentityServerHost.Quickstart.UI.DeviceController.CreateScopeViewModel(Duende.IdentityServer.Validation.ParsedScopeValue,Duende.IdentityServer.Models.ApiScope,System.Boolean)",
+      "kind": "Controller",
+      "detector": "aspnetcore.controller",
+      "display": "IdentityServerHost.Quickstart.UI.DeviceController.CreateScopeViewModel(Duende.IdentityServer.Validation.ParsedScopeValue, Duende.IdentityServer.Models.ApiScope, bool)",
+      "project": "Identity.API",
+      "route": null,
+      "routeComplete": null,
+      "httpMethod": null,
+      "declaredAuthorization": null,
+      "authorization": {
+        "posture": "Authorized",
+        "origin": "DeclaringType",
+        "declaredOn": "IdentityServerHost.Quickstart.UI.DeviceController",
+        "attribute": "AuthorizeAttribute"
+      },
+      "trustContext": "external",
+      "taintsInstanceFields": false,
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/Identity.API/Quickstart/Device/DeviceController.cs",
+      "line": 191,
+      "tainted": [
+        {
+          "Name": "parsedScopeValue",
+          "Ordinal": 0,
+          "Type": "Duende.IdentityServer.Validation.ParsedScopeValue",
+          "source": "Body"
+        },
+        {
+          "Name": "apiScope",
+          "Ordinal": 1,
+          "Type": "Duende.IdentityServer.Models.ApiScope",
+          "source": "Body"
+        },
+        {
+          "Name": "check",
+          "Ordinal": 2,
+          "Type": "bool",
+          "source": "Query"
+        }
+      ]
+    },
+    {
+      "id": "M:IdentityServerHost.Quickstart.UI.DeviceController.Index",
+      "kind": "Controller",
+      "detector": "aspnetcore.controller",
+      "display": "IdentityServerHost.Quickstart.UI.DeviceController.Index()",
+      "project": "Identity.API",
+      "route": null,
+      "routeComplete": null,
+      "httpMethod": "GET",
+      "declaredAuthorization": null,
+      "authorization": {
+        "posture": "Authorized",
+        "origin": "DeclaringType",
+        "declaredOn": "IdentityServerHost.Quickstart.UI.DeviceController",
+        "attribute": "AuthorizeAttribute"
+      },
+      "trustContext": "external",
+      "taintsInstanceFields": false,
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/Identity.API/Quickstart/Device/DeviceController.cs",
+      "line": 28,
+      "tainted": []
+    },
+    {
+      "id": "M:IdentityServerHost.Quickstart.UI.DeviceController.UserCodeCapture(System.String)",
+      "kind": "Controller",
+      "detector": "aspnetcore.controller",
+      "display": "IdentityServerHost.Quickstart.UI.DeviceController.UserCodeCapture(string)",
+      "project": "Identity.API",
+      "route": null,
+      "routeComplete": null,
+      "httpMethod": "POST",
+      "declaredAuthorization": null,
+      "authorization": {
+        "posture": "Authorized",
+        "origin": "DeclaringType",
+        "declaredOn": "IdentityServerHost.Quickstart.UI.DeviceController",
+        "attribute": "AuthorizeAttribute"
+      },
+      "trustContext": "external",
+      "taintsInstanceFields": false,
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/Identity.API/Quickstart/Device/DeviceController.cs",
+      "line": 43,
+      "tainted": [
+        {
+          "Name": "userCode",
+          "Ordinal": 0,
+          "Type": "string",
+          "source": "Query"
+        }
+      ]
+    },
+    {
+      "id": "M:IdentityServerHost.Quickstart.UI.DiagnosticsController.Index",
+      "kind": "Controller",
+      "detector": "aspnetcore.controller",
+      "display": "IdentityServerHost.Quickstart.UI.DiagnosticsController.Index()",
+      "project": "Identity.API",
+      "route": null,
+      "routeComplete": null,
+      "httpMethod": null,
+      "declaredAuthorization": null,
+      "authorization": {
+        "posture": "Authorized",
+        "origin": "DeclaringType",
+        "declaredOn": "IdentityServerHost.Quickstart.UI.DiagnosticsController",
+        "attribute": "AuthorizeAttribute"
+      },
+      "trustContext": "external",
+      "taintsInstanceFields": false,
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/Identity.API/Quickstart/Diagnostics/DiagnosticsController.cs",
+      "line": 11,
+      "tainted": []
+    },
+    {
+      "id": "M:IdentityServerHost.Quickstart.UI.ExternalController.Callback",
+      "kind": "Controller",
+      "detector": "aspnetcore.controller",
+      "display": "IdentityServerHost.Quickstart.UI.ExternalController.Callback()",
+      "project": "Identity.API",
+      "route": null,
+      "routeComplete": null,
+      "httpMethod": "GET",
+      "declaredAuthorization": null,
+      "authorization": {
+        "posture": "Anonymous",
+        "origin": "DeclaringType",
+        "declaredOn": "IdentityServerHost.Quickstart.UI.ExternalController",
+        "attribute": "AllowAnonymousAttribute"
+      },
+      "trustContext": "external",
+      "taintsInstanceFields": false,
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/Identity.API/Quickstart/Account/ExternalController.cs",
+      "line": 64,
+      "tainted": []
+    },
+    {
+      "id": "M:IdentityServerHost.Quickstart.UI.ExternalController.Challenge(System.String,System.String)",
+      "kind": "Controller",
+      "detector": "aspnetcore.controller",
+      "display": "IdentityServerHost.Quickstart.UI.ExternalController.Challenge(string, string)",
+      "project": "Identity.API",
+      "route": null,
+      "routeComplete": null,
+      "httpMethod": "GET",
+      "declaredAuthorization": null,
+      "authorization": {
+        "posture": "Anonymous",
+        "origin": "DeclaringType",
+        "declaredOn": "IdentityServerHost.Quickstart.UI.ExternalController",
+        "attribute": "AllowAnonymousAttribute"
+      },
+      "trustContext": "external",
+      "taintsInstanceFields": false,
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/Identity.API/Quickstart/Account/ExternalController.cs",
+      "line": 34,
+      "tainted": [
+        {
+          "Name": "scheme",
+          "Ordinal": 0,
+          "Type": "string",
+          "source": "Query"
+        },
+        {
+          "Name": "returnUrl",
+          "Ordinal": 1,
+          "Type": "string",
+          "source": "Query"
+        }
+      ]
+    },
+    {
+      "id": "M:IdentityServerHost.Quickstart.UI.GrantsController.Index",
+      "kind": "Controller",
+      "detector": "aspnetcore.controller",
+      "display": "IdentityServerHost.Quickstart.UI.GrantsController.Index()",
+      "project": "Identity.API",
+      "route": null,
+      "routeComplete": null,
+      "httpMethod": "GET",
+      "declaredAuthorization": null,
+      "authorization": {
+        "posture": "Authorized",
+        "origin": "DeclaringType",
+        "declaredOn": "IdentityServerHost.Quickstart.UI.GrantsController",
+        "attribute": "AuthorizeAttribute"
+      },
+      "trustContext": "external",
+      "taintsInstanceFields": false,
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/Identity.API/Quickstart/Grants/GrantsController.cs",
+      "line": 33,
+      "tainted": []
+    },
+    {
+      "id": "M:IdentityServerHost.Quickstart.UI.GrantsController.Revoke(System.String)",
+      "kind": "Controller",
+      "detector": "aspnetcore.controller",
+      "display": "IdentityServerHost.Quickstart.UI.GrantsController.Revoke(string)",
+      "project": "Identity.API",
+      "route": null,
+      "routeComplete": null,
+      "httpMethod": "POST",
+      "declaredAuthorization": null,
+      "authorization": {
+        "posture": "Authorized",
+        "origin": "DeclaringType",
+        "declaredOn": "IdentityServerHost.Quickstart.UI.GrantsController",
+        "attribute": "AuthorizeAttribute"
+      },
+      "trustContext": "external",
+      "taintsInstanceFields": false,
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/Identity.API/Quickstart/Grants/GrantsController.cs",
+      "line": 43,
+      "tainted": [
+        {
+          "Name": "clientId",
+          "Ordinal": 0,
+          "Type": "string",
+          "source": "Query"
+        }
+      ]
+    },
+    {
+      "id": "M:IdentityServerHost.Quickstart.UI.HomeController.Error(System.String)",
+      "kind": "Controller",
+      "detector": "aspnetcore.controller",
+      "display": "IdentityServerHost.Quickstart.UI.HomeController.Error(string)",
+      "project": "Identity.API",
+      "route": null,
+      "routeComplete": null,
+      "httpMethod": null,
+      "declaredAuthorization": null,
+      "authorization": {
+        "posture": "Anonymous",
+        "origin": "DeclaringType",
+        "declaredOn": "IdentityServerHost.Quickstart.UI.HomeController",
+        "attribute": "AllowAnonymousAttribute"
+      },
+      "trustContext": "external",
+      "taintsInstanceFields": false,
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/Identity.API/Quickstart/Home/HomeController.cs",
+      "line": 39,
+      "tainted": [
+        {
+          "Name": "errorId",
+          "Ordinal": 0,
+          "Type": "string",
+          "source": "Query"
+        }
+      ]
+    },
+    {
+      "id": "M:IdentityServerHost.Quickstart.UI.HomeController.Index",
+      "kind": "Controller",
+      "detector": "aspnetcore.controller",
+      "display": "IdentityServerHost.Quickstart.UI.HomeController.Index()",
+      "project": "Identity.API",
+      "route": null,
+      "routeComplete": null,
+      "httpMethod": null,
+      "declaredAuthorization": null,
+      "authorization": {
+        "posture": "Anonymous",
+        "origin": "DeclaringType",
+        "declaredOn": "IdentityServerHost.Quickstart.UI.HomeController",
+        "attribute": "AllowAnonymousAttribute"
+      },
+      "trustContext": "external",
+      "taintsInstanceFields": false,
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/Identity.API/Quickstart/Home/HomeController.cs",
+      "line": 24,
+      "tainted": []
+    },
+    {
+      "id": "M:Program.{Main}$(System.String[])",
+      "kind": "ConsoleMain",
+      "detector": "dotnet.main",
+      "display": "\u003Ctop-level-statements-entry-point\u003E",
+      "project": "OrderProcessor",
+      "route": null,
+      "routeComplete": null,
+      "httpMethod": null,
+      "declaredAuthorization": null,
+      "authorization": {
+        "posture": "Undeclared",
+        "origin": "None",
+        "declaredOn": null,
+        "attribute": null
+      },
+      "trustContext": "external",
+      "taintsInstanceFields": false,
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/OrderProcessor/Program.cs",
+      "line": 1,
+      "tainted": [
+        {
+          "Name": "args",
+          "Ordinal": 0,
+          "Type": "string[]",
+          "source": "CommandLine"
+        }
+      ]
+    },
+    {
+      "id": "M:eShop.OrderProcessor.Services.GracePeriodManagerService.ExecuteAsync(System.Threading.CancellationToken)",
+      "kind": "HostedService",
+      "detector": "hosting.service",
+      "display": "eShop.OrderProcessor.Services.GracePeriodManagerService.ExecuteAsync(System.Threading.CancellationToken)",
+      "project": "OrderProcessor",
+      "route": null,
+      "routeComplete": null,
+      "httpMethod": null,
+      "declaredAuthorization": null,
+      "authorization": {
+        "posture": "Undeclared",
+        "origin": "None",
+        "declaredOn": null,
+        "attribute": null
+      },
+      "trustContext": "external",
+      "taintsInstanceFields": false,
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/OrderProcessor/Services/GracePeriodManagerService.cs",
+      "line": 15,
+      "tainted": []
+    },
+    {
+      "id": "M:Program.{Main}$(System.String[])",
+      "kind": "ConsoleMain",
+      "detector": "dotnet.main",
+      "display": "\u003Ctop-level-statements-entry-point\u003E",
+      "project": "Ordering.API",
+      "route": null,
+      "routeComplete": null,
+      "httpMethod": null,
+      "declaredAuthorization": null,
+      "authorization": {
+        "posture": "Undeclared",
+        "origin": "None",
+        "declaredOn": null,
+        "attribute": null
+      },
+      "trustContext": "external",
+      "taintsInstanceFields": false,
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/Ordering.API/Program.cs",
+      "line": 1,
+      "tainted": [
+        {
+          "Name": "args",
+          "Ordinal": 0,
+          "Type": "string[]",
+          "source": "CommandLine"
+        }
+      ]
+    },
+    {
+      "id": "M:eShop.Ordering.API.Application.Commands.CancelOrderCommandHandler.Handle(eShop.Ordering.API.Application.Commands.CancelOrderCommand,System.Threading.CancellationToken)",
+      "kind": "MessageConsumer",
+      "detector": "messaging.consumer",
+      "display": "eShop.Ordering.API.Application.Commands.CancelOrderCommandHandler.Handle(eShop.Ordering.API.Application.Commands.CancelOrderCommand, System.Threading.CancellationToken)",
+      "project": "Ordering.API",
+      "route": null,
+      "routeComplete": null,
+      "httpMethod": null,
+      "declaredAuthorization": null,
+      "authorization": {
+        "posture": "Undeclared",
+        "origin": "None",
+        "declaredOn": null,
+        "attribute": null
+      },
+      "trustContext": "external",
+      "taintsInstanceFields": false,
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/Ordering.API/Application/Commands/CancelOrderCommandHandler.cs",
+      "line": 19,
+      "tainted": [
+        {
+          "Name": "command",
+          "Ordinal": 0,
+          "Type": "eShop.Ordering.API.Application.Commands.CancelOrderCommand",
+          "source": "Message"
+        }
+      ]
+    },
+    {
+      "id": "M:eShop.Ordering.API.Application.Commands.CreateOrderCommandHandler.Handle(eShop.Ordering.API.Application.Commands.CreateOrderCommand,System.Threading.CancellationToken)",
+      "kind": "MessageConsumer",
+      "detector": "messaging.consumer",
+      "display": "eShop.Ordering.API.Application.Commands.CreateOrderCommandHandler.Handle(eShop.Ordering.API.Application.Commands.CreateOrderCommand, System.Threading.CancellationToken)",
+      "project": "Ordering.API",
+      "route": null,
+      "routeComplete": null,
+      "httpMethod": null,
+      "declaredAuthorization": null,
+      "authorization": {
+        "posture": "Undeclared",
+        "origin": "None",
+        "declaredOn": null,
+        "attribute": null
+      },
+      "trustContext": "external",
+      "taintsInstanceFields": false,
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/Ordering.API/Application/Commands/CreateOrderCommandHandler.cs",
+      "line": 29,
+      "tainted": [
+        {
+          "Name": "message",
+          "Ordinal": 0,
+          "Type": "eShop.Ordering.API.Application.Commands.CreateOrderCommand",
+          "source": "Message"
+        }
+      ]
+    },
+    {
+      "id": "M:eShop.Ordering.API.Application.Commands.CreateOrderDraftCommandHandler.Handle(eShop.Ordering.API.Application.Commands.CreateOrderDraftCommand,System.Threading.CancellationToken)",
+      "kind": "MessageConsumer",
+      "detector": "messaging.consumer",
+      "display": "eShop.Ordering.API.Application.Commands.CreateOrderDraftCommandHandler.Handle(eShop.Ordering.API.Application.Commands.CreateOrderDraftCommand, System.Threading.CancellationToken)",
+      "project": "Ordering.API",
+      "route": null,
+      "routeComplete": null,
+      "httpMethod": null,
+      "declaredAuthorization": null,
+      "authorization": {
+        "posture": "Undeclared",
+        "origin": "None",
+        "declaredOn": null,
+        "attribute": null
+      },
+      "trustContext": "external",
+      "taintsInstanceFields": false,
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/Ordering.API/Application/Commands/CreateOrderDraftCommandHandler.cs",
+      "line": 10,
+      "tainted": [
+        {
+          "Name": "message",
+          "Ordinal": 0,
+          "Type": "eShop.Ordering.API.Application.Commands.CreateOrderDraftCommand",
+          "source": "Message"
+        }
+      ]
+    },
+    {
+      "id": "M:eShop.Ordering.API.Application.Commands.SetAwaitingValidationOrderStatusCommandHandler.Handle(eShop.Ordering.API.Application.Commands.SetAwaitingValidationOrderStatusCommand,System.Threading.CancellationToken)",
+      "kind": "MessageConsumer",
+      "detector": "messaging.consumer",
+      "display": "eShop.Ordering.API.Application.Commands.SetAwaitingValidationOrderStatusCommandHandler.Handle(eShop.Ordering.API.Application.Commands.SetAwaitingValidationOrderStatusCommand, System.Threading.CancellationToken)",
+      "project": "Ordering.API",
+      "route": null,
+      "routeComplete": null,
+      "httpMethod": null,
+      "declaredAuthorization": null,
+      "authorization": {
+        "posture": "Undeclared",
+        "origin": "None",
+        "declaredOn": null,
+        "attribute": null
+      },
+      "trustContext": "external",
+      "taintsInstanceFields": false,
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/Ordering.API/Application/Commands/SetAwaitingValidationOrderStatusCommandHandler.cs",
+      "line": 19,
+      "tainted": [
+        {
+          "Name": "command",
+          "Ordinal": 0,
+          "Type": "eShop.Ordering.API.Application.Commands.SetAwaitingValidationOrderStatusCommand",
+          "source": "Message"
+        }
+      ]
+    },
+    {
+      "id": "M:eShop.Ordering.API.Application.Commands.SetPaidOrderStatusCommandHandler.Handle(eShop.Ordering.API.Application.Commands.SetPaidOrderStatusCommand,System.Threading.CancellationToken)",
+      "kind": "MessageConsumer",
+      "detector": "messaging.consumer",
+      "display": "eShop.Ordering.API.Application.Commands.SetPaidOrderStatusCommandHandler.Handle(eShop.Ordering.API.Application.Commands.SetPaidOrderStatusCommand, System.Threading.CancellationToken)",
+      "project": "Ordering.API",
+      "route": null,
+      "routeComplete": null,
+      "httpMethod": null,
+      "declaredAuthorization": null,
+      "authorization": {
+        "posture": "Undeclared",
+        "origin": "None",
+        "declaredOn": null,
+        "attribute": null
+      },
+      "trustContext": "external",
+      "taintsInstanceFields": false,
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/Ordering.API/Application/Commands/SetPaidOrderStatusCommandHandler.cs",
+      "line": 19,
+      "tainted": [
+        {
+          "Name": "command",
+          "Ordinal": 0,
+          "Type": "eShop.Ordering.API.Application.Commands.SetPaidOrderStatusCommand",
+          "source": "Message"
+        }
+      ]
+    },
+    {
+      "id": "M:eShop.Ordering.API.Application.Commands.SetStockConfirmedOrderStatusCommandHandler.Handle(eShop.Ordering.API.Application.Commands.SetStockConfirmedOrderStatusCommand,System.Threading.CancellationToken)",
+      "kind": "MessageConsumer",
+      "detector": "messaging.consumer",
+      "display": "eShop.Ordering.API.Application.Commands.SetStockConfirmedOrderStatusCommandHandler.Handle(eShop.Ordering.API.Application.Commands.SetStockConfirmedOrderStatusCommand, System.Threading.CancellationToken)",
+      "project": "Ordering.API",
+      "route": null,
+      "routeComplete": null,
+      "httpMethod": null,
+      "declaredAuthorization": null,
+      "authorization": {
+        "posture": "Undeclared",
+        "origin": "None",
+        "declaredOn": null,
+        "attribute": null
+      },
+      "trustContext": "external",
+      "taintsInstanceFields": false,
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/Ordering.API/Application/Commands/SetStockConfirmedOrderStatusCommandHandler.cs",
+      "line": 19,
+      "tainted": [
+        {
+          "Name": "command",
+          "Ordinal": 0,
+          "Type": "eShop.Ordering.API.Application.Commands.SetStockConfirmedOrderStatusCommand",
+          "source": "Message"
+        }
+      ]
+    },
+    {
+      "id": "M:eShop.Ordering.API.Application.Commands.SetStockRejectedOrderStatusCommandHandler.Handle(eShop.Ordering.API.Application.Commands.SetStockRejectedOrderStatusCommand,System.Threading.CancellationToken)",
+      "kind": "MessageConsumer",
+      "detector": "messaging.consumer",
+      "display": "eShop.Ordering.API.Application.Commands.SetStockRejectedOrderStatusCommandHandler.Handle(eShop.Ordering.API.Application.Commands.SetStockRejectedOrderStatusCommand, System.Threading.CancellationToken)",
+      "project": "Ordering.API",
+      "route": null,
+      "routeComplete": null,
+      "httpMethod": null,
+      "declaredAuthorization": null,
+      "authorization": {
+        "posture": "Undeclared",
+        "origin": "None",
+        "declaredOn": null,
+        "attribute": null
+      },
+      "trustContext": "external",
+      "taintsInstanceFields": false,
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/Ordering.API/Application/Commands/SetStockRejectedOrderStatusCommandHandler.cs",
+      "line": 19,
+      "tainted": [
+        {
+          "Name": "command",
+          "Ordinal": 0,
+          "Type": "eShop.Ordering.API.Application.Commands.SetStockRejectedOrderStatusCommand",
+          "source": "Message"
+        }
+      ]
+    },
+    {
+      "id": "M:eShop.Ordering.API.Application.Commands.ShipOrderCommandHandler.Handle(eShop.Ordering.API.Application.Commands.ShipOrderCommand,System.Threading.CancellationToken)",
+      "kind": "MessageConsumer",
+      "detector": "messaging.consumer",
+      "display": "eShop.Ordering.API.Application.Commands.ShipOrderCommandHandler.Handle(eShop.Ordering.API.Application.Commands.ShipOrderCommand, System.Threading.CancellationToken)",
+      "project": "Ordering.API",
+      "route": null,
+      "routeComplete": null,
+      "httpMethod": null,
+      "declaredAuthorization": null,
+      "authorization": {
+        "posture": "Undeclared",
+        "origin": "None",
+        "declaredOn": null,
+        "attribute": null
+      },
+      "trustContext": "external",
+      "taintsInstanceFields": false,
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/Ordering.API/Application/Commands/ShipOrderCommandHandler.cs",
+      "line": 19,
+      "tainted": [
+        {
+          "Name": "command",
+          "Ordinal": 0,
+          "Type": "eShop.Ordering.API.Application.Commands.ShipOrderCommand",
+          "source": "Message"
+        }
+      ]
+    },
+    {
+      "id": "M:eShop.Ordering.API.Application.DomainEventHandlers.OrderCancelledDomainEventHandler.Handle(eShop.Ordering.Domain.Events.OrderCancelledDomainEvent,System.Threading.CancellationToken)",
+      "kind": "MessageConsumer",
+      "detector": "messaging.consumer",
+      "display": "eShop.Ordering.API.Application.DomainEventHandlers.OrderCancelledDomainEventHandler.Handle(eShop.Ordering.Domain.Events.OrderCancelledDomainEvent, System.Threading.CancellationToken)",
+      "project": "Ordering.API",
+      "route": null,
+      "routeComplete": null,
+      "httpMethod": null,
+      "declaredAuthorization": null,
+      "authorization": {
+        "posture": "Undeclared",
+        "origin": "None",
+        "declaredOn": null,
+        "attribute": null
+      },
+      "trustContext": "external",
+      "taintsInstanceFields": false,
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/Ordering.API/Application/DomainEventHandlers/OrderCancelledDomainEventHandler.cs",
+      "line": 23,
+      "tainted": [
+        {
+          "Name": "domainEvent",
+          "Ordinal": 0,
+          "Type": "eShop.Ordering.Domain.Events.OrderCancelledDomainEvent",
+          "source": "Message"
+        }
+      ]
+    },
+    {
+      "id": "M:eShop.Ordering.API.Application.DomainEventHandlers.OrderShippedDomainEventHandler.Handle(eShop.Ordering.Domain.Events.OrderShippedDomainEvent,System.Threading.CancellationToken)",
+      "kind": "MessageConsumer",
+      "detector": "messaging.consumer",
+      "display": "eShop.Ordering.API.Application.DomainEventHandlers.OrderShippedDomainEventHandler.Handle(eShop.Ordering.Domain.Events.OrderShippedDomainEvent, System.Threading.CancellationToken)",
+      "project": "Ordering.API",
+      "route": null,
+      "routeComplete": null,
+      "httpMethod": null,
+      "declaredAuthorization": null,
+      "authorization": {
+        "posture": "Undeclared",
+        "origin": "None",
+        "declaredOn": null,
+        "attribute": null
+      },
+      "trustContext": "external",
+      "taintsInstanceFields": false,
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/Ordering.API/Application/DomainEventHandlers/OrderShippedDomainEventHandler.cs",
+      "line": 23,
+      "tainted": [
+        {
+          "Name": "domainEvent",
+          "Ordinal": 0,
+          "Type": "eShop.Ordering.Domain.Events.OrderShippedDomainEvent",
+          "source": "Message"
+        }
+      ]
+    },
+    {
+      "id": "M:eShop.Ordering.API.Application.DomainEventHandlers.OrderStatusChangedToAwaitingValidationDomainEventHandler.Handle(eShop.Ordering.Domain.Events.OrderStatusChangedToAwaitingValidationDomainEvent,System.Threading.CancellationToken)",
+      "kind": "MessageConsumer",
+      "detector": "messaging.consumer",
+      "display": "eShop.Ordering.API.Application.DomainEventHandlers.OrderStatusChangedToAwaitingValidationDomainEventHandler.Handle(eShop.Ordering.Domain.Events.OrderStatusChangedToAwaitingValidationDomainEvent, System.Threading.CancellationToken)",
+      "project": "Ordering.API",
+      "route": null,
+      "routeComplete": null,
+      "httpMethod": null,
+      "declaredAuthorization": null,
+      "authorization": {
+        "posture": "Undeclared",
+        "origin": "None",
+        "declaredOn": null,
+        "attribute": null
+      },
+      "trustContext": "external",
+      "taintsInstanceFields": false,
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/Ordering.API/Application/DomainEventHandlers/OrderStatusChangedToAwaitingValidationDomainEventHandler.cs",
+      "line": 23,
+      "tainted": [
+        {
+          "Name": "domainEvent",
+          "Ordinal": 0,
+          "Type": "eShop.Ordering.Domain.Events.OrderStatusChangedToAwaitingValidationDomainEvent",
+          "source": "Message"
+        }
+      ]
+    },
+    {
+      "id": "M:eShop.Ordering.API.Application.DomainEventHandlers.OrderStatusChangedToPaidDomainEventHandler.Handle(eShop.Ordering.Domain.Events.OrderStatusChangedToPaidDomainEvent,System.Threading.CancellationToken)",
+      "kind": "MessageConsumer",
+      "detector": "messaging.consumer",
+      "display": "eShop.Ordering.API.Application.DomainEventHandlers.OrderStatusChangedToPaidDomainEventHandler.Handle(eShop.Ordering.Domain.Events.OrderStatusChangedToPaidDomainEvent, System.Threading.CancellationToken)",
+      "project": "Ordering.API",
+      "route": null,
+      "routeComplete": null,
+      "httpMethod": null,
+      "declaredAuthorization": null,
+      "authorization": {
+        "posture": "Undeclared",
+        "origin": "None",
+        "declaredOn": null,
+        "attribute": null
+      },
+      "trustContext": "external",
+      "taintsInstanceFields": false,
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/Ordering.API/Application/DomainEventHandlers/OrderStatusChangedToPaidDomainEventHandler.cs",
+      "line": 22,
+      "tainted": [
+        {
+          "Name": "domainEvent",
+          "Ordinal": 0,
+          "Type": "eShop.Ordering.Domain.Events.OrderStatusChangedToPaidDomainEvent",
+          "source": "Message"
+        }
+      ]
+    },
+    {
+      "id": "M:eShop.Ordering.API.Application.DomainEventHandlers.OrderStatusChangedToStockConfirmedDomainEventHandler.Handle(eShop.Ordering.Domain.Events.OrderStatusChangedToStockConfirmedDomainEvent,System.Threading.CancellationToken)",
+      "kind": "MessageConsumer",
+      "detector": "messaging.consumer",
+      "display": "eShop.Ordering.API.Application.DomainEventHandlers.OrderStatusChangedToStockConfirmedDomainEventHandler.Handle(eShop.Ordering.Domain.Events.OrderStatusChangedToStockConfirmedDomainEvent, System.Threading.CancellationToken)",
+      "project": "Ordering.API",
+      "route": null,
+      "routeComplete": null,
+      "httpMethod": null,
+      "declaredAuthorization": null,
+      "authorization": {
+        "posture": "Undeclared",
+        "origin": "None",
+        "declaredOn": null,
+        "attribute": null
+      },
+      "trustContext": "external",
+      "taintsInstanceFields": false,
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/Ordering.API/Application/DomainEventHandlers/OrderStatusChangedToStockConfirmedDomainEventHandler.cs",
+      "line": 23,
+      "tainted": [
+        {
+          "Name": "domainEvent",
+          "Ordinal": 0,
+          "Type": "eShop.Ordering.Domain.Events.OrderStatusChangedToStockConfirmedDomainEvent",
+          "source": "Message"
+        }
+      ]
+    },
+    {
+      "id": "M:eShop.Ordering.API.Application.DomainEventHandlers.UpdateOrderWhenBuyerAndPaymentMethodVerifiedDomainEventHandler.Handle(eShop.Ordering.Domain.Events.BuyerAndPaymentMethodVerifiedDomainEvent,System.Threading.CancellationToken)",
+      "kind": "MessageConsumer",
+      "detector": "messaging.consumer",
+      "display": "eShop.Ordering.API.Application.DomainEventHandlers.UpdateOrderWhenBuyerAndPaymentMethodVerifiedDomainEventHandler.Handle(eShop.Ordering.Domain.Events.BuyerAndPaymentMethodVerifiedDomainEvent, System.Threading.CancellationToken)",
+      "project": "Ordering.API",
+      "route": null,
+      "routeComplete": null,
+      "httpMethod": null,
+      "declaredAuthorization": null,
+      "authorization": {
+        "posture": "Undeclared",
+        "origin": "None",
+        "declaredOn": null,
+        "attribute": null
+      },
+      "trustContext": "external",
+      "taintsInstanceFields": false,
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/Ordering.API/Application/DomainEventHandlers/UpdateOrderWhenBuyerAndPaymentMethodVerifiedDomainEventHandler.cs",
+      "line": 19,
+      "tainted": [
+        {
+          "Name": "domainEvent",
+          "Ordinal": 0,
+          "Type": "eShop.Ordering.Domain.Events.BuyerAndPaymentMethodVerifiedDomainEvent",
+          "source": "Message"
+        }
+      ]
+    },
+    {
+      "id": "M:eShop.Ordering.API.Application.DomainEventHandlers.ValidateOrAddBuyerAggregateWhenOrderStartedDomainEventHandler.Handle(eShop.Ordering.Domain.Events.OrderStartedDomainEvent,System.Threading.CancellationToken)",
+      "kind": "MessageConsumer",
+      "detector": "messaging.consumer",
+      "display": "eShop.Ordering.API.Application.DomainEventHandlers.ValidateOrAddBuyerAggregateWhenOrderStartedDomainEventHandler.Handle(eShop.Ordering.Domain.Events.OrderStartedDomainEvent, System.Threading.CancellationToken)",
+      "project": "Ordering.API",
+      "route": null,
+      "routeComplete": null,
+      "httpMethod": null,
+      "declaredAuthorization": null,
+      "authorization": {
+        "posture": "Undeclared",
+        "origin": "None",
+        "declaredOn": null,
+        "attribute": null
+      },
+      "trustContext": "external",
+      "taintsInstanceFields": false,
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/Ordering.API/Application/DomainEventHandlers/ValidateOrAddBuyerAggregateWhenOrderStartedDomainEventHandler.cs",
+      "line": 20,
+      "tainted": [
+        {
+          "Name": "domainEvent",
+          "Ordinal": 0,
+          "Type": "eShop.Ordering.Domain.Events.OrderStartedDomainEvent",
+          "source": "Message"
+        }
+      ]
+    },
+    {
+      "id": "M:OrdersApi.CancelOrderAsync(System.Guid,eShop.Ordering.API.Application.Commands.CancelOrderCommand,OrderServices)",
+      "kind": "MinimalApi",
+      "detector": "aspnetcore.minimalapi",
+      "display": "OrdersApi.CancelOrderAsync(System.Guid, eShop.Ordering.API.Application.Commands.CancelOrderCommand, OrderServices)",
+      "project": "Ordering.API",
+      "route": "/api/orders/cancel",
+      "routeComplete": null,
+      "httpMethod": "PUT",
+      "declaredAuthorization": "Required",
+      "authorization": {
+        "posture": "Authorized",
+        "origin": "Registration",
+        "declaredOn": null,
+        "attribute": null
+      },
+      "trustContext": "external",
+      "taintsInstanceFields": false,
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/Ordering.API/Apis/OrdersApi.cs",
+      "line": 22,
+      "tainted": [
+        {
+          "Name": "requestId",
+          "Ordinal": 0,
+          "Type": "System.Guid",
+          "source": "Header"
+        },
+        {
+          "Name": "command",
+          "Ordinal": 1,
+          "Type": "eShop.Ordering.API.Application.Commands.CancelOrderCommand",
+          "source": "Body"
+        },
+        {
+          "Name": "services",
+          "Ordinal": 2,
+          "Type": "OrderServices",
+          "source": "Body"
+        }
+      ]
+    },
+    {
+      "id": "M:OrdersApi.CreateOrderAsync(System.Guid,CreateOrderRequest,OrderServices)",
+      "kind": "MinimalApi",
+      "detector": "aspnetcore.minimalapi",
+      "display": "OrdersApi.CreateOrderAsync(System.Guid, CreateOrderRequest, OrderServices)",
+      "project": "Ordering.API",
+      "route": "/api/orders",
+      "routeComplete": null,
+      "httpMethod": "POST",
+      "declaredAuthorization": "Required",
+      "authorization": {
+        "posture": "Authorized",
+        "origin": "Registration",
+        "declaredOn": null,
+        "attribute": null
+      },
+      "trustContext": "external",
+      "taintsInstanceFields": false,
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/Ordering.API/Apis/OrdersApi.cs",
+      "line": 118,
+      "tainted": [
+        {
+          "Name": "requestId",
+          "Ordinal": 0,
+          "Type": "System.Guid",
+          "source": "Header"
+        },
+        {
+          "Name": "request",
+          "Ordinal": 1,
+          "Type": "CreateOrderRequest",
+          "source": "Body"
+        },
+        {
+          "Name": "services",
+          "Ordinal": 2,
+          "Type": "OrderServices",
+          "source": "Body"
+        }
+      ]
+    },
+    {
+      "id": "M:OrdersApi.CreateOrderDraftAsync(eShop.Ordering.API.Application.Commands.CreateOrderDraftCommand,OrderServices)",
+      "kind": "MinimalApi",
+      "detector": "aspnetcore.minimalapi",
+      "display": "OrdersApi.CreateOrderDraftAsync(eShop.Ordering.API.Application.Commands.CreateOrderDraftCommand, OrderServices)",
+      "project": "Ordering.API",
+      "route": "/api/orders/draft",
+      "routeComplete": null,
+      "httpMethod": "POST",
+      "declaredAuthorization": "Required",
+      "authorization": {
+        "posture": "Authorized",
+        "origin": "Registration",
+        "declaredOn": null,
+        "attribute": null
+      },
+      "trustContext": "external",
+      "taintsInstanceFields": false,
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/Ordering.API/Apis/OrdersApi.cs",
+      "line": 106,
+      "tainted": [
+        {
+          "Name": "command",
+          "Ordinal": 0,
+          "Type": "eShop.Ordering.API.Application.Commands.CreateOrderDraftCommand",
+          "source": "Body"
+        },
+        {
+          "Name": "services",
+          "Ordinal": 1,
+          "Type": "OrderServices",
+          "source": "Body"
+        }
+      ]
+    },
+    {
+      "id": "M:OrdersApi.GetCardTypesAsync(eShop.Ordering.API.Application.Queries.IOrderQueries)",
+      "kind": "MinimalApi",
+      "detector": "aspnetcore.minimalapi",
+      "display": "OrdersApi.GetCardTypesAsync(eShop.Ordering.API.Application.Queries.IOrderQueries)",
+      "project": "Ordering.API",
+      "route": "/api/orders/cardtypes",
+      "routeComplete": null,
+      "httpMethod": "GET",
+      "declaredAuthorization": "Required",
+      "authorization": {
+        "posture": "Authorized",
+        "origin": "Registration",
+        "declaredOn": null,
+        "attribute": null
+      },
+      "trustContext": "external",
+      "taintsInstanceFields": false,
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/Ordering.API/Apis/OrdersApi.cs",
+      "line": 100,
+      "tainted": []
+    },
+    {
+      "id": "M:OrdersApi.GetOrderAsync(System.Int32,OrderServices)",
+      "kind": "MinimalApi",
+      "detector": "aspnetcore.minimalapi",
+      "display": "OrdersApi.GetOrderAsync(int, OrderServices)",
+      "project": "Ordering.API",
+      "route": "/api/orders/{orderId:int}",
+      "routeComplete": null,
+      "httpMethod": "GET",
+      "declaredAuthorization": "Required",
+      "authorization": {
+        "posture": "Authorized",
+        "origin": "Registration",
+        "declaredOn": null,
+        "attribute": null
+      },
+      "trustContext": "external",
+      "taintsInstanceFields": false,
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/Ordering.API/Apis/OrdersApi.cs",
+      "line": 80,
+      "tainted": [
+        {
+          "Name": "orderId",
+          "Ordinal": 0,
+          "Type": "int",
+          "source": "Route"
+        },
+        {
+          "Name": "services",
+          "Ordinal": 1,
+          "Type": "OrderServices",
+          "source": "Body"
+        }
+      ]
+    },
+    {
+      "id": "M:OrdersApi.GetOrdersByUserAsync(OrderServices)",
+      "kind": "MinimalApi",
+      "detector": "aspnetcore.minimalapi",
+      "display": "OrdersApi.GetOrdersByUserAsync(OrderServices)",
+      "project": "Ordering.API",
+      "route": "/api/orders",
+      "routeComplete": null,
+      "httpMethod": "GET",
+      "declaredAuthorization": "Required",
+      "authorization": {
+        "posture": "Authorized",
+        "origin": "Registration",
+        "declaredOn": null,
+        "attribute": null
+      },
+      "trustContext": "external",
+      "taintsInstanceFields": false,
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/Ordering.API/Apis/OrdersApi.cs",
+      "line": 93,
+      "tainted": [
+        {
+          "Name": "services",
+          "Ordinal": 0,
+          "Type": "OrderServices",
+          "source": "Body"
+        }
+      ]
+    },
+    {
+      "id": "M:OrdersApi.ShipOrderAsync(System.Guid,eShop.Ordering.API.Application.Commands.ShipOrderCommand,OrderServices)",
+      "kind": "MinimalApi",
+      "detector": "aspnetcore.minimalapi",
+      "display": "OrdersApi.ShipOrderAsync(System.Guid, eShop.Ordering.API.Application.Commands.ShipOrderCommand, OrderServices)",
+      "project": "Ordering.API",
+      "route": "/api/orders/ship",
+      "routeComplete": null,
+      "httpMethod": "PUT",
+      "declaredAuthorization": "Required",
+      "authorization": {
+        "posture": "Authorized",
+        "origin": "Registration",
+        "declaredOn": null,
+        "attribute": null
+      },
+      "trustContext": "external",
+      "taintsInstanceFields": false,
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/Ordering.API/Apis/OrdersApi.cs",
+      "line": 51,
+      "tainted": [
+        {
+          "Name": "requestId",
+          "Ordinal": 0,
+          "Type": "System.Guid",
+          "source": "Header"
+        },
+        {
+          "Name": "command",
+          "Ordinal": 1,
+          "Type": "eShop.Ordering.API.Application.Commands.ShipOrderCommand",
+          "source": "Body"
+        },
+        {
+          "Name": "services",
+          "Ordinal": 2,
+          "Type": "OrderServices",
+          "source": "Body"
+        }
+      ]
+    },
+    {
+      "id": "M:Program.{Main}$(System.String[])",
+      "kind": "ConsoleMain",
+      "detector": "dotnet.main",
+      "display": "\u003Ctop-level-statements-entry-point\u003E",
+      "project": "PaymentProcessor",
+      "route": null,
+      "routeComplete": null,
+      "httpMethod": null,
+      "declaredAuthorization": null,
+      "authorization": {
+        "posture": "Undeclared",
+        "origin": "None",
+        "declaredOn": null,
+        "attribute": null
+      },
+      "trustContext": "external",
+      "taintsInstanceFields": false,
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/PaymentProcessor/Program.cs",
+      "line": 1,
+      "tainted": [
+        {
+          "Name": "args",
+          "Ordinal": 0,
+          "Type": "string[]",
+          "source": "CommandLine"
+        }
+      ]
+    },
+    {
+      "id": "M:Program.{Main}$(System.String[])",
+      "kind": "ConsoleMain",
+      "detector": "dotnet.main",
+      "display": "\u003Ctop-level-statements-entry-point\u003E",
+      "project": "WebApp",
+      "route": null,
+      "routeComplete": null,
+      "httpMethod": null,
+      "declaredAuthorization": null,
+      "authorization": {
+        "posture": "Undeclared",
+        "origin": "None",
+        "declaredOn": null,
+        "attribute": null
+      },
+      "trustContext": "external",
+      "taintsInstanceFields": false,
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/WebApp/Program.cs",
+      "line": 1,
+      "tainted": [
+        {
+          "Name": "args",
+          "Ordinal": 0,
+          "Type": "string[]",
+          "source": "CommandLine"
+        }
+      ]
+    },
+    {
+      "id": "M:Program.{Main}$(System.String[])",
+      "kind": "ConsoleMain",
+      "detector": "dotnet.main",
+      "display": "\u003Ctop-level-statements-entry-point\u003E",
+      "project": "WebhookClient",
+      "route": null,
+      "routeComplete": null,
+      "httpMethod": null,
+      "declaredAuthorization": null,
+      "authorization": {
+        "posture": "Undeclared",
+        "origin": "None",
+        "declaredOn": null,
+        "attribute": null
+      },
+      "trustContext": "external",
+      "taintsInstanceFields": false,
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/WebhookClient/Program.cs",
+      "line": 1,
+      "tainted": [
+        {
+          "Name": "args",
+          "Ordinal": 0,
+          "Type": "string[]",
+          "source": "CommandLine"
+        }
+      ]
+    },
+    {
+      "id": "M:eShop.WebhookClient.Endpoints.AuthenticationEndpoints.MapAuthenticationEndpoints(Microsoft.AspNetCore.Routing.IEndpointRouteBuilder)~AuthenticationEndpoints.cs:12:32",
+      "kind": "MinimalApi",
+      "detector": "aspnetcore.minimalapi",
+      "display": "POST /logout",
+      "project": "WebhookClient",
+      "route": "/logout",
+      "routeComplete": null,
+      "httpMethod": "POST",
+      "declaredAuthorization": null,
+      "authorization": {
+        "posture": "Undeclared",
+        "origin": "None",
+        "declaredOn": null,
+        "attribute": null
+      },
+      "trustContext": "external",
+      "taintsInstanceFields": false,
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/WebhookClient/Endpoints/AuthenticationEndpoints.cs",
+      "line": 12,
+      "tainted": []
+    },
+    {
+      "id": "M:eShop.WebhookClient.Endpoints.WebhookEndpoints.MapWebhookEndpoints(Microsoft.AspNetCore.Routing.IEndpointRouteBuilder)~WebhookEndpoints.cs:16:57",
+      "kind": "MinimalApi",
+      "detector": "aspnetcore.minimalapi",
+      "display": "ANY /check",
+      "project": "WebhookClient",
+      "route": "/check",
+      "routeComplete": null,
+      "httpMethod": null,
+      "declaredAuthorization": null,
+      "authorization": {
+        "posture": "Undeclared",
+        "origin": "None",
+        "declaredOn": null,
+        "attribute": null
+      },
+      "trustContext": "external",
+      "taintsInstanceFields": false,
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/WebhookClient/Endpoints/WebhookEndpoints.cs",
+      "line": 16,
+      "tainted": [
+        {
+          "Name": "value",
+          "Ordinal": 0,
+          "Type": "string",
+          "source": "Header"
+        }
+      ]
+    },
+    {
+      "id": "M:eShop.WebhookClient.Endpoints.WebhookEndpoints.MapWebhookEndpoints(Microsoft.AspNetCore.Routing.IEndpointRouteBuilder)~WebhookEndpoints.cs:31:42",
+      "kind": "MinimalApi",
+      "detector": "aspnetcore.minimalapi",
+      "display": "POST /webhook-received",
+      "project": "WebhookClient",
+      "route": "/webhook-received",
+      "routeComplete": null,
+      "httpMethod": "POST",
+      "declaredAuthorization": null,
+      "authorization": {
+        "posture": "Undeclared",
+        "origin": "None",
+        "declaredOn": null,
+        "attribute": null
+      },
+      "trustContext": "external",
+      "taintsInstanceFields": false,
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/WebhookClient/Endpoints/WebhookEndpoints.cs",
+      "line": 31,
+      "tainted": [
+        {
+          "Name": "hook",
+          "Ordinal": 0,
+          "Type": "eShop.WebhookClient.Services.WebhookData",
+          "source": "Body"
+        }
+      ]
+    },
+    {
+      "id": "M:Program.{Main}$(System.String[])",
+      "kind": "ConsoleMain",
+      "detector": "dotnet.main",
+      "display": "\u003Ctop-level-statements-entry-point\u003E",
+      "project": "Webhooks.API",
+      "route": null,
+      "routeComplete": null,
+      "httpMethod": null,
+      "declaredAuthorization": null,
+      "authorization": {
+        "posture": "Undeclared",
+        "origin": "None",
+        "declaredOn": null,
+        "attribute": null
+      },
+      "trustContext": "external",
+      "taintsInstanceFields": false,
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/Webhooks.API/Program.cs",
+      "line": 1,
+      "tainted": [
+        {
+          "Name": "args",
+          "Ordinal": 0,
+          "Type": "string[]",
+          "source": "CommandLine"
+        }
+      ]
+    },
+    {
+      "id": "M:Webhooks.API.WebHooksApi.MapWebHooksApiV1(Microsoft.AspNetCore.Routing.IEndpointRouteBuilder)~WebHooksApi.cs:13:25",
+      "kind": "MinimalApi",
+      "detector": "aspnetcore.minimalapi",
+      "display": "GET /api/webhooks",
+      "project": "Webhooks.API",
+      "route": "/api/webhooks",
+      "routeComplete": null,
+      "httpMethod": "GET",
+      "declaredAuthorization": "Required",
+      "authorization": {
+        "posture": "Authorized",
+        "origin": "Registration",
+        "declaredOn": null,
+        "attribute": null
+      },
+      "trustContext": "external",
+      "taintsInstanceFields": false,
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/Webhooks.API/Apis/WebHooksApi.cs",
+      "line": 13,
+      "tainted": [
+        {
+          "Name": "user",
+          "Ordinal": 1,
+          "Type": "System.Security.Claims.ClaimsPrincipal",
+          "source": "Credential"
+        }
+      ]
+    },
+    {
+      "id": "M:Webhooks.API.WebHooksApi.MapWebHooksApiV1(Microsoft.AspNetCore.Routing.IEndpointRouteBuilder)~WebHooksApi.cs:20:33",
+      "kind": "MinimalApi",
+      "detector": "aspnetcore.minimalapi",
+      "display": "GET /api/webhooks/{id:int}",
+      "project": "Webhooks.API",
+      "route": "/api/webhooks/{id:int}",
+      "routeComplete": null,
+      "httpMethod": "GET",
+      "declaredAuthorization": "Required",
+      "authorization": {
+        "posture": "Authorized",
+        "origin": "Registration",
+        "declaredOn": null,
+        "attribute": null
+      },
+      "trustContext": "external",
+      "taintsInstanceFields": false,
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/Webhooks.API/Apis/WebHooksApi.cs",
+      "line": 20,
+      "tainted": [
+        {
+          "Name": "user",
+          "Ordinal": 1,
+          "Type": "System.Security.Claims.ClaimsPrincipal",
+          "source": "Credential"
+        },
+        {
+          "Name": "id",
+          "Ordinal": 2,
+          "Type": "int",
+          "source": "Route"
+        }
+      ]
+    },
+    {
+      "id": "M:Webhooks.API.WebHooksApi.MapWebHooksApiV1(Microsoft.AspNetCore.Routing.IEndpointRouteBuilder)~WebHooksApi.cs:35:26",
+      "kind": "MinimalApi",
+      "detector": "aspnetcore.minimalapi",
+      "display": "POST /api/webhooks",
+      "project": "Webhooks.API",
+      "route": "/api/webhooks",
+      "routeComplete": null,
+      "httpMethod": "POST",
+      "declaredAuthorization": "Required",
+      "authorization": {
+        "posture": "Authorized",
+        "origin": "Registration",
+        "declaredOn": null,
+        "attribute": null
+      },
+      "trustContext": "external",
+      "taintsInstanceFields": false,
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/Webhooks.API/Apis/WebHooksApi.cs",
+      "line": 35,
+      "tainted": [
+        {
+          "Name": "request",
+          "Ordinal": 0,
+          "Type": "Webhooks.API.Model.WebhookSubscriptionRequest",
+          "source": "Body"
+        },
+        {
+          "Name": "user",
+          "Ordinal": 3,
+          "Type": "System.Security.Claims.ClaimsPrincipal",
+          "source": "Credential"
+        }
+      ]
+    },
+    {
+      "id": "M:Webhooks.API.WebHooksApi.MapWebHooksApiV1(Microsoft.AspNetCore.Routing.IEndpointRouteBuilder)~WebHooksApi.cs:66:36",
+      "kind": "MinimalApi",
+      "detector": "aspnetcore.minimalapi",
+      "display": "DELETE /api/webhooks/{id:int}",
+      "project": "Webhooks.API",
+      "route": "/api/webhooks/{id:int}",
+      "routeComplete": null,
+      "httpMethod": "DELETE",
+      "declaredAuthorization": "Required",
+      "authorization": {
+        "posture": "Authorized",
+        "origin": "Registration",
+        "declaredOn": null,
+        "attribute": null
+      },
+      "trustContext": "external",
+      "taintsInstanceFields": false,
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/Webhooks.API/Apis/WebHooksApi.cs",
+      "line": 66,
+      "tainted": [
+        {
+          "Name": "user",
+          "Ordinal": 1,
+          "Type": "System.Security.Claims.ClaimsPrincipal",
+          "source": "Credential"
+        },
+        {
+          "Name": "id",
+          "Ordinal": 2,
+          "Type": "int",
+          "source": "Route"
+        }
+      ]
+    },
+    {
+      "id": "M:Webhooks.API.Model.WebhookSubscriptionRequest.Validate(System.ComponentModel.DataAnnotations.ValidationContext)",
+      "kind": "Validation",
+      "detector": "aspnetcore.callback",
+      "display": "Webhooks.API.Model.WebhookSubscriptionRequest.Validate(System.ComponentModel.DataAnnotations.ValidationContext)",
+      "project": "Webhooks.API",
+      "route": null,
+      "routeComplete": null,
+      "httpMethod": null,
+      "declaredAuthorization": null,
+      "authorization": {
+        "posture": "Undeclared",
+        "origin": "None",
+        "declaredOn": null,
+        "attribute": null
+      },
+      "trustContext": "external",
+      "taintsInstanceFields": true,
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/Webhooks.API/Model/WebhookSubscriptionRequest.cs",
+      "line": 10,
+      "tainted": []
+    },
+    {
+      "id": "M:Program.{Main}$(System.String[])",
+      "kind": "ConsoleMain",
+      "detector": "dotnet.main",
+      "display": "\u003Ctop-level-statements-entry-point\u003E",
+      "project": "eShop.AppHost",
+      "route": null,
+      "routeComplete": null,
+      "httpMethod": null,
+      "declaredAuthorization": null,
+      "authorization": {
+        "posture": "Undeclared",
+        "origin": "None",
+        "declaredOn": null,
+        "attribute": null
+      },
+      "trustContext": "external",
+      "taintsInstanceFields": false,
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/eShop.AppHost/AppHost.cs",
+      "line": 1,
+      "tainted": [
+        {
+          "Name": "args",
+          "Ordinal": 0,
+          "Type": "string[]",
+          "source": "CommandLine"
+        }
+      ]
+    },
+    {
+      "id": "M:eShop.ServiceDefaults.Extensions.UseDefaultOpenApi(Microsoft.AspNetCore.Builder.WebApplication)~OpenApi.Extensions.cs:41:29",
+      "kind": "MinimalApi",
+      "detector": "aspnetcore.minimalapi",
+      "display": "GET /",
+      "project": "eShop.ServiceDefaults",
+      "route": "/",
+      "routeComplete": false,
+      "httpMethod": "GET",
+      "declaredAuthorization": null,
+      "authorization": {
+        "posture": "Undeclared",
+        "origin": "None",
+        "declaredOn": null,
+        "attribute": null
+      },
+      "trustContext": "external",
+      "taintsInstanceFields": false,
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/eShop.ServiceDefaults/OpenApi.Extensions.cs",
+      "line": 41,
+      "tainted": []
+    }
+  ]
+}

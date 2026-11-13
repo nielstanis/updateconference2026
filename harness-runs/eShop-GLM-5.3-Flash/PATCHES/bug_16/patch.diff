@@ -1,0 +1,87 @@
+--- a/src/WebhookClient/Services/HooksRepository.cs
++++ b/src/WebhookClient/Services/HooksRepository.cs
+@@ -5,10 +5,19 @@
+ public class HooksRepository
+ {
++    private const int MaxEntries = 1000;
++
+     private readonly ConcurrentQueue<WebHookReceived> _data = new();
+     private readonly ConcurrentDictionary<OnChangeSubscription, object?> _onChangeSubscriptions = new();
+ 
+     public Task AddNew(WebHookReceived hook)
+     {
+         _data.Enqueue(hook);
+ 
++        // Keep only the most recent MaxEntries hooks so the queue cannot grow
++        // without bound when many hooks are received (e.g. unauthenticated posts).
++        while (_data.Count > MaxEntries)
++        {
++            _data.TryDequeue(out _);
++        }
++
+         foreach (var subscription in _onChangeSubscriptions)
+         {
+             try
+--- a/src/WebhookClient/Endpoints/WebhookEndpoints.cs
++++ b/src/WebhookClient/Endpoints/WebhookEndpoints.cs
+@@ -8,6 +8,7 @@
+     public static IEndpointRouteBuilder MapWebhookEndpoints(this IEndpointRouteBuilder app)
+     {
+         const string webhookCheckHeader = "X-eshop-whtoken";
++        const int maxPayloadLength = 64 * 1024;
+ 
+         var configuration = app.ServiceProvider.GetRequiredService<IConfiguration>();
+         bool.TryParse(configuration["ValidateToken"], out var validateToken);
+--- a/src/WebhookClient/Endpoints/WebhookEndpoints.cs
++++ b/src/WebhookClient/Endpoints/WebhookEndpoints.cs
+@@ -36,14 +37,20 @@
+ 
+             if (!validateToken || tokenToValidate == token)
+             {
++                if (hook.Payload?.Length > maxPayloadLength)
++                {
++                    logger.LogInformation("Received hook is NOT processed - payload exceeds the maximum allowed length of {MaxPayloadLength}.", maxPayloadLength);
++                    return TypedResults.StatusCode(StatusCodes.Status413PayloadTooLarge);
++                }
++
+                 logger.LogInformation("Received hook is going to be processed");
+                 var newHook = new WebHookReceived()
+                 {
+                     Data = hook.Payload,
+                     When = hook.When,
+                     Token = token
+                 };
+                 await hooksRepository.AddNew(newHook);
+                 logger.LogInformation("Received hook was processed.");
+                 return Results.Ok(newHook);
+             });
+--- a/tests/Application.UnitTests/WebhookClientTests.cs
++++ b/tests/Application.UnitTests/WebhookClientTests.cs
+@@ -92,9 +92,29 @@
+         var acceptedResponse = await client.SendAsync(acceptedRequest, TestContext.CancellationToken);
+         Assert.AreEqual(HttpStatusCode.OK, acceptedResponse.StatusCode);
+ 
+         var repository = app.Services.GetRequiredService<HooksRepository>();
+         var received = (await repository.GetAll()).Single();
+         Assert.AreEqual("payload", received.Data);
+         Assert.AreEqual("expected", received.Token);
+     }
++
++    [TestMethod]
++    public async Task HooksRepositoryCapsRetainedHooksAtMaxEntries()
++    {
++        var repository = new HooksRepository();
++        var hooks = Enumerable.Range(0, 1001)
++            .Select(i => new WebHookReceived { Data = $"payload {i}", When = DateTime.UtcNow })
++            .ToArray();
++
++        foreach (var hook in hooks)
++        {
++            await repository.AddNew(hook);
++        }
++
++        var retained = (await repository.GetAll()).ToList();
++        Assert.AreEqual(1000, retained.Count);
++        CollectionAssert.Contains(retained, hooks[^1]);
++    }
+ }

@@ -1,0 +1,229 @@
+--- a/src/Webhooks.API/Services/GrantUrlTesterService.cs
++++ b/src/Webhooks.API/Services/GrantUrlTesterService.cs
+@@ -4,13 +4,19 @@
+ {
+     public async Task<bool> TestGrantUrl(string urlHook, string url, string token)
+     {
++        if (!WebhookUrlValidator.IsAllowed(urlHook) || !WebhookUrlValidator.IsAllowed(url))
++        {
++            logger.LogWarning("Url of the hook ({UrlHook}) or the grant url ({Url}) is not an allowed destination", urlHook, url);
++            return false;
++        }
++
+         if (!CheckSameOrigin(urlHook, url))
+         {
+             logger.LogWarning("Url of the hook ({UrlHook} and the grant url ({Url} do not belong to same origin)", urlHook, url);
+             return false;
+         }
+ 
+-        var client = factory.CreateClient();
++        var client = factory.CreateClient("webhooks");
+         var msg = new HttpRequestMessage(HttpMethod.Options, url);
+         msg.Headers.Add("X-eshop-whtoken", token);
+ 
+--- a/src/Webhooks.API/Services/WebhooksSender.cs
++++ b/src/Webhooks.API/Services/WebhooksSender.cs
+@@ -4,7 +4,7 @@
+ {
+     public async Task SendAll(IEnumerable<WebhookSubscription> receivers, WebhookData data)
+     {
+-        var client = httpClientFactory.CreateClient();
++        var client = httpClientFactory.CreateClient("webhooks");
+         var json = JsonSerializer.Serialize(data);
+         var tasks = receivers.Select(r => OnSendData(r, json, client));
+         await Task.WhenAll(tasks);
+@@ -12,6 +12,12 @@
+ 
+     private Task OnSendData(WebhookSubscription subs, string jsonData, HttpClient client)
+     {
++        if (!WebhookUrlValidator.IsAllowed(subs.DestUrl))
++        {
++            logger.LogWarning("Skipping hook delivery to disallowed destination {DestUrl}", subs.DestUrl);
++            return Task.CompletedTask;
++        }
++
+         var request = new HttpRequestMessage()
+         {
+             RequestUri = new Uri(subs.DestUrl, UriKind.Absolute),
+--- a/src/Webhooks.API/Model/WebhookSubscriptionRequest.cs
++++ b/src/Webhooks.API/Model/WebhookSubscriptionRequest.cs
+@@ -9,14 +9,14 @@
+ 
+     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+     {
+-        if (!Uri.IsWellFormedUriString(GrantUrl, UriKind.Absolute))
++        if (!WebhookUrlValidator.IsAllowed(GrantUrl))
+         {
+-            yield return new ValidationResult("GrantUrl is not valid", new[] { nameof(GrantUrl) });
++            yield return new ValidationResult("GrantUrl is not a valid public http(s) URL", new[] { nameof(GrantUrl) });
+         }
+ 
+-        if (!Uri.IsWellFormedUriString(Url, UriKind.Absolute))
++        if (!WebhookUrlValidator.IsAllowed(Url))
+         {
+-            yield return new ValidationResult("Url is not valid", new[] { nameof(Url) });
++            yield return new ValidationResult("Url is not a valid public http(s) URL", new[] { nameof(Url) });
+         }
+ 
+         var isOk = Enum.TryParse(Event, ignoreCase: true, result: out WebhookType whtype);
+--- a/src/Webhooks.API/Extensions/Extensions.cs
++++ b/src/Webhooks.API/Extensions/Extensions.cs
+@@ -11,6 +11,13 @@
+ 
+         builder.Services.AddMigration<WebhooksContext>();
+ 
++        // Webhook destinations are user supplied, so never follow redirects from them.
++        builder.Services.AddHttpClient("webhooks")
++            .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
++            {
++                AllowAutoRedirect = false
++            });
++
+         builder.Services.AddTransient<IGrantUrlTesterService, GrantUrlTesterService>();
+         builder.Services.AddTransient<IWebhooksRetriever, WebhooksRetriever>();
+         builder.Services.AddTransient<IWebhooksSender, WebhooksSender>();
+--- /dev/null
++++ b/src/Webhooks.API/Services/WebhookUrlValidator.cs
+@@ -0,0 +1,108 @@
++using System.Net;
++using System.Net.Sockets;
++
++namespace Webhooks.API.Services;
++
++/// <summary>
++/// Validates a user supplied webhook destination before it is used for an outbound request.
++/// Only public http(s) endpoints are accepted; loopback, private, link-local, metadata and
++/// platform resolved single-label hosts are rejected.
++/// </summary>
++public static class WebhookUrlValidator
++{
++    public static bool IsAllowed(string url) =>
++        Uri.TryCreate(url, UriKind.Absolute, out var uri) && IsAllowed(uri);
++
++    public static bool IsAllowed(Uri uri)
++    {
++        if (uri is null || !uri.IsAbsoluteUri)
++        {
++            return false;
++        }
++
++        if (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps)
++        {
++            return false;
++        }
++
++        // User info is not needed by a webhook receiver and is a common way to make a
++        // different host appear to be part of an otherwise valid URL.
++        if (!string.IsNullOrEmpty(uri.UserInfo))
++        {
++            return false;
++        }
++
++        var host = uri.DnsSafeHost.TrimEnd('.');
++        var addressCandidate = host.Trim('[', ']');
++
++        if (addressCandidate.Length == 0 ||
++            addressCandidate.Equals("localhost", StringComparison.OrdinalIgnoreCase) ||
++            addressCandidate.EndsWith(".localhost", StringComparison.OrdinalIgnoreCase) ||
++            addressCandidate.Equals("metadata.google.internal", StringComparison.OrdinalIgnoreCase))
++        {
++            return false;
++        }
++
++        if (IPAddress.TryParse(addressCandidate, out var address))
++        {
++            return IsPublicAddress(address);
++        }
++
++        // Reject numeric forms that system resolvers interpret as IPv4 (2130706433,
++        // 0x7f000001, 0177.0.0.1) but IPAddress.TryParse does not.
++        if (IsNumericHost(addressCandidate))
++        {
++            return false;
++        }
++
++        // Single-label names are resolved by the platform/service discovery and are never
++        // valid public webhook receivers.
++        return addressCandidate.Contains('.');
++    }
++
++    private static bool IsPublicAddress(IPAddress address)
++    {
++        if (address.IsIPv4MappedToIPv6)
++        {
++            address = address.MapToIPv4();
++        }
++
++        if (IPAddress.IsLoopback(address) ||
++            address.Equals(IPAddress.Any) ||
++            address.Equals(IPAddress.IPv6Any))
++        {
++            return false;
++        }
++
++        if (address.AddressFamily == AddressFamily.InterNetwork)
++        {
++            var bytes = address.GetAddressBytes();
++            return bytes[0] != 0 &&
++                   bytes[0] != 10 &&
++                   bytes[0] != 127 &&
++                   !(bytes[0] == 100 && bytes[1] >= 64 && bytes[1] <= 127) &&
++                   !(bytes[0] == 169 && bytes[1] == 254) &&
++                   !(bytes[0] == 172 && bytes[1] >= 16 && bytes[1] <= 31) &&
++                   !(bytes[0] == 192 && bytes[1] == 168) &&
++                   !(bytes[0] == 192 && bytes[1] == 0 && bytes[2] == 0) &&
++                   !(bytes[0] == 198 && (bytes[1] == 18 || bytes[1] == 19)) &&
++                   bytes[0] < 224;
++        }
++
++        if (address.AddressFamily == AddressFamily.InterNetworkV6)
++        {
++            return !address.IsIPv6LinkLocal &&
++                   !address.IsIPv6SiteLocal &&
++                   !address.IsIPv6UniqueLocal &&
++                   !address.IsIPv6Multicast;
++        }
++
++        return false;
++    }
++
++    private static bool IsNumericHost(string host) =>
++        host.Split('.').All(part =>
++            part.StartsWith("0x", StringComparison.OrdinalIgnoreCase)
++                ? part.Length > 2 && part[2..].All(char.IsAsciiHexDigit)
++                : part.Length > 0 && part.All(char.IsAsciiDigit));
++}
+--- /dev/null
++++ b/tests/Webhooks.FunctionalTests/WebhookUrlValidatorTests.cs
+@@ -0,0 +1,31 @@
++using Webhooks.API.Services;
++
++namespace eShop.Webhooks.FunctionalTests;
++
++public sealed class WebhookUrlValidatorTests
++{
++    [Theory]
++    [InlineData("https://receiver.test/webhook")]
++    [InlineData("http://8.8.8.8/webhook")]
++    public void PublicDestinationsAreAllowed(string url)
++    {
++        Assert.True(WebhookUrlValidator.IsAllowed(url));
++    }
++
++    [Theory]
++    [InlineData("http://127.0.0.1/admin")]
++    [InlineData("http://localhost:8080/admin")]
++    [InlineData("http://169.254.169.254/latest/meta-data/")]
++    [InlineData("http://[::1]/admin")]
++    [InlineData("http://10.0.0.5/internal")]
++    [InlineData("http://192.168.1.10/")]
++    [InlineData("http://192.0.0.192/")]
++    [InlineData("http://2130706433/")]
++    [InlineData("http://ordering-api/webhook")]
++    [InlineData("file:///etc/passwd")]
++    [InlineData("gopher://internal/")]
++    public void InternalOrUnsupportedDestinationsAreRejected(string url)
++    {
++        Assert.False(WebhookUrlValidator.IsAllowed(url));
++    }
++}

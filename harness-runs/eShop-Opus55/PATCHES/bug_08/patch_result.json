@@ -1,0 +1,23 @@
+{
+  "id": "f031",
+  "source": "TRIAGE.json#f031",
+  "title": "CreateItem accepts a client-supplied primary key, allowing sequence collisions that block item creation",
+  "file": "src/Catalog.API/Apis/CatalogApi.cs",
+  "line": 421,
+  "category": "business-logic",
+  "severity": "LOW",
+  "owner_hint": "component: src/Catalog.API/; no CODEOWNERS; top committer Mike Kistler (3/11)",
+  "mode": "static",
+  "verified": "static_review_only",
+  "review": "REJECT",
+  "style_score": 6,
+  "out_of_scope_hunks": [
+    "src/Catalog.API/Apis/CatalogApi.cs:375"
+  ],
+  "rationale": "Root cause CatalogApi.cs:421 (CreateItem) copies Id = product.Id from the body; on a Postgres identity-by-default column the explicit Id does not advance the sequence. The fix removes that assignment so EF lets Postgres assign the Id; Location already reflects item.Id. Companion change: CatalogContextSeed.cs seeds explicit ids, so SeedAsync now ends with a constant setval(pg_get_serial_sequence('\"Catalog\"','Id'), MAX(Id)+1, false), run outside the if(!Any()) block so existing databases (including attacker-claimed ids) are repaired on startup; idempotent. UpdateItem (v2 PUT /items/{id}) now returns 400 when the body Id differs from the route id instead of a 500 from EF. Anonymous creation itself is f003.",
+  "variants_checked": "CreateItem fixed; UpdateItem/UpdateItemV1 mismatch rejected (V1 consistent by construction); CatalogContextSeed.SeedAsync sequence repaired; no other body-to-PK copy in src; CatalogBrand/CatalogType use generated ids; overlap with f003 (auth) noted; if f003 adds auth these functional tests will need its auth setup.",
+  "bypass_considered": "Any client Id is ignored; pre-claimed ids are skipped by the startup setval; mismatched v2 PUT returns 400 before SetValues and PUT never inserts.",
+  "test_note": "tests/Catalog.FunctionalTests/CatalogApiTests.cs CreateCatalogItemIgnoresClientSuppliedId (v1 and v2); AddCatalogItem and GetCatalogItemPicDoesNotServeFilesOutsidePics updated to read the id from Location. Hunk line numbers computed by hand; not built or run.",
+  "review_reason": "The CreateItem hunk removes Id = product.Id at line 421 (root-cause fix) and the seed setval hunk is a necessary follow-on because the seeder inserts explicit ids into an IdentityByDefault column; the constant raw SQL adds no input surface. The UpdateItem hunk (-375,7) adds a body/route id check to a different function on the v2 PUT route, which already fails with a 500 when EF refuses the key change, so it is scope creep and should be a separate change. Without it the reviewer would ACCEPT at about 7.",
+  "verdict": null
+}

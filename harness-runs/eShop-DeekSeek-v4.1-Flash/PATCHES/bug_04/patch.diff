@@ -1,0 +1,163 @@
+--- a/src/WebhookClient/Components/Pages/Home/ReceivedMessages.razor
++++ b/src/WebhookClient/Components/Pages/Home/ReceivedMessages.razor
+@@ -1,22 +1,32 @@
++@using Microsoft.AspNetCore.Components.Authorization
+ @inject HooksRepository HooksRepository
+ @implements IDisposable
+ 
+-@if (messages is null)
+-{
+-    <div class="grid-placeholder">Loading...</div>
+-}
+-else if (messages.Any())
+-{
+-    <QuickGrid Items="@messages">
+-        <PropertyColumn Sortable="@true" Title="When" Property="@(hook => hook.When)" />
+-        <PropertyColumn Sortable="@true" Title="Data" Property="@(hook => hook.Data)" />
+-        <PropertyColumn Sortable="@true" Title="Token" Property="@(hook => hook.Token)" />
+-    </QuickGrid>
+-}
+-else
+-{
+-    <div class="grid-placeholder">
+-        <div>None yet received</div>
+-    </div>
+-    <p>Webhook messages will appear once a webhook is registered and an order transitions into "paid" status.</p>
+-}
++<AuthorizeView>
++    <Authorized>
++        @if (messages is null)
++        {
++            <div class="grid-placeholder">Loading...</div>
++        }
++        else if (messages.Any())
++        {
++            <QuickGrid Items="@messages">
++                <PropertyColumn Sortable="@true" Title="When" Property="@(hook => hook.When)" />
++                <PropertyColumn Sortable="@true" Title="Data" Property="@(hook => hook.Data)" />
++                <PropertyColumn Sortable="@true" Title="Token" Property="@(hook => hook.Token)" />
++            </QuickGrid>
++        }
++        else
++        {
++            <div class="grid-placeholder">
++                <div>None yet received</div>
++            </div>
++            <p>Webhook messages will appear once a webhook is registered and an order transitions into "paid" status.</p>
++        }
++    </Authorized>
++    <NotAuthorized>
++        <div class="grid-placeholder">
++            Log in to view received webhook messages
++        </div>
++    </NotAuthorized>
++</AuthorizeView>
+--- a/src/WebhookClient/Components/Pages/AddWebhook.razor
++++ b/src/WebhookClient/Components/Pages/AddWebhook.razor
+@@ -1,7 +1,8 @@
+ @page "/add-webhook"
++@using Microsoft.AspNetCore.Components.Authorization
+ @using Microsoft.Extensions.Options
+ @inject IOptions<WebhookClientOptions> options
+ @inject NavigationManager Nav
+ @inject WebhooksClient WebhooksClient
+ 
+ <h2>Register a new webhook</h2>
+@@ -11,12 +12,21 @@
+-<form @onsubmit="RegisterAsync">
+-    <p>
+-        Token:
+-        <input type="text" @bind="@token" placeholder="Token" />
+-    </p>
+-    <button class="action" type="submit">Register</button>
+-</form>
+-
+-@if (!string.IsNullOrEmpty(message))
+-{
+-    <p class="error-message">@message</p>
+-}
++<AuthorizeView>
++    <Authorized>
++        <form @onsubmit="RegisterAsync">
++            <p>
++                Token:
++                <input type="text" @bind="@token" placeholder="Token" />
++            </p>
++            <button class="action" type="submit">Register</button>
++        </form>
++
++        @if (!string.IsNullOrEmpty(message))
++        {
++            <p class="error-message">@message</p>
++        }
++    </Authorized>
++    <NotAuthorized>
++        <div class="grid-placeholder">
++            Log in to register a webhook
++        </div>
++    </NotAuthorized>
++</AuthorizeView>
+--- a/tests/Application.UnitTests/WebhookClientTests.cs
++++ b/tests/Application.UnitTests/WebhookClientTests.cs
+@@ -1,8 +1,14 @@
+ using eShop.WebhookClient.Services;
+ using eShop.WebhookClient.Endpoints;
++using eShop.WebhookClient.Components.Pages.Home;
+ using Microsoft.AspNetCore.Builder;
++using Microsoft.AspNetCore.Components;
++using Microsoft.AspNetCore.Components.Authorization;
++using Microsoft.AspNetCore.Components.Web.HtmlRendering;
+ using Microsoft.AspNetCore.Hosting;
+ using Microsoft.AspNetCore.TestHost;
+ using Microsoft.Extensions.DependencyInjection;
++using Microsoft.Extensions.Logging.Abstractions;
+ using System.Net;
+ using System.Net.Http.Json;
++using System.Security.Claims;
+@@ -96,5 +102,46 @@
+         var received = (await repository.GetAll()).Single();
+         Assert.AreEqual("payload", received.Data);
+         Assert.AreEqual("expected", received.Token);
+     }
++
++    [TestMethod]
++    public async Task ReceivedMessagesDoesNotRenderTokensToAnonymousVisitors()
++    {
++        const string token = "super-secret-delivery-token";
++        var repository = new HooksRepository();
++        await repository.AddNew(new WebHookReceived
++        {
++            Data = "{\"orderId\":42}",
++            Token = token,
++            When = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
++        });
++
++        var services = new ServiceCollection();
++        services.AddLogging();
++        services.AddAuthorization();
++        services.AddSingleton(repository);
++        await using var serviceProvider = services.BuildServiceProvider();
++        await using var renderer = new HtmlRenderer(serviceProvider, NullLoggerFactory.Instance);
++
++        var html = await renderer.Dispatcher.InvokeAsync(async () =>
++        {
++            var authenticationState = Task.FromResult(
++                new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity())));
++            var output = await renderer.RenderComponentAsync<CascadingValue<Task<AuthenticationState>>>(
++                ParameterView.FromDictionary(new Dictionary<string, object?>
++                {
++                    [nameof(CascadingValue<Task<AuthenticationState>>.Value)] = authenticationState,
++                    [nameof(CascadingValue<Task<AuthenticationState>>.ChildContent)] = (RenderFragment)(builder =>
++                    {
++                        builder.OpenComponent<ReceivedMessages>(0);
++                        builder.CloseComponent();
++                    })
++                }));
++
++            return output.ToHtmlString();
++        });
++
++        Assert.IsFalse(html.Contains(token, StringComparison.Ordinal), "The shared webhook delivery token must not be rendered to anonymous visitors.");
++        Assert.IsTrue(html.Contains("Log in to view received webhook messages", StringComparison.Ordinal));
++    }
+ }

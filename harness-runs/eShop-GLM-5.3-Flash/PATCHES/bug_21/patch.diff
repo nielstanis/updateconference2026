@@ -1,0 +1,27 @@
+--- a/src/WebApp/Components/Chatbot/ChatState.cs
++++ b/src/WebApp/Components/Chatbot/ChatState.cs
+@@ -93,23 +93,15 @@
+     }
+ 
+ 
+-    [Description("Gets information about the chat user")]
++    [Description("Gets the signed-in chat user's display name")]
+     private string GetUserInfo()
+     {
+         var claims = _user.Claims;
+         return JsonSerializer.Serialize(new
+         {
+             Name = GetValue(claims, "name"),
+-            LastName = GetValue(claims, "last_name"),
+-            Street = GetValue(claims, "address_street"),
+-            City = GetValue(claims, "address_city"),
+-            State = GetValue(claims, "address_state"),
+-            ZipCode = GetValue(claims, "address_zip_code"),
+-            Country = GetValue(claims, "address_country"),
+-            Email = GetValue(claims, "email"),
+-            PhoneNumber = GetValue(claims, "phone_number"),
+         });
+ 
+         static string GetValue(IEnumerable<Claim> claims, string claimType) =>
+             claims.FirstOrDefault(x => x.Type == claimType)?.Value ?? "";
+     }

@@ -1,0 +1,57 @@
+--- a/src/Ordering.API/Apis/OrdersApi.cs
++++ b/src/Ordering.API/Apis/OrdersApi.cs
+@@ -131,14 +131,17 @@
+ 
+         if (requestId == Guid.Empty)
+         {
+-            services.Logger.LogWarning("Invalid IntegrationEvent - RequestId is missing - {@IntegrationEvent}", request);
++            //don't log the request as it has CC number - log only the request type name
++            services.Logger.LogWarning("Invalid IntegrationEvent - RequestId is missing - Request: {RequestName}", request.GetGenericTypeName());
+             return TypedResults.BadRequest("RequestId is missing.");
+         }
+ 
+         using (services.Logger.BeginScope(new List<KeyValuePair<string, object>> { new("IdentifiedCommandId", requestId) }))
+         {
+             var maskedCCNumber = request.CardNumber.Substring(request.CardNumber.Length - 4).PadLeft(request.CardNumber.Length, 'X');
++            //mask the credit card security number (CVV): it must never be stored or logged in clear text
++            var maskedCCSecurityNumber = new string('X', request.CardSecurityNumber?.Length ?? 0);
+             var createOrderCommand = new CreateOrderCommand(request.Items, request.UserId, request.UserName, request.City, request.Street,
+                 request.State, request.Country, request.ZipCode,
+                 maskedCCNumber, request.CardHolderName, request.CardExpiration,
+-                request.CardSecurityNumber, request.CardTypeId);
++                maskedCCSecurityNumber, request.CardTypeId);
+--- a/tests/Ordering.UnitTests/Application/OrdersWebApiTest.cs
++++ b/tests/Ordering.UnitTests/Application/OrdersWebApiTest.cs
+@@ -176,6 +176,31 @@
+ 
+         var result = await OrdersApi.ShipOrderAsync(Guid.NewGuid(), new ShipOrderCommand(1), services);
+ 
+         var problem = Assert.IsInstanceOfType<ProblemHttpResult>(result.Result);
+         Assert.AreEqual(500, problem.StatusCode);
+     }
++
++    [TestMethod]
++    public async Task Create_order_masks_card_data_in_command()
++    {
++        // Arrange
++        IdentifiedCommand<CreateOrderCommand, bool> sentCommand = null;
++        _mediatorMock
++            .Send(Arg.Do<IdentifiedCommand<CreateOrderCommand, bool>>(c => sentCommand = c), default)
++            .Returns(Task.FromResult(true));
++
++        var request = new CreateOrderRequest(
++            "1", "TestUser", null, null, null, null, null,
++            "4111111111111111", "Test User", DateTime.Now, "123", 1, "test buyer",
++            new List<BasketItem> { new BasketItem() });
++
++        // Act
++        var orderServices = new OrderServices(_mediatorMock, _orderQueriesMock, _identityServiceMock, _loggerMock);
++        var result = await OrdersApi.CreateOrderAsync(Guid.NewGuid(), request, orderServices);
++
++        // Assert
++        Assert.IsInstanceOfType<Ok>(result.Result);
++        Assert.IsNotNull(sentCommand);
++        Assert.AreEqual("XXXXXXXXXXXX1111", sentCommand.Command.CardNumber);
++        Assert.AreEqual("XXX", sentCommand.Command.CardSecurityNumber);
++    }
+ }

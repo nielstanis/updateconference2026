@@ -1,0 +1,240 @@
+--- a/src/Webhooks.API/Services/WebhooksSender.cs
++++ b/src/Webhooks.API/Services/WebhooksSender.cs
+@@ -4,14 +4,20 @@
+ {
+     public async Task SendAll(IEnumerable<WebhookSubscription> receivers, WebhookData data)
+     {
+-        var client = httpClientFactory.CreateClient();
++        var client = httpClientFactory.CreateClient(WebhookUrlValidator.HttpClientName);
+         var json = JsonSerializer.Serialize(data);
+         var tasks = receivers.Select(r => OnSendData(r, json, client));
+         await Task.WhenAll(tasks);
+     }
+ 
+-    private Task OnSendData(WebhookSubscription subs, string jsonData, HttpClient client)
++    private async Task OnSendData(WebhookSubscription subs, string jsonData, HttpClient client)
+     {
++        if (!await WebhookUrlValidator.IsSafeDestinationAsync(subs.DestUrl))
++        {
++            logger.LogWarning("Refusing to deliver webhook to {DestUrl} because it does not resolve to a public address", subs.DestUrl);
++            return;
++        }
++
+         var request = new HttpRequestMessage()
+         {
+             RequestUri = new Uri(subs.DestUrl, UriKind.Absolute),
+@@ -29,7 +35,7 @@
+             logger.LogDebug("Sending hook to {DestUrl} of type {Type}", subs.DestUrl, subs.Type);
+         }
+ 
+-        return client.SendAsync(request);
++        using var response = await client.SendAsync(request);
+     }
+ 
+ }
+--- a/src/Webhooks.API/Services/GrantUrlTesterService.cs
++++ b/src/Webhooks.API/Services/GrantUrlTesterService.cs
+@@ -10,7 +10,13 @@
+             return false;
+         }
+ 
+-        var client = factory.CreateClient();
++        if (!await WebhookUrlValidator.IsSafeDestinationAsync(url))
++        {
++            logger.LogWarning("Grant url {Url} does not resolve to a public address.", url);
++            return false;
++        }
++
++        var client = factory.CreateClient(WebhookUrlValidator.HttpClientName);
+         var msg = new HttpRequestMessage(HttpMethod.Options, url);
+         msg.Headers.Add("X-eshop-whtoken", token);
+ 
+--- a/src/Webhooks.API/Extensions/Extensions.cs
++++ b/src/Webhooks.API/Extensions/Extensions.cs
+@@ -14,6 +14,14 @@
+         builder.Services.AddTransient<IGrantUrlTesterService, GrantUrlTesterService>();
+         builder.Services.AddTransient<IWebhooksRetriever, WebhooksRetriever>();
+         builder.Services.AddTransient<IWebhooksSender, WebhooksSender>();
++
++        builder.Services.AddHttpClient(WebhookUrlValidator.HttpClientName)
++            .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
++            {
++                AllowAutoRedirect = false,
++                UseProxy = false,
++                ConnectCallback = WebhookUrlValidator.ConnectAsync
++            });
+     }
+ 
+     private static void AddEventBusSubscriptions(this IEventBusBuilder eventBus)
+--- /dev/null
++++ b/src/Webhooks.API/Services/WebhookUrlValidator.cs
+@@ -0,0 +1,124 @@
++using System.Net;
++using System.Net.Sockets;
++
++namespace Webhooks.API.Services;
++
++/// <summary>
++/// Validates outbound webhook destinations at delivery time and only connects to
++/// public addresses, so a stored URL cannot be redirected or rebound to an
++/// internal service.
++/// </summary>
++public static class WebhookUrlValidator
++{
++    public const string HttpClientName = "webhooks-outbound";
++
++    public static async Task<bool> IsSafeDestinationAsync(string url, CancellationToken cancellationToken = default)
++    {
++        if (!Uri.TryCreate(url, UriKind.Absolute, out var uri) ||
++            (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps))
++        {
++            return false;
++        }
++
++        var addresses = await ResolveAsync(uri.Host, cancellationToken);
++
++        return addresses.Length > 0 && addresses.All(IsPublicAddress);
++    }
++
++    public static bool IsPublicAddress(IPAddress address)
++    {
++        if (address.IsIPv4MappedToIPv6)
++        {
++            address = address.MapToIPv4();
++        }
++
++        if (IPAddress.IsLoopback(address) ||
++            address.Equals(IPAddress.Any) ||
++            address.Equals(IPAddress.IPv6Any))
++        {
++            return false;
++        }
++
++        if (address.AddressFamily == AddressFamily.InterNetworkV6)
++        {
++            var bytes = address.GetAddressBytes();
++
++            // fc00::/7 unique local, fec0::/10 site local, fe80::/10 link local
++            if ((bytes[0] & 0xfe) == 0xfc ||
++                (bytes[0] == 0xfe && (bytes[1] & 0xc0) == 0xc0) ||
++                address.IsIPv6LinkLocal)
++            {
++                return false;
++            }
++
++            // ::/96 IPv4-compatible, 2002::/16 6to4, 2001::/32 Teredo, 64:ff9b::/32 NAT64
++            return !(bytes.Take(10).All(b => b == 0) ||
++                     (bytes[0] == 0x00 && bytes[1] == 0x64 && bytes[2] == 0xff && bytes[3] == 0x9b) ||
++                     (bytes[0] == 0x20 && bytes[1] == 0x01 && bytes[2] == 0x00 && bytes[3] == 0x00) ||
++                     (bytes[0] == 0x20 && bytes[1] == 0x02)) &&
++                   !address.IsIPv6Multicast;
++        }
++
++        var v4 = address.GetAddressBytes();
++        return v4[0] switch
++        {
++            0 or 10 or 127 => false,
++            100 => v4[1] is < 64 or > 127,
++            169 => v4[1] != 254,
++            172 => v4[1] is < 16 or > 31,
++            192 => v4[1] != 168,
++            198 => v4[1] is not (18 or 19),
++            >= 224 => false,
++            _ => true
++        };
++    }
++
++    public static async ValueTask<Stream> ConnectAsync(SocketsHttpConnectionContext context, CancellationToken cancellationToken)
++    {
++        var addresses = await ResolveAsync(context.DnsEndPoint.Host, cancellationToken);
++
++        foreach (var address in addresses)
++        {
++            if (!IsPublicAddress(address))
++            {
++                continue;
++            }
++
++            var socket = new Socket(address.AddressFamily, SocketType.Stream, ProtocolType.Tcp) { NoDelay = true };
++
++            try
++            {
++                await socket.ConnectAsync(new IPEndPoint(address, context.DnsEndPoint.Port), cancellationToken);
++                return new NetworkStream(socket, ownsSocket: true);
++            }
++            catch (SocketException)
++            {
++                socket.Dispose();
++            }
++            catch
++            {
++                socket.Dispose();
++                throw;
++            }
++        }
++
++        throw new HttpRequestException($"No public address is available for {context.DnsEndPoint.Host}.");
++    }
++
++    private static async Task<IPAddress[]> ResolveAsync(string host, CancellationToken cancellationToken)
++    {
++        if (IPAddress.TryParse(host.Trim('[', ']'), out var literal))
++        {
++            return [literal];
++        }
++
++        try
++        {
++            return await Dns.GetHostAddressesAsync(host, cancellationToken);
++        }
++        catch (SocketException)
++        {
++            return [];
++        }
++    }
++}
+--- /dev/null
++++ b/tests/Webhooks.FunctionalTests/WebhookSenderSsrfTests.cs
+@@ -0,0 +1,42 @@
++using System.Net;
++using Microsoft.Extensions.Logging.Abstractions;
++
++namespace eShop.Webhooks.FunctionalTests;
++
++public sealed class WebhookSenderSsrfTests
++{
++    [Fact]
++    public async Task SendAllDoesNotSendToStoredInternalDestUrl()
++    {
++        var handler = new RecordingHandler();
++        using var client = new HttpClient(handler);
++        var sender = new WebhooksSender(new StubHttpClientFactory(client), NullLogger<WebhooksSender>.Instance);
++        var subscription = new WebhookSubscription
++        {
++            DestUrl = "http://169.254.169.254/latest/meta-data/",
++            Token = "secret",
++            Type = WebhookType.OrderPaid,
++            UserId = "owner"
++        };
++
++        await sender.SendAll([subscription], new WebhookData(WebhookType.OrderPaid, new { OrderId = 1 }));
++
++        Assert.Null(handler.LastRequest);
++    }
++
++    private sealed class StubHttpClientFactory(HttpClient client) : IHttpClientFactory
++    {
++        public HttpClient CreateClient(string name) => client;
++    }
++
++    private sealed class RecordingHandler : HttpMessageHandler
++    {
++        public HttpRequestMessage? LastRequest { get; private set; }
++
++        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
++        {
++            LastRequest = request;
++            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK));
++        }
++    }
++}

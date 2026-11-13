@@ -1,0 +1,22 @@
+{
+  "id": "f007",
+  "source": "TRIAGE.json#3",
+  "title": "Any authenticated user can cancel any order by OrderNumber",
+  "file": "src/Ordering.API/Application/Commands/CancelOrderCommandHandler.cs",
+  "line": 19,
+  "category": "IDOR / BFLA",
+  "severity": "MEDIUM",
+  "owner_hint": "top committer: Aditya Mandaleeka (1/1 recent commits); no CODEOWNERS entry",
+  "mode": "static",
+  "verified": "static_review_only",
+  "review": "ACCEPT",
+  "style_score": 7,
+  "out_of_scope_hunks": [
+    "tests/Ordering.UnitTests/Application/CancelOrderCommandHandlerTest.cs:1 (new test file, benign)"
+  ],
+  "rationale": "Root cause: src/Ordering.API/Application/Commands/CancelOrderCommandHandler.cs:21-27 loads the order by OrderNumber and cancels it with no ownership check. The handler could not tell a user request from an internal one, because OrderPaymentFailedIntegrationEventHandler also sends CancelOrderCommand with no HTTP context. The fix: (1) CancelOrderCommand gains RequestingUserId, marked JsonIgnore so a request body cannot set or spoof it. (2) OrdersApi.CancelOrderAsync overwrites it with the caller's \"sub\" claim, and returns 403 if there is no sub, so the user path never sends null. (3) The handler, when RequestingUserId is not null, loads the order's Buyer via BuyerId and refuses (returns false, API gives 500 \"failed to process\", same as other failures) unless buyer.IdentityGuid equals the caller. Orders with no BuyerId are denied for user callers. Internal senders (null) keep working. This uses the same ownership relation as OrderQueries.GetOrdersFromUserAsync (o.Buyer.IdentityGuid == userId). IBuyerRepository is already registered in DI (Extensions.cs:48).",
+  "variants_checked": "OrdersApi.cs:ShipOrderAsync / ShipOrderCommandHandler: same missing ownership check, but it is a different finding (BFLA on the ship action) and was left out to keep the diff to f007. OrdersApi.cs:GetOrderAsync / OrderQueries.GetOrderAsync: also fetches by id with no owner check (read-side IDOR); left out of scope. OrderPaymentFailedIntegrationEventHandler: sends CancelOrderCommand internally, so it must not be owner-checked, and it stays null-user. ClientApp OrderService only builds the HTTP body. The only other CancelOrderCommand constructors are in tests/OrdersWebApiTest.cs, which still compile because of the default parameter.",
+  "bypass_considered": "Putting \"RequestingUserId\": null in the JSON body: it is JsonIgnore'd, and the API overwrites it from the token anyway. Replaying with another user's order number: the buyer's IdentityGuid does not match, so the handler returns false. A token with no sub claim: the API returns 403. An empty-string sub: it reaches the handler, matches no IdentityGuid (Buyer rejects blank identities), and is denied. Idempotency (x-requestid) does not help the attacker: the IdentifiedCommand wraps the already-stamped command. Residual risk: any future internal sender with a null user is trusted by design. This cannot be reached from the HTTP API. I could not compile or run anything, so the diff is unverified. Existing OrdersWebApiTest tests should still pass, since the NSubstitute IIdentityService returns \"\" (non-null) for GetUserIdentity.",
+  "test_note": "Added tests/Ordering.UnitTests/Application/CancelOrderCommandHandlerTest.cs. Handle_does_not_cancel_order_owned_by_another_user fails on the old code (it does not compile against the old constructor; the old logic would also cancel) and passes after the change. A companion test checks the owner can still cancel. Not compiled or run, because I was read-only.",
+  "review_reason": "The handler hunk (CancelOrderCommandHandler.cs:~25) adds the missing ownership check by comparing Buyer.IdentityGuid to RequestingUserId. The OrdersApi.cs hunk sets that value server-side from the token, and the field is [JsonIgnore], so clients cannot supply it. A null identity is rejected with 403 at the API. The only caveat is that a null RequestingUserId skips the check for the trusted internal event handler, which is a fail-open default but not exploitable via the HTTP path."
+}

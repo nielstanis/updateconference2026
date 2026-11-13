@@ -1,0 +1,21 @@
+{
+  "id": "f001",
+  "source": "TRIAGE.json#f001",
+  "title": "GET /api/orders/{orderId} returns any user's order (no ownership check)",
+  "file": "src/Ordering.API/Apis/OrdersApi.cs",
+  "line": 80,
+  "category": "idor",
+  "severity": "HIGH",
+  "owner_hint": "component: src/Ordering.API/; no CODEOWNERS; recent committers Rob Conery, David Fowler (1/4 each)",
+  "mode": "static",
+  "verified": "static_review_only",
+  "review": "ACCEPT",
+  "style_score": 5,
+  "out_of_scope_hunks": [],
+  "rationale": "Root cause OrderQueries.cs:8-10: GetOrderAsync selects by primary key only, and its sole caller OrdersApi.GetOrderAsync (OrdersApi.cs:84) never reads caller identity. IOrderQueries.GetOrderAsync now takes userId and filters o.Id == id && o.Buyer.IdentityGuid == userId (same predicate as GetOrdersFromUserAsync, OrderQueries.cs:40); OrdersApi passes IdentityService.GetUserIdentity() (sub). Non-owned orders throw KeyNotFoundException -> existing 404, so no exists-but-not-yours oracle. Null/empty userId rejected in the query to avoid EF IS NULL matching buyer-less rows. No admin bypass added. Agent ran `git apply --check` from stdin (no writes) against the read-only brief.",
+  "variants_checked": "GetOrdersFromUserAsync already filtered; GetCardTypesAsync reference data; only production caller OrdersApi.GetOrderAsync updated plus two test mocks; cancel (f002), ship (f011), create/draft (f005) left to siblings; mobile-bff /api/orders/{*any} reaches the same handler; functional test GetStoredOrdersWithOrderId still expects 404.",
+  "bypass_considered": "Sequential id enumeration via API or BFF now 404s; principal without sub hits the IsNullOrEmpty guard; identity comes only from the token, never request input; no other order-detail read path exists.",
+  "test_note": "tests/Ordering.UnitTests/Application/OrdersWebApiTest.cs Get_order_of_another_user_returns_not_found; two existing mocks updated for the new signature. SQL predicate not unit-tested (no EF in-memory provider in Ordering.UnitTests). Not built or run.",
+  "review_reason": "The OrderQueries.cs hunk changes the lookup to FirstOrDefaultAsync(o => o.Id == id && o.Buyer.IdentityGuid == userId) and OrdersApi.cs:84 passes IdentityService.GetUserIdentity(), closing the IDOR at the data layer with the same ownership predicate GetOrdersFromUserAsync uses; empty identity fails closed and no new input is trusted. Style 5 because the OrdersApi.cs hunk header was off by one (-80,6 should be -80,7 +80,8) and the OrderQueries.cs blank context line lacked the source's trailing whitespace. Orchestrator corrected both mechanical issues in PATCHES/bug_00/patch.diff after review; content unchanged. The new unit test mocks the query layer, so the EF filter itself is not exercised.",
+  "verdict": null
+}

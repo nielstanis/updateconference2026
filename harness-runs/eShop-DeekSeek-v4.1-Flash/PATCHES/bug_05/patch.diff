@@ -1,0 +1,45 @@
+--- a/src/WebhookClient/Components/Pages/AddWebhook.razor
++++ b/src/WebhookClient/Components/Pages/AddWebhook.razor
+@@ -1,6 +1,8 @@
+ @page "/add-webhook"
++@using Microsoft.AspNetCore.Authorization
+ @using Microsoft.Extensions.Options
+ @inject IOptions<WebhookClientOptions> options
+ @inject NavigationManager Nav
+ @inject WebhooksClient WebhooksClient
++@attribute [Authorize]
+ 
+ <h2>Register a new webhook</h2>
+@@ -24,17 +26,16 @@
+ @code {
+     string? token;
+     string? message;
+ 
+-    protected override void OnInitialized()
+-    {
+-        token = options.Value.Token;
+-    }
+-
+     private async Task RegisterAsync()
+     {
+-        if (string.IsNullOrEmpty(token))
++        // Keep the configured token out of the render tree: read it only
++        // server-side and use it as a fallback when no token was entered.
++        var tokenToUse = string.IsNullOrEmpty(token) ? options.Value.Token : token;
++        if (string.IsNullOrEmpty(tokenToUse))
+         {
+             return;
+         }
+ 
+         message = null;
+@@ -47,7 +48,7 @@
+         var payload = new WebhookSubscriptionRequest
+         {
+             Event = "OrderPaid",
+             GrantUrl = granturl,
+             Url = url,
+-            Token = token
++            Token = tokenToUse
+         };
+ 
+         var response = await WebhooksClient.AddWebHookAsync(payload);

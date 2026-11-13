@@ -1,0 +1,23 @@
+{
+  "id": "f028",
+  "bug_nn": "bug_16",
+  "source": "TRIAGE.json#bug_16",
+  "title": "Logout failure leaves access/refresh tokens in SecureStorage; post-logout redirect is unregistered",
+  "file": "src/ClientApp/Services/Identity/IdentityService.cs",
+  "line": 47,
+  "category": "token-exposure",
+  "severity": "MEDIUM",
+  "owner_hint": "top committer: Michael Stonis (4 of 4 recent commits); no CODEOWNERS entry",
+  "mode": "static",
+  "verified": "static_review_only",
+  "status": "patch",
+  "review": "ACCEPT",
+  "style_score": 7,
+  "out_of_scope_hunks": [],
+  "rationale": "SignOutAsync returns on LogoutAsync error before the only token wipe, the post-logout URI mismatches the registered value, and the caller ignores the result. The diff clears the token in a finally block, converts provider errors into a false result, appends /Account/Redirecting to the post-logout URI, and surfaces a failure alert.",
+  "variants_checked": "Sign-in, refresh, mock service and the profile caller checked; the browser callback activity has no path restriction so the extra path is still delivered.",
+  "bypass_considered": "All provider outcomes (error, cancel, missing endpoint, exception) now reach the finally and clear the token. Residual: if the keystore write itself throws, the token remains; a dedicated remove path with retry is a follow-up.",
+  "test_note": "Added SignOutClearsStoredTokenWhenProviderLogoutFailsTest using MockSettingsService and a failing override.",
+  "review_reason": "Clearing the stored token in finally eliminates the masked failure where an errored LogoutAsync returned early, and the redirect hunk matches the server registration. The caller now surfaces the failure; only noise is the broad catch and the test seam.",
+  "verdict": null
+}

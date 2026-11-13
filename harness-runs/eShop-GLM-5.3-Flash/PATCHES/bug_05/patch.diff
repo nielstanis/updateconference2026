@@ -1,0 +1,59 @@
+--- a/src/Identity.API/Program.cs
++++ b/src/Identity.API/Program.cs
+@@ -23,17 +23,20 @@
+     options.Events.RaiseErrorEvents = true;
+     options.Events.RaiseInformationEvents = true;
+     options.Events.RaiseFailureEvents = true;
+     options.Events.RaiseSuccessEvents = true;
+ 
+-    // TODO: Remove this line in production.
+-    options.KeyManagement.Enabled = false;
+-})
+-.AddInMemoryIdentityResources(Config.GetResources())
+-.AddInMemoryApiScopes(Config.GetApiScopes())
+-.AddInMemoryApiResources(Config.GetApis())
+-.AddInMemoryClients(Config.GetClients(builder.Configuration))
+-.AddAspNetIdentity<ApplicationUser>()
+-// TODO: Not recommended for production - you need to store your key material somewhere secure
+-.AddDeveloperSigningCredential();
++    // Automatic key management is left enabled (the IdentityServer default):
++    // signing keys are created and rotated by IdentityServer itself, so no
++    // static signing key ships with the repository or build output, and no
++    // key file is ever loaded from the content root.
++    // TODO: Before running in production, persist auto-managed keys in a
++    // durable ISigningKeyStore (e.g. database-backed) or register a
++    // certificate-based credential from a secret store via AddSigningCredential.
++})
++.AddInMemoryIdentityResources(Config.GetResources())
++.AddInMemoryApiScopes(Config.GetApiScopes())
++.AddInMemoryApiResources(Config.GetApis())
++.AddInMemoryClients(Config.GetClients(builder.Configuration))
++.AddAspNetIdentity<ApplicationUser>();
+ 
+ builder.Services.AddTransient<IProfileService, ProfileService>();
+--- a/src/Identity.API/Identity.API.csproj
++++ b/src/Identity.API/Identity.API.csproj
+@@ -44,11 +44,6 @@
+   <ItemGroup>
+     <ProjectReference Include="..\eShop.ServiceDefaults\eShop.ServiceDefaults.csproj" />
+   </ItemGroup>
+-  
+-  <ItemGroup>
+-    <!-- Don't use this in production -->
+-    <Content Include="tempkey.jwk" CopyToOutputDirectory="PreserveNewest" />
+-  </ItemGroup>
+ 
+   <ItemGroup>
+     <Compile Include="..\Shared\MigrateDbContextExtensions.cs" Link="Extensions\MigrateDbContextExtensions.cs" />
+--- a/.gitignore
++++ b/.gitignore
+@@ -491,5 +491,9 @@
+ /.playwright-cli/
+ /playwright/.cache/
+ /playwright/.auth/
+ /user.json
+ .azure
++
++# IdentityServer developer signing keys (never commit key material)
++tempkey*.jwk
++tempkey*.rsa

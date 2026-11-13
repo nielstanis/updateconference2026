@@ -1,0 +1,68 @@
+--- a/src/Identity.API/UsersSeed.cs
++++ b/src/Identity.API/UsersSeed.cs
+@@ -1,9 +1,17 @@
+ 
+ namespace eShop.Identity.API;
+ 
+-public class UsersSeed(ILogger<UsersSeed> logger, UserManager<ApplicationUser> userManager) : IDbSeeder<ApplicationDbContext>
++public class UsersSeed(ILogger<UsersSeed> logger, UserManager<ApplicationUser> userManager, IHostEnvironment environment) : IDbSeeder<ApplicationDbContext>
+ {
+     public async Task SeedAsync(ApplicationDbContext context)
+     {
++        // The demo accounts use a well-known password, so only seed them in Development.
++        if (!environment.IsDevelopment())
++        {
++            logger.LogInformation("Skipping demo user seeding outside the Development environment");
++            return;
++        }
++
+         var alice = await userManager.FindByNameAsync("alice");
+ 
+         if (alice == null)
+--- /dev/null
++++ b/tests/Application.UnitTests/UsersSeedTests.cs
+@@ -0,0 +1,49 @@
++using eShop.Identity.API;
++using eShop.Identity.API.Data;
++using eShop.Identity.API.Models;
++using Microsoft.AspNetCore.Identity;
++using Microsoft.Extensions.Hosting;
++using Microsoft.Extensions.Logging.Abstractions;
++
++namespace eShop.Application.UnitTests;
++
++[TestClass]
++public class UsersSeedTests
++{
++    private static UserManager<ApplicationUser> CreateUserManager()
++        => Substitute.For<UserManager<ApplicationUser>>(
++            Substitute.For<IUserStore<ApplicationUser>>(), null, null, null, null, null, null, null, null);
++
++    [TestMethod]
++    public async Task DoesNotSeedKnownPasswordUsersOutsideDevelopment()
++    {
++        var userManager = CreateUserManager();
++        var environment = Substitute.For<IHostEnvironment>();
++        environment.EnvironmentName.Returns(Environments.Production);
++
++        var seed = new UsersSeed(NullLogger<UsersSeed>.Instance, userManager, environment);
++        await seed.SeedAsync(null!);
++
++        await userManager.DidNotReceive().CreateAsync(Arg.Any<ApplicationUser>(), Arg.Any<string>());
++    }
++
++    [TestMethod]
++    public async Task SeedsDemoUsersInDevelopment()
++    {
++        var userManager = CreateUserManager();
++        userManager.CreateAsync(Arg.Any<ApplicationUser>(), Arg.Any<string>()).Returns(IdentityResult.Success);
++        var environment = Substitute.For<IHostEnvironment>();
++        environment.EnvironmentName.Returns(Environments.Development);
++
++        var seed = new UsersSeed(NullLogger<UsersSeed>.Instance, userManager, environment);
++        await seed.SeedAsync(null!);
++
++        await userManager.Received(2).CreateAsync(Arg.Any<ApplicationUser>(), Arg.Any<string>());
++    }
++}
+

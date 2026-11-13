@@ -1,0 +1,46 @@
+--- a/src/eShop.ServiceDefaults/AuthenticationExtensions.cs
++++ b/src/eShop.ServiceDefaults/AuthenticationExtensions.cs
+@@ -49,4 +49,7 @@
+-            options.TokenValidationParameters.ValidateAudience = false;
++            // Only accept access tokens whose "aud" contains this service's API resource
++            // (orders/basket/webhooks in Identity.API Config.GetApis); reject tokens minted
++            // for another API and ID tokens minted for a client application.
++            options.TokenValidationParameters.ValidateAudience = true;
+         });
+ 
+--- /dev/null
++++ b/tests/Application.UnitTests/AuthenticationExtensionsTests.cs
+@@ -0,0 +1,33 @@
++using eShop.ServiceDefaults;
++using Microsoft.AspNetCore.Authentication.JwtBearer;
++using Microsoft.AspNetCore.Builder;
++using Microsoft.Extensions.Configuration;
++using Microsoft.Extensions.DependencyInjection;
++using Microsoft.Extensions.Options;
++
++namespace eShop.Application.UnitTests;
++
++[TestClass]
++public class AuthenticationExtensionsTests
++{
++    [TestMethod]
++    public void DefaultAuthenticationValidatesConfiguredAudience()
++    {
++        var builder = WebApplication.CreateBuilder();
++        builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?>
++        {
++            ["Identity:Url"] = "https://identity.test",
++            ["Identity:Audience"] = "orders"
++        });
++
++        builder.AddDefaultAuthentication();
++
++        using var provider = builder.Services.BuildServiceProvider();
++        var jwt = provider.GetRequiredService<IOptionsMonitor<JwtBearerOptions>>()
++            .Get(JwtBearerDefaults.AuthenticationScheme);
++
++        Assert.IsTrue(jwt.TokenValidationParameters.ValidateAudience,
++            "Audience validation must stay enabled so tokens minted for other APIs are rejected.");
++        Assert.AreEqual("orders", jwt.TokenValidationParameters.ValidAudience);
++    }
++}

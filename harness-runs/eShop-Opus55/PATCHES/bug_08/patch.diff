@@ -1,0 +1,87 @@
+--- a/src/Catalog.API/Apis/CatalogApi.cs
++++ b/src/Catalog.API/Apis/CatalogApi.cs
+@@ -375,7 +375,14 @@
+         [Description("The id of the catalog item to delete")] int id,
+         [AsParameters] CatalogServices services,
+         CatalogItem productToUpdate)
+     {
++        if (productToUpdate.Id != id)
++        {
++            return TypedResults.BadRequest<ProblemDetails>(new (){
++                Detail = $"Item id {productToUpdate.Id} in the body does not match id {id} in the route."
++            });
++        }
++
+         var catalogItem = await services.Context.CatalogItems.SingleOrDefaultAsync(i => i.Id == id);
+
+         if (catalogItem == null)
+@@ -418,6 +425,5 @@
+     {
+         var item = new CatalogItem(product.Name)
+         {
+-            Id = product.Id,
+             CatalogBrandId = product.CatalogBrandId,
+             CatalogTypeId = product.CatalogTypeId,
+--- a/src/Catalog.API/Infrastructure/CatalogContextSeed.cs
++++ b/src/Catalog.API/Infrastructure/CatalogContextSeed.cs
+@@ -72,4 +72,9 @@
+             logger.LogInformation("Seeded catalog with {NumItems} items", context.CatalogItems.Count());
+             await context.SaveChangesAsync();
+         }
++
++        // Seeded items carry explicit ids, which do not advance the identity sequence.
++        // Move it past the highest existing id so server-assigned ids never collide.
++        await context.Database.ExecuteSqlRawAsync(
++            "SELECT setval(pg_get_serial_sequence('\"Catalog\"', 'Id'), COALESCE((SELECT MAX(\"Id\") FROM \"Catalog\"), 0) + 1, false);");
+     }
+--- a/tests/Catalog.FunctionalTests/CatalogApiTests.cs
++++ b/tests/Catalog.FunctionalTests/CatalogApiTests.cs
+@@ -253,5 +253,6 @@
+         var createResponse = await httpClient.PostAsJsonAsync(
+             "/api/catalog/items", item, cancellationToken);
+         createResponse.EnsureSuccessStatusCode();
++        id = int.Parse(createResponse.Headers.Location!.OriginalString.Split('/')[^1]);
+
+         try
+@@ -422,15 +423,39 @@
+         var response = await _httpClient.PostAsJsonAsync("/api/catalog/items", bodyContent, TestContext.Current.CancellationToken);
+         response.EnsureSuccessStatusCode();
++        var createdId = int.Parse(response.Headers.Location!.OriginalString.Split('/')[^1]);
+
+         // Act - 2
+-        response = await _httpClient.GetAsync($"/api/catalog/items/{id}", TestContext.Current.CancellationToken);
++        response = await _httpClient.GetAsync($"/api/catalog/items/{createdId}", TestContext.Current.CancellationToken);
+         response.EnsureSuccessStatusCode();
+         var body = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+         var addedItem = JsonSerializer.Deserialize<CatalogItem>(body, _jsonSerializerOptions);
+
+         // Assert - 1
+-        Assert.Equal(bodyContent.Id, addedItem.Id);
++        Assert.Equal(createdId, addedItem.Id);
+
+     }
+
++    [Theory]
++    [InlineData(1.0, 99911)]
++    [InlineData(2.0, 99912)]
++    public async Task CreateCatalogItemIgnoresClientSuppliedId(double version, int clientId)
++    {
++        var httpClient = CreateHttpClient(new ApiVersion(version));
++        var cancellationToken = TestContext.Current.CancellationToken;
++
++        var item = new CatalogItem("Client id test")
++        {
++            Id = clientId,
++            CatalogTypeId = 1,
++            CatalogBrandId = 1
++        };
++
++        var createResponse = await httpClient.PostAsJsonAsync("/api/catalog/items", item, cancellationToken);
++        createResponse.EnsureSuccessStatusCode();
++        var createdId = int.Parse(createResponse.Headers.Location!.OriginalString.Split('/')[^1]);
++        await httpClient.DeleteAsync($"/api/catalog/items/{createdId}", cancellationToken);
++
++        Assert.NotEqual(clientId, createdId);
++    }
++
+     [Theory]

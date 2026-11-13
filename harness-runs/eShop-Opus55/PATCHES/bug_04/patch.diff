@@ -1,0 +1,187 @@
+--- a/src/Ordering.API/Application/Commands/CreateOrderCommandHandler.cs
++++ b/src/Ordering.API/Application/Commands/CreateOrderCommandHandler.cs
+@@ -9,40 +9,51 @@
+     private readonly IOrderRepository _orderRepository;
+     private readonly IIdentityService _identityService;
+     private readonly IMediator _mediator;
+     private readonly IOrderingIntegrationEventService _orderingIntegrationEventService;
++    private readonly ICatalogService _catalogService;
+     private readonly ILogger<CreateOrderCommandHandler> _logger;
+
+     // Using DI to inject infrastructure persistence Repositories
+     public CreateOrderCommandHandler(IMediator mediator,
+         IOrderingIntegrationEventService orderingIntegrationEventService,
+         IOrderRepository orderRepository,
+         IIdentityService identityService,
++        ICatalogService catalogService,
+         ILogger<CreateOrderCommandHandler> logger)
+     {
+         _orderRepository = orderRepository ?? throw new ArgumentNullException(nameof(orderRepository));
+         _identityService = identityService ?? throw new ArgumentNullException(nameof(identityService));
+         _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
+         _orderingIntegrationEventService = orderingIntegrationEventService ?? throw new ArgumentNullException(nameof(orderingIntegrationEventService));
++        _catalogService = catalogService ?? throw new ArgumentNullException(nameof(catalogService));
+         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+     }
+
+     public async Task<bool> Handle(CreateOrderCommand message, CancellationToken cancellationToken)
+     {
++        // Never trust client-supplied product name or price: resolve them from the catalog by product id
++        var catalogItems = await _catalogService.GetCatalogItemsAsync(message.OrderItems.Select(i => i.ProductId), cancellationToken);
++
+         // Add Integration event to clean the basket
+         var orderStartedIntegrationEvent = new OrderStartedIntegrationEvent(message.UserId);
+         await _orderingIntegrationEventService.AddAndSaveEventAsync(orderStartedIntegrationEvent);
+
+         // Add/Update the Buyer AggregateRoot
+         // DDD patterns comment: Add child entities and value-objects through the Order Aggregate-Root
+         // methods and constructor so validations, invariants and business logic
+         // make sure that consistency is preserved across the whole aggregate
+         var address = new Address(message.Street, message.City, message.State, message.Country, message.ZipCode);
+         var order = new Order(message.UserId, message.UserName, address, message.CardTypeId, message.CardNumber, message.CardSecurityNumber, message.CardHolderName, message.CardExpiration);
+
+         foreach (var item in message.OrderItems)
+         {
+-            order.AddOrderItem(item.ProductId, item.ProductName, item.UnitPrice, item.Discount, item.PictureUrl, item.Units);
++            if (!catalogItems.TryGetValue(item.ProductId, out var catalogItem))
++            {
++                throw new OrderingDomainException($"Product {item.ProductId} was not found in the catalog.");
++            }
++
++            order.AddOrderItem(item.ProductId, catalogItem.Name, catalogItem.Price, item.Discount, item.PictureUrl, item.Units);
+         }
+
+         _logger.LogInformation("Creating Order - Order: {@Order}", order);
+
+--- /dev/null
++++ b/src/Ordering.API/Infrastructure/Services/ICatalogService.cs
+@@ -0,0 +1,8 @@
++namespace eShop.Ordering.API.Infrastructure.Services;
++
++public interface ICatalogService
++{
++    Task<IReadOnlyDictionary<int, CatalogItemPrice>> GetCatalogItemsAsync(IEnumerable<int> productIds, CancellationToken cancellationToken = default);
++}
++
++public record CatalogItemPrice(int Id, string Name, decimal Price);
+--- /dev/null
++++ b/src/Ordering.API/Infrastructure/Services/CatalogService.cs
+@@ -0,0 +1,19 @@
++using System.Net.Http.Json;
++
++namespace eShop.Ordering.API.Infrastructure.Services;
++
++public class CatalogService(HttpClient httpClient) : ICatalogService
++{
++    public async Task<IReadOnlyDictionary<int, CatalogItemPrice>> GetCatalogItemsAsync(IEnumerable<int> productIds, CancellationToken cancellationToken = default)
++    {
++        var ids = productIds.Distinct().ToList();
++        if (ids.Count == 0)
++        {
++            return new Dictionary<int, CatalogItemPrice>();
++        }
++
++        var uri = $"api/catalog/items/by?api-version=1.0&ids={string.Join("&ids=", ids)}";
++        var items = await httpClient.GetFromJsonAsync<List<CatalogItemPrice>>(uri, cancellationToken);
++        return (items ?? new List<CatalogItemPrice>()).ToDictionary(i => i.Id);
++    }
++}
+--- a/src/Ordering.API/Extensions/Extensions.cs
++++ b/src/Ordering.API/Extensions/Extensions.cs
+@@ -47,6 +47,8 @@
+         services.AddScoped<IOrderQueries, OrderQueries>();
+         services.AddScoped<IBuyerRepository, BuyerRepository>();
+         services.AddScoped<IOrderRepository, OrderRepository>();
+         services.AddScoped<IRequestManager, RequestManager>();
++
++        services.AddHttpClient<ICatalogService, CatalogService>(o => o.BaseAddress = new("https+http://catalog-api"));
+     }
+
+--- a/src/eShop.AppHost/AppHost.cs
++++ b/src/eShop.AppHost/AppHost.cs
+@@ -39,10 +39,11 @@
+     .WithReference(rabbitMq).WaitFor(rabbitMq)
+     .WithReference(catalogDb);
+
+ var orderingApi = builder.AddDotnetProject("ordering-api", "../Ordering.API")
+     .WithReference(rabbitMq).WaitFor(rabbitMq)
+     .WithReference(orderDb).WaitFor(orderDb)
++    .WithReference(catalogApi)
+     .WithHttpHealthCheck("/health")
+     .WithEnvironment("Identity__Url", identityEndpoint);
+
+ builder.AddDotnetProject("order-processor", "../OrderProcessor")
+--- a/tests/Ordering.UnitTests/Application/NewOrderCommandHandlerTest.cs
++++ b/tests/Ordering.UnitTests/Application/NewOrderCommandHandlerTest.cs
+@@ -10,12 +10,14 @@
+     private readonly IIdentityService _identityServiceMock;
+     private readonly IMediator _mediator;
+     private readonly IOrderingIntegrationEventService _orderingIntegrationEventService;
++    private readonly ICatalogService _catalogServiceMock;
+
+     public NewOrderRequestHandlerTest()
+     {
+
+         _orderRepositoryMock = Substitute.For<IOrderRepository>();
+         _identityServiceMock = Substitute.For<IIdentityService>();
+         _orderingIntegrationEventService = Substitute.For<IOrderingIntegrationEventService>();
+         _mediator = Substitute.For<IMediator>();
++        _catalogServiceMock = Substitute.For<ICatalogService>();
+     }
+@@ -39,12 +41,42 @@
+         var LoggerMock = Substitute.For<ILogger<CreateOrderCommandHandler>>();
+         //Act
+-        var handler = new CreateOrderCommandHandler(_mediator, _orderingIntegrationEventService, _orderRepositoryMock, _identityServiceMock, LoggerMock);
++        var handler = new CreateOrderCommandHandler(_mediator, _orderingIntegrationEventService, _orderRepositoryMock, _identityServiceMock, _catalogServiceMock, LoggerMock);
+         var cltToken = new CancellationToken();
+         var result = await handler.Handle(fakeOrderCmd, cltToken);
+
+         //Assert
+         Assert.IsFalse(result);
+     }
+
++    [TestMethod]
++    public async Task Handle_uses_catalog_price_and_name_instead_of_client_supplied_values()
++    {
++        var basketItems = new List<BasketItem>
++        {
++            new BasketItem { ProductId = 1, ProductName = "Forged name", UnitPrice = 0.01m, Quantity = 2 }
++        };
++        var fakeOrderCmd = FakeOrderRequestWithBuyer(new Dictionary<string, object>
++        { ["cardExpiration"] = DateTime.UtcNow.AddYears(1) }, basketItems);
++
++        _catalogServiceMock.GetCatalogItemsAsync(Arg.Any<IEnumerable<int>>(), Arg.Any<CancellationToken>())
++            .Returns(Task.FromResult<IReadOnlyDictionary<int, CatalogItemPrice>>(
++                new Dictionary<int, CatalogItemPrice> { [1] = new CatalogItemPrice(1, "Catalog name", 100m) }));
++
++        Order persistedOrder = null;
++        _orderRepositoryMock.When(r => r.Add(Arg.Any<Order>())).Do(ci => persistedOrder = ci.Arg<Order>());
++
++        var LoggerMock = Substitute.For<ILogger<CreateOrderCommandHandler>>();
++        //Act
++        var handler = new CreateOrderCommandHandler(_mediator, _orderingIntegrationEventService, _orderRepositoryMock, _identityServiceMock, _catalogServiceMock, LoggerMock);
++        await handler.Handle(fakeOrderCmd, new CancellationToken());
++
++        //Assert
++        Assert.IsNotNull(persistedOrder);
++        var orderItem = persistedOrder.OrderItems.Single();
++        Assert.AreEqual(100m, orderItem.UnitPrice);
++        Assert.AreEqual("Catalog name", orderItem.ProductName);
++        Assert.AreEqual(200m, persistedOrder.GetTotal());
++    }
++
+     [TestMethod]
+     public void Handle_throws_exception_when_no_buyerId()
+@@ -63,10 +95,10 @@
+         return new Order("1", "fakeName", new Address("street", "city", "state", "country", "zipcode"), 1, "12", "111", "fakeName", DateTime.UtcNow.AddYears(1));
+     }
+
+-    private CreateOrderCommand FakeOrderRequestWithBuyer(Dictionary<string, object> args = null)
++    private CreateOrderCommand FakeOrderRequestWithBuyer(Dictionary<string, object> args = null, List<BasketItem> items = null)
+     {
+         return new CreateOrderCommand(
+-            new List<BasketItem>(),
++            items ?? new List<BasketItem>(),
+             userId: args != null && args.ContainsKey("userId") ? (string)args["userId"] : null,
+             userName: args != null && args.ContainsKey("userName") ? (string)args["userName"] : null,
+             city: args != null && args.ContainsKey("city") ? (string)args["city"] : null,

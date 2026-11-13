@@ -1,0 +1,136 @@
+--- a/src/ClientApp/Services/Identity/IdentityService.cs
++++ b/src/ClientApp/Services/Identity/IdentityService.cs
+@@ -1,4 +1,5 @@
++using System.Diagnostics;
+ using eShop.ClientApp.Models.Token;
+ using eShop.ClientApp.Models.User;
+ using eShop.ClientApp.Services.Settings;
+ using IdentityModel.OidcClient;
+@@ -45,13 +46,27 @@ public class IdentityService : IIdentityService
+     public async Task<bool> SignOutAsync()
+     {
+-        var response = await GetClient().LogoutAsync(new LogoutRequest()).ConfigureAwait(false);
++        var signedOut = false;
+ 
+-        if (response.IsError)
++        try
+         {
+-            return false;
++            var response = await LogoutWithProviderAsync().ConfigureAwait(false);
++
++            signedOut = !response.IsError;
+         }
+-
+-        await _settingsService.SetUserTokenAsync(default);
+-
+-        return !response.IsError;
++        catch (Exception ex)
++        {
++            Debug.WriteLine($"[SignOut] Error signing out: {ex}");
++        }
++        finally
++        {
++            // Local sign-out must not depend on the identity provider being reachable.
++            await _settingsService.SetUserTokenAsync(default).ConfigureAwait(false);
++        }
++
++        return signedOut;
+     }
++
++    protected virtual Task<LogoutResult> LogoutWithProviderAsync()
++    {
++        return GetClient().LogoutAsync(new LogoutRequest());
++    }
+@@ -138,7 +153,8 @@
+             ClientId = _settingsService.ClientId,
+             ClientSecret = _settingsService.ClientSecret,
+             Scope = "openid profile basket orders offline_access",
+             RedirectUri = _settingsService.CallbackUri,
+-            PostLogoutRedirectUri = _settingsService.CallbackUri,
++            // IdentityServer registers "{MauiCallback}/Account/Redirecting" for the maui client.
++            PostLogoutRedirectUri = $"{_settingsService.CallbackUri}/Account/Redirecting",
+             Browser = _browser,
+         };
+--- a/src/ClientApp/ViewModels/LoginViewModel.cs
++++ b/src/ClientApp/ViewModels/LoginViewModel.cs
+@@ -13,3 +13,4 @@ public partial class LoginViewModel : ViewModelBase
+     private readonly IAppEnvironmentService _appEnvironmentService;
++    private readonly IDialogService _dialogService;
+     private readonly IOpenUrlService _openUrlService;
+     private readonly ISettingsService _settingsService;
+@@ -30,8 +31,9 @@ public partial class LoginViewModel : ViewModelBase
+     public LoginViewModel(
+-        IOpenUrlService openUrlService, IAppEnvironmentService appEnvironmentService,
++        IOpenUrlService openUrlService, IAppEnvironmentService appEnvironmentService, IDialogService dialogService,
+         INavigationService navigationService, ISettingsService settingsService)
+         : base(navigationService)
+     {
+         _settingsService = settingsService;
++        _dialogService = dialogService;
+         _openUrlService = openUrlService;
+         _appEnvironmentService = appEnvironmentService;
+@@ -105,9 +107,17 @@ public partial class LoginViewModel : ViewModelBase
+     private async Task PerformLogoutAsync()
+     {
+-        await _appEnvironmentService.IdentityService.SignOutAsync();
++        var signedOut = await _appEnvironmentService.IdentityService.SignOutAsync();
+ 
+         _settingsService.UseFakeLocation = false;
+ 
+         UserName.Value = string.Empty;
+         Password.Value = string.Empty;
++
++        if (!signedOut)
++        {
++            await _dialogService.ShowAlertAsync(
++                "Sign out could not be completed with the identity provider. Your local session has been cleared.",
++                "Sign out",
++                "OK");
++        }
+     }
+--- /dev/null
++++ b/tests/ClientApp.UnitTests/Services/IdentityServiceTests.cs
+@@ -0,0 +1,43 @@
++using ClientApp.UnitTests.Mocks;
++using eShop.ClientApp.Models.Token;
++using eShop.ClientApp.Services.Identity;
++using IdentityModel.OidcClient;
++
++namespace ClientApp.UnitTests.Services;
++
++[TestClass]
++public class IdentityServiceTests
++{
++    [TestMethod]
++    public async Task SignOutClearsStoredTokenWhenProviderLogoutFailsTest()
++    {
++        var settingsService = new MockSettingsService();
++        await settingsService.SetUserTokenAsync(new UserToken
++        {
++            AccessToken = "access-token",
++            IdToken = "id-token",
++            RefreshToken = "refresh-token",
++            ExpiresAt = DateTimeOffset.Now.AddHours(1)
++        });
++
++        var identityService = new FailingLogoutIdentityService(settingsService);
++
++        var signedOut = await identityService.SignOutAsync();
++
++        Assert.IsFalse(signedOut);
++        Assert.IsNull(await settingsService.GetUserTokenAsync());
++    }
++
++    private sealed class FailingLogoutIdentityService : IdentityService
++    {
++        public FailingLogoutIdentityService(ISettingsService settingsService)
++            : base(null!, settingsService, null!)
++        {
++        }
++
++        protected override Task<LogoutResult> LogoutWithProviderAsync()
++        {
++            throw new InvalidOperationException("Identity provider is unavailable.");
++        }
++    }
++}

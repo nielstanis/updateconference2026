@@ -1,0 +1,97 @@
+--- a/src/Catalog.API/Apis/CatalogApi.cs
++++ b/src/Catalog.API/Apis/CatalogApi.cs
+@@ -100,21 +100,25 @@
+         v1.MapPut("/items", UpdateItemV1)
+             .WithName("UpdateItem")
+             .WithSummary("Create or replace a catalog item")
+             .WithDescription("Create or replace a catalog item")
+-            .WithTags("Items");
++            .WithTags("Items")
++            .RequireAuthorization();
+         v2.MapPut("/items/{id:int}", UpdateItem)
+             .WithName("UpdateItem-V2")
+             .WithSummary("Create or replace a catalog item")
+             .WithDescription("Create or replace a catalog item")
+-            .WithTags("Items");
++            .WithTags("Items")
++            .RequireAuthorization();
+         api.MapPost("/items", CreateItem)
+             .WithName("CreateItem")
+             .WithSummary("Create a catalog item")
+-            .WithDescription("Create a new item in the catalog");
++            .WithDescription("Create a new item in the catalog")
++            .RequireAuthorization();
+         api.MapDelete("/items/{id:int}", DeleteItemById)
+             .WithName("DeleteItem")
+             .WithSummary("Delete catalog item")
+-            .WithDescription("Delete the specified catalog item");
++            .WithDescription("Delete the specified catalog item")
++            .RequireAuthorization();
+ 
+         return app;
+     }
+--- a/src/Catalog.API/Extensions/Extensions.cs
++++ b/src/Catalog.API/Extensions/Extensions.cs
+@@ -3,6 +3,11 @@
+ public static class Extensions
+ {
+     public static void AddApplicationServices(this IHostApplicationBuilder builder)
+     {
++        // JWT bearer authentication (same wiring as Ordering/Basket/Webhooks). Authorization services
++        // are always registered so RequireAuthorization endpoints fail closed even if no Identity config exists.
++        builder.AddDefaultAuthentication();
++        builder.Services.AddAuthorization();
++
+         // Avoid loading full database config and migrations if startup
+         // is being invoked from build-time OpenAPI generation
+         if (builder.Environment.IsBuild())
+--- a/src/Catalog.API/appsettings.json
++++ b/src/Catalog.API/appsettings.json
+@@ -17,6 +17,9 @@
+   "ConnectionStrings": {
+     "EventBus": "amqp://localhost"
+   },
++  "Identity": {
++    "Audience": "catalog"
++  },
+   "EventBus": {
+     "SubscriptionClientName": "Catalog"
+   },
+--- a/src/eShop.AppHost/AppHost.cs
++++ b/src/eShop.AppHost/AppHost.cs
+@@ -38,5 +38,6 @@
+ var catalogApi = builder.AddDotnetProject("catalog-api", "../Catalog.API")
+     .WithReference(rabbitMq).WaitFor(rabbitMq)
+-    .WithReference(catalogDb);
++    .WithReference(catalogDb)
++    .WithEnvironment("Identity__Url", identityEndpoint);
+ 
+ var orderingApi = builder.AddDotnetProject("ordering-api", "../Ordering.API")
+--- a/tests/Catalog.FunctionalTests/CatalogApiTests.cs
++++ b/tests/Catalog.FunctionalTests/CatalogApiTests.cs
+@@ -24,6 +24,23 @@
+     {
+         var handler = new ApiVersionHandler(new QueryStringApiVersionWriter(), apiVersion);
+         return _webApplicationFactory.CreateDefaultClient(handler);
+     }
+ 
++    [Theory]
++    [InlineData("PUT", "/api/catalog/items?api-version=1.0")]
++    [InlineData("PUT", "/api/catalog/items/1?api-version=2.0")]
++    [InlineData("POST", "/api/catalog/items?api-version=1.0")]
++    [InlineData("DELETE", "/api/catalog/items/1?api-version=1.0")]
++    public async Task AnonymousCatalogWritesAreRejected(string method, string url)
++    {
++        using var factory = _webApplicationFactory.WithWebHostBuilder(builder => builder
++            .UseSetting("Identity:Url", "http://localhost:1")
++            .UseSetting("Identity:Audience", "catalog"));
++        using var client = factory.CreateClient();
++
++        var response = await client.SendAsync(new HttpRequestMessage(new HttpMethod(method), url), TestContext.Current.CancellationToken);
++
++        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
++    }
++
+     [Theory]
+     [InlineData(1.0)]
+

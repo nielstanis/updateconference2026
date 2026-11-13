@@ -1,0 +1,23 @@
+{
+  "id": "f016",
+  "bug_nn": "bug_12",
+  "source": "TRIAGE.json#bug_12",
+  "title": "Webhook signing token written to logs in cleartext at Information level",
+  "file": "src/Webhooks.API/Services/GrantUrlTesterService.cs",
+  "line": 17,
+  "category": "sensitive-data-in-logs",
+  "severity": "MEDIUM",
+  "owner_hint": "top committer: Aditya Mandaleeka (1 of 1 recent commit); no CODEOWNERS entry",
+  "mode": "static",
+  "verified": "static_review_only",
+  "status": "patch",
+  "review": "REJECT",
+  "style_score": 5,
+  "out_of_scope_hunks": [],
+  "rationale": "Both Information-level messages log the caller and expected webhook tokens verbatim. The diff replaces the token values with booleans for supplied/received/matched.",
+  "variants_checked": "WebhooksSender logs only destination and type; API handlers do not log the token; validation messages carry no values.",
+  "bypass_considered": "The receiver's own proxy or non-default header-recording instrumentation can still log the X-eshop-whtoken header; that is receiver-side and outside this file.",
+  "test_note": "No test added: no unit-test project exists for Webhooks.API and the service is internal; the functional fixture replaces the real tester.",
+  "review_reason": "Hunk 1 fixes the leak, but hunk 2 still logs {TokenReceived}, which is the receiver's echo of the same shared secret, so the credential remains in logs on the success path and user-controlled header content still reaches the logger. Log only the TokenMatched boolean and fix the IsNullOrEmpty/IsNullOrWhiteSpace mismatch.",
+  "verdict": null
+}

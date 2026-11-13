@@ -1,0 +1,72 @@
+--- a/src/Identity.API/.gitignore
++++ b/src/Identity.API/.gitignore
+@@ -1,2 +1,3 @@
+ wwwroot/lib/
+ keys/
++tempkey.jwk
+--- a/src/Identity.API/Identity.API.csproj
++++ b/src/Identity.API/Identity.API.csproj
+@@ -45,11 +45,6 @@
+     <ProjectReference Include="..\eShop.ServiceDefaults\eShop.ServiceDefaults.csproj" />
+   </ItemGroup>
+
+-  <ItemGroup>
+-    <!-- Don't use this in production -->
+-    <Content Include="tempkey.jwk" CopyToOutputDirectory="PreserveNewest" />
+-  </ItemGroup>
+-
+   <ItemGroup>
+     <Compile Include="..\Shared\MigrateDbContextExtensions.cs" Link="Extensions\MigrateDbContextExtensions.cs" />
+     <Compile Include="..\Shared\ActivityExtensions.cs" Link="Extensions\ActivityExtensions.cs" />
+--- a/src/Identity.API/Program.cs
++++ b/src/Identity.API/Program.cs
+@@ -15,7 +15,7 @@
+         .AddEntityFrameworkStores<ApplicationDbContext>()
+         .AddDefaultTokenProviders();
+
+-builder.Services.AddIdentityServer(options =>
++var identityServer = builder.Services.AddIdentityServer(options =>
+ {
+     //options.IssuerUri = "null";
+     options.Authentication.CookieLifetime = TimeSpan.FromHours(2);
+@@ -25,16 +25,20 @@
+     options.Events.RaiseFailureEvents = true;
+     options.Events.RaiseSuccessEvents = true;
+
+-    // TODO: Remove this line in production.
+-    options.KeyManagement.Enabled = false;
++    // Outside Development, Duende automatic key management creates and rotates signing keys at runtime.
++    options.KeyManagement.Enabled = !builder.Environment.IsDevelopment();
+ })
+ .AddInMemoryIdentityResources(Config.GetResources())
+ .AddInMemoryApiScopes(Config.GetApiScopes())
+ .AddInMemoryApiResources(Config.GetApis())
+ .AddInMemoryClients(Config.GetClients(builder.Configuration))
+-.AddAspNetIdentity<ApplicationUser>()
+-// TODO: Not recommended for production - you need to store your key material somewhere secure
+-.AddDeveloperSigningCredential();
++.AddAspNetIdentity<ApplicationUser>();
++
++if (builder.Environment.IsDevelopment())
++{
++    // Generates a local, gitignored tempkey.jwk on first run; never committed or copied to build output.
++    identityServer.AddDeveloperSigningCredential();
++}
+
+ builder.Services.AddTransient<IProfileService, ProfileService>();
+ builder.Services.AddTransient<ILoginService<ApplicationUser>, EFLoginService>();
+--- a/tests/Application.UnitTests/IdentityConfigurationTests.cs
++++ b/tests/Application.UnitTests/IdentityConfigurationTests.cs
+@@ -39,6 +39,12 @@
+         CollectionAssert.Contains(clients["maui"].AllowedScopes.ToList(), "orders");
+     }
+
++    [TestMethod]
++    public void SigningKeyIsNotCopiedToBuildOutput()
++    {
++        Assert.IsFalse(File.Exists(Path.Combine(AppContext.BaseDirectory, "tempkey.jwk")));
++    }
++
+     [TestMethod]
+     [DataRow("/connect/authorize?redirect_uri=https%3A%2F%2Fweb.test%2Fsignin-oidc&scope=openid", "https://web.test/")]
+     [DataRow("/connect/authorize?client_id=webapp", "")]

@@ -1,0 +1,20 @@
+{
+  "id": "f014",
+  "source": "TRIAGE.json#9",
+  "title": "BFF /api/orders/{*any} catch-all exposes all ordering write routes (ship, cancel) with no method limits or role check",
+  "file": "src/eShop.AppHost/Extensions.cs",
+  "line": 119,
+  "category": "broken_access_control",
+  "severity": "MEDIUM",
+  "owner_hint": "top committer: Eric Erhardt (6/13 recent commits); no CODEOWNERS entry",
+  "mode": "static",
+  "verified": "static_review_only",
+  "review": "ACCEPT",
+  "style_score": 8,
+  "out_of_scope_hunks": [],
+  "rationale": "Root cause: src/eShop.AppHost/Extensions.cs:146-147, a single `/api/orders/{*any}` route forwarded every path and HTTP method to Ordering.API, so the back-office PUT /ship, POST /draft and GET /cardtypes were reachable from the public mobile BFF. The MAUI client (src/ClientApp/Services/Order/OrderService.cs) only calls: POST api/orders (create), GET api/orders (list), GET api/orders/{id}, and PUT api/orders/cancel, always with api-version=1.0. The catch-all is replaced by three explicit routes with method restrictions (WithMatchMethods, which exists in Aspire.Hosting.Yarp 13.5.3), preserving the api-version query match. `{orderId:int}` limits the GET route to numeric ids. Cancel is kept because the client uses it; its ownership check belongs to the separate Ordering.API findings (f003/f006/f007/f008). Anything else, including /ship, /draft and /cardtypes, no longer matches a YARP route and returns 404 at the BFF. Ordering.API itself is unchanged, so the web app and internal callers are unaffected. [Likely 🟡] I could not build or run this, and I am assuming YARP resolves the exact `/api/orders` route correctly alongside the other two.",
+  "variants_checked": "Extensions.cs:ConfigureMobileBffRoutes: the catalog routes use the same catch-all pattern (`/api/catalog/{*any}`) but belong to f004, so I did not touch them. The identity route `/identity/{*any}` is out of scope. grep across src for other `api/orders` YARP/proxy routes found only the ClientApp OrderService and Ordering.API's own OrdersApi.cs; the AppHost.cs:64 call site needs no change.",
+  "bypass_considered": "Tried `PUT /api/orders/ship`, `POST /api/orders/draft`, `GET /api/orders/cardtypes`, and a method override with `POST /api/orders/cancel`. None matches: ship, draft and cardtypes have no route, and cancel is PUT-only. `/api/orders/1/ship` has no route either, because the id route matches only a single int segment. Case-variants and trailing slashes still hit the same restricted routes. Path-normalization tricks (`..`, `%2f`) are not matched by any restricted route and are normalized by ASP.NET routing. The remaining exposure, cancelling or reading another user's order through the allowed routes, is an Ordering.API authorization issue handled in f003/f006/f007/f008, not here.",
+  "test_note": "No test added. tests/eShop.AppHost.UnitTests exists, but it has no existing pattern for introspecting the YARP route configuration. The Aspire 13.5.3 API for reading back the routes built inside `WithConfiguration` could not be verified without building, so a test written blind risked not compiling. The recommended follow-up is a test that builds the YARP resource, runs ConfigureMobileBffRoutes, and asserts that no route matches PUT /api/orders/ship and that the GET, POST and cancel routes carry the expected methods.",
+  "review_reason": "The single hunk (Extensions.cs:145-147) replaces the `/api/orders/{*any}` catch-all with an allowlist of `/api/orders` (GET, POST), `/api/orders/{orderId:int}` (GET) and `/api/orders/cancel` (PUT). That drops the BFF exposure of `/ship`, `/draft` and `/cardtypes`, which are defined in OrdersApi.cs:11-17, and no new input is parsed or trusted. All four `OrderService` calls in the MAUI client still match a route. `WithMatchMethods` is confirmed in Aspire.Hosting.Yarp 13.5.3 but not verifiable in the pinned 13.6.0, and Ordering.API still lacks its own authorization on `/ship`."
+}

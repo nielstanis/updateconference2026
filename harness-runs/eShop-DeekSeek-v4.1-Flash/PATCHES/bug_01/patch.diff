@@ -1,0 +1,198 @@
+--- a/src/Catalog.API/Apis/CatalogApi.cs
++++ b/src/Catalog.API/Apis/CatalogApi.cs
+@@ -99,19 +99,23 @@
+         // Routes for modifying catalog items.
+         v1.MapPut("/items", UpdateItemV1)
+             .WithName("UpdateItem")
+             .WithSummary("Create or replace a catalog item")
+             .WithDescription("Create or replace a catalog item")
+-            .WithTags("Items");
++            .WithTags("Items")
++            .RequireAuthorization();
+         v2.MapPut("/items/{id:int}", UpdateItem)
+             .WithName("UpdateItem-V2")
+             .WithSummary("Create or replace a catalog item")
+             .WithDescription("Create or replace a catalog item")
+-            .WithTags("Items");
++            .WithTags("Items")
++            .RequireAuthorization();
+         api.MapPost("/items", CreateItem)
+             .WithName("CreateItem")
+             .WithSummary("Create a catalog item")
+-            .WithDescription("Create a new item in the catalog");
++            .WithDescription("Create a new item in the catalog")
++            .RequireAuthorization();
+         api.MapDelete("/items/{id:int}", DeleteItemById)
+             .WithName("DeleteItem")
+             .WithSummary("Delete catalog item")
+-            .WithDescription("Delete the specified catalog item");
++            .WithDescription("Delete the specified catalog item")
++            .RequireAuthorization();
+ 
+         return app;
+     }
+--- a/src/Catalog.API/Program.cs
++++ b/src/Catalog.API/Program.cs
+@@ -3,6 +3,7 @@
+ var builder = WebApplication.CreateBuilder(args);
+ 
+ builder.AddServiceDefaults();
++builder.AddDefaultAuthentication();
+ builder.AddApplicationServices();
+ builder.Services.AddKeyedSingleton<IFileProvider>("pics", (services, _) =>
+     new PhysicalFileProvider(Path.Combine(
+--- a/src/Catalog.API/appsettings.json
++++ b/src/Catalog.API/appsettings.json
+@@ -24,4 +24,8 @@
+   "CatalogOptions": {
+     "UseCustomizationData": false
+-  }
++  },
++  "Identity": {
++    "Url": "http://localhost:5223",
++    "Audience": "catalog"
++  }
+ }
+--- a/src/eShop.AppHost/AppHost.cs
++++ b/src/eShop.AppHost/AppHost.cs
+@@ -38,3 +38,4 @@
+ var catalogApi = builder.AddDotnetProject("catalog-api", "../Catalog.API")
+     .WithReference(rabbitMq).WaitFor(rabbitMq)
+-    .WithReference(catalogDb);
++    .WithReference(catalogDb)
++    .WithEnvironment("Identity__Url", identityEndpoint);
+--- a/src/eShop.ServiceDefaults/OpenApi.Extensions.cs
++++ b/src/eShop.ServiceDefaults/OpenApi.Extensions.cs
+@@ -51,7 +51,7 @@
+         var openApi = builder.Configuration.GetSection("OpenApi");
+         var identitySection = builder.Configuration.GetSection("Identity");
+ 
+         var scopes = identitySection.Exists()
+-            ? identitySection.GetRequiredSection("Scopes").GetChildren().ToDictionary(p => p.Key, p => p.Value)
++            ? identitySection.GetSection("Scopes").GetChildren().ToDictionary(p => p.Key, p => p.Value)
+             : new Dictionary<string, string?>();
+ 
+ 
+--- a/src/eShop.ServiceDefaults/OpenApiOptionsExtensions.cs
++++ b/src/eShop.ServiceDefaults/OpenApiOptionsExtensions.cs
+@@ -159,13 +159,13 @@
+     private class SecuritySchemeDefinitionsTransformer(IConfiguration configuration) : IOpenApiDocumentTransformer
+     {
+         public Task TransformAsync(OpenApiDocument document, OpenApiDocumentTransformerContext context, CancellationToken cancellationToken)
+         {
+             var identitySection = configuration.GetSection("Identity");
+             if (!identitySection.Exists())
+             {
+                 return Task.CompletedTask;
+             }
+ 
+             var identityUrlExternal = identitySection.GetRequiredValue("Url");
+-            var scopes = identitySection.GetRequiredSection("Scopes").GetChildren().ToDictionary(p => p.Key, p => p.Value ?? string.Empty);
++            var scopes = identitySection.GetSection("Scopes").GetChildren().ToDictionary(p => p.Key, p => p.Value ?? string.Empty);
+             var securityScheme = new OpenApiSecurityScheme
+--- a/tests/Catalog.FunctionalTests/CatalogApiFixture.cs
++++ b/tests/Catalog.FunctionalTests/CatalogApiFixture.cs
+@@ -1,8 +1,10 @@
+ using System.Reflection;
+ 
+ using Aspire.Hosting;
+ using Aspire.Hosting.ApplicationModel;
+ 
++using Microsoft.AspNetCore.Builder;
+ using Microsoft.AspNetCore.Mvc.Testing;
++using Microsoft.Extensions.DependencyInjection;
+ 
+ namespace eShop.Catalog.FunctionalTests;
+@@ -34,6 +34,23 @@
+                 });
+         });
++        builder.ConfigureServices(services =>
++        {
++            services.AddSingleton<IStartupFilter>(new AutoAuthorizeStartupFilter());
++        });
+         return base.CreateHost(builder);
+     }
+ 
++    private sealed class AutoAuthorizeStartupFilter : IStartupFilter
++    {
++        public Action<IApplicationBuilder> Configure(Action<IApplicationBuilder> next)
++        {
++            return builder =>
++            {
++                builder.UseMiddleware<AutoAuthorizeMiddleware>();
++                next(builder);
++            };
++        }
++    }
++
+     public new async Task DisposeAsync()
+--- /dev/null
++++ b/tests/Catalog.FunctionalTests/AutoAuthorizeMiddleware.cs
+@@ -0,0 +1,32 @@
++using System.Security.Claims;
++
++using Microsoft.AspNetCore.Http;
++
++namespace eShop.Catalog.FunctionalTests;
++
++// Populates an authenticated user so the existing happy-path write tests keep working.
++// Requests that set AnonymousHeader are left anonymous so the authorization regression
++// test exercises the real authorization pipeline.
++internal sealed class AutoAuthorizeMiddleware
++{
++    public const string AnonymousHeader = "X-Test-Anonymous";
++
++    private readonly RequestDelegate _next;
++
++    public AutoAuthorizeMiddleware(RequestDelegate next)
++    {
++        _next = next;
++    }
++
++    public async Task Invoke(HttpContext httpContext)
++    {
++        if (!httpContext.Request.Headers.ContainsKey(AnonymousHeader))
++        {
++            var identity = new ClaimsIdentity("test");
++            identity.AddClaim(new Claim(ClaimTypes.Name, "9e3163b9-1ae6-4652-9dc6-7898ab7b7a00"));
++            httpContext.User.AddIdentity(identity);
++        }
++
++        await _next(httpContext);
++    }
++}
+--- a/tests/Catalog.FunctionalTests/CatalogApiTests.cs
++++ b/tests/Catalog.FunctionalTests/CatalogApiTests.cs
+@@ -455,8 +455,31 @@
+         // Assert - 1
+         Assert.Equal("NoContent", response.StatusCode.ToString());
+         Assert.Equal("NotFound", responseStatus.ToString());
+     }
+ 
++    [Fact]
++    public async Task CatalogWriteEndpointsRejectAnonymousRequests()
++    {
++        var httpClient = CreateHttpClient(new ApiVersion(2.0));
++        httpClient.DefaultRequestHeaders.Add(AutoAuthorizeMiddleware.AnonymousHeader, "true");
++
++        var putResponse = await httpClient.PutAsJsonAsync(
++            $"/api/catalog/items/{int.MaxValue}",
++            new CatalogItem("Anonymous update"),
++            TestContext.Current.CancellationToken);
++        var postResponse = await httpClient.PostAsync(
++            "/api/catalog/items",
++            new StringContent(string.Empty),
++            TestContext.Current.CancellationToken);
++        var deleteResponse = await httpClient.DeleteAsync(
++            $"/api/catalog/items/{int.MaxValue}",
++            TestContext.Current.CancellationToken);
++
++        Assert.Equal(HttpStatusCode.Unauthorized, putResponse.StatusCode);
++        Assert.Equal(HttpStatusCode.Unauthorized, postResponse.StatusCode);
++        Assert.Equal(HttpStatusCode.Unauthorized, deleteResponse.StatusCode);
++    }
++
+     [Theory]
+     [InlineData(1.0)]
+     [InlineData(2.0)]
+     public async Task GetCatalogItemRejectsInvalidId(double version)

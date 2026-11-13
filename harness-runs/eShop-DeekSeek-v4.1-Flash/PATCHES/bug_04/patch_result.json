@@ -1,0 +1,26 @@
+{
+  "id": "f014",
+  "bug_nn": "bug_04",
+  "source": "TRIAGE.json#bug_04",
+  "title": "Received-webhook token column is rendered to unauthenticated visitors",
+  "file": "src/WebhookClient/Components/Pages/Home/ReceivedMessages.razor",
+  "line": 13,
+  "category": "sensitive-data-exposure",
+  "severity": "HIGH",
+  "owner_hint": "top committer: Steve Sanderson (1 of 1 recent commit); no CODEOWNERS entry",
+  "mode": "static",
+  "verified": "static_review_only",
+  "status": "patch",
+  "review": "ACCEPT",
+  "style_score": 7,
+  "out_of_scope_hunks": [
+    "src/WebhookClient/Components/Pages/AddWebhook.razor:1-2,12-30",
+    "tests/Application.UnitTests/WebhookClientTests.cs:1-8,102-162"
+  ],
+  "rationale": "ReceivedMessages renders hook.Token and Home.razor:22 invokes it outside the AuthorizeView on the anonymous / route. The diff wraps the component body in AuthorizeView/NotAuthorized and applies the same gate to the AddWebhook form that pre-fills the same secret.",
+  "variants_checked": "ReceivedMessages fixed; RegisteredHooks already behind AuthorizeView; AddWebhook same-secret exposure gated; endpoints do not render the token.",
+  "bypass_considered": "A page-level [Authorize] would be inert because Routes.razor uses RouteView with no fallback policy, so the guard is an explicit AuthorizeView inside the component.",
+  "test_note": "Added ReceivedMessagesDoesNotRenderTokensToAnonymousVisitors using HtmlRenderer with an anonymous principal.",
+  "review_reason": "Wrapping the grid restores the same AuthorizeView boundary the sibling component already has, closing the token render for anonymous circuits. The AddWebhook hunk is off the call path but fixes the same secret exposure at an ungated page, so the patch is complete rather than narrowly scoped.",
+  "verdict": null
+}

@@ -1,0 +1,25 @@
+--- a/src/eShop.AppHost/Extensions.cs
++++ b/src/eShop.AppHost/Extensions.cs
+@@ -143,8 +143,19 @@
+                 .WithMatchRouteQueryParameter([new() { Name = "api-version", Values = ["1.0", "1", "2.0"], Mode = QueryParameterMatchMode.Exact }]);
+ 
+-            // Ordering routes
+-            yarp.AddRoute("/api/orders/{*any}", orderingApi.GetEndpoint("http"))
+-                .WithMatchRouteQueryParameter([new() { Name = "api-version", Values = ["1.0", "1"], Mode = QueryParameterMatchMode.Exact }]);
++            // Ordering routes: only what the mobile client calls (OrderService). ship, draft and
++            // cardtypes are intentionally not exposed through the BFF.
++            yarp.AddRoute("/api/orders", orderingApi.GetEndpoint("http"))
++                .WithMatchMethods("GET", "POST")
++                .WithMatchRouteQueryParameter([new() { Name = "api-version", Values = ["1.0", "1"], Mode = QueryParameterMatchMode.Exact }]);
++
++            yarp.AddRoute("/api/orders/{orderId:int}", orderingApi.GetEndpoint("http"))
++                .WithMatchMethods("GET")
++                .WithMatchRouteQueryParameter([new() { Name = "api-version", Values = ["1.0", "1"], Mode = QueryParameterMatchMode.Exact }]);
++
++            yarp.AddRoute("/api/orders/cancel", orderingApi.GetEndpoint("http"))
++                .WithMatchMethods("PUT")
++                .WithMatchRouteQueryParameter([new() { Name = "api-version", Values = ["1.0", "1"], Mode = QueryParameterMatchMode.Exact }]);
+ 
+             // Identity routes
+             yarp.AddRoute("/identity/{*any}", identityApi.GetEndpoint("http"))
+

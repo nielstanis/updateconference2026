@@ -1,0 +1,23 @@
+{
+  "id": "f004",
+  "bug_nn": "bug_03",
+  "source": "TRIAGE.json#bug_03",
+  "title": "Any authenticated customer can ship any order",
+  "file": "src/Ordering.API/Apis/OrdersApi.cs",
+  "line": 51,
+  "category": "auth-bypass",
+  "severity": "HIGH",
+  "owner_hint": "top committer: Rob Conery (1 of 1 recent commit); no CODEOWNERS entry",
+  "mode": "static",
+  "verified": "static_review_only",
+  "status": "patch",
+  "review": "REJECT",
+  "style_score": 6,
+  "out_of_scope_hunks": [],
+  "rationale": "Ship is gated only by bare authentication and the handler ships whichever order number the body supplies, despite being documented as an administrator action. The diff registers an AdminOnly policy requiring the admin role and adds RequireAuthorization(\"AdminOnly\") to the ship endpoint.",
+  "variants_checked": "Ship fixed; cancel and by-id read have different root causes left to their own fixes; no other admin-only operation exists in the group; Webhooks handlers filter by caller id.",
+  "bypass_considered": "Authorization evaluates validated JWT claims before model binding, so body order numbers cannot influence it; a forged role claim is blocked by issuer/signature validation.",
+  "test_note": "Added ShipOrderRequiresAdminRole (403 for customer) and extended the test middleware with a role claim defaulting to admin.",
+  "review_reason": "Right layer, but nothing issues the admin role: ProfileService emits no role claim and UsersSeed assigns no roles, so RequireRole(\"admin\") would 403 every caller and permanently disable shipping. The test only passes because AutoAuthorizeMiddleware defaults every request to admin.",
+  "verdict": null
+}

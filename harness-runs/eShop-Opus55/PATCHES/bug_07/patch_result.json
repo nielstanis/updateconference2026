@@ -1,0 +1,21 @@
+{
+  "id": "f002",
+  "source": "TRIAGE.json#f002",
+  "title": "PUT /api/orders/cancel cancels any user's order",
+  "file": "src/Ordering.API/Application/Commands/CancelOrderCommandHandler.cs",
+  "line": 21,
+  "category": "idor",
+  "severity": "LOW",
+  "owner_hint": "component: src/Ordering.API/; no CODEOWNERS; top committer Aditya Mandaleeka (1/1)",
+  "mode": "static",
+  "verified": "static_review_only",
+  "review": "ACCEPT",
+  "style_score": 7,
+  "out_of_scope_hunks": [],
+  "rationale": "Root cause CancelOrderCommandHandler.cs:21-27 loads by client OrderNumber and cancels with no ownership check, and CancelOrderCommand carries no caller identity. Because the handler is also used by the internal OrderPaymentFailedIntegrationEventHandler (no HttpContext), identity is placed on the command: CancelOrderCommand gains optional UserId; OrdersApi.CancelOrderAsync always overwrites it with the token sub (403 if missing); the handler resolves the Buyer via IBuyerRepository.FindAsync(UserId) and returns false unless order.BuyerId == buyer.Id (BuyerId because GetAsync does not load the Buyer navigation). A false result reuses the existing 500 'Cancel order failed' response, so no existence oracle. The internal payment-failed path keeps UserId null and still cancels.",
+  "variants_checked": "Ship (f011) left to sibling; integration-event-only Set*Status handlers need no change; OrderPaymentFailedIntegrationEventHandler works with UserId null; GET (f001) and create (f005) are siblings; IdentifiedCommandHandler only forwards; ClientApp DTO compatible; existing OrdersWebApiTest mocks return \"\" for userId; functional tests' AutoAuthorizeMiddleware adds sub.",
+  "bypass_considered": "Body userId (null or another user) is overwritten from the token; missing sub returns 403 before dispatch (prevents impersonating the internal null path); empty sub finds no buyer; accounts with no Buyer row fail; orders with null BuyerId fail closed (owner also cannot cancel in that short window).",
+  "test_note": "tests/Ordering.UnitTests/Application/CancelOrderCommandHandlerTest.cs Handle_does_not_cancel_order_owned_by_another_buyer. Not built or run.",
+  "review_reason": "The handler hunk resolves the caller's Buyer via IBuyerRepository.FindAsync and refuses the cancel when Order.BuyerId differs, fixing the root cause at CancelOrderCommandHandler.cs:25-31; the endpoint sets UserId from the token sub with `command with { UserId = userId }`, discarding any client value. Design weakness: a null UserId skips the check (fail-open by design for OrderPaymentFailedIntegrationEventHandler), so any future HTTP path that builds CancelOrderCommand without UserId would bypass it. OrdersApi hunk header is one line off but applies with offset.",
+  "verdict": null
+}

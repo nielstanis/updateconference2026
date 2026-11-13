@@ -1,0 +1,1785 @@
+{
+  "triage_completed": true,
+  "triage_context": {
+    "mode": "interactive",
+    "environment": "Internet-facing web service (HTTP is untrusted). webapp, identity-api and mobile-bff are publicly exposed; any self-registered shopper is untrusted. RabbitMQ, Postgres and Redis are internal (reaching them requires a compromised service or leaked credentials).",
+    "threat_model": [
+      "Tenant-to-tenant data leakage",
+      "Privilege escalation to admin",
+      "Compliance-scoped data exposure (PII / PCI / PHI)",
+      "Unauthenticated remote code execution (incl. forging tokens for arbitrary users)"
+    ],
+    "scoring": "Derived HIGH/MEDIUM/LOW from preconditions",
+    "noise_tolerance": "precision",
+    "votes_per_finding": 3,
+    "repo": "/home/tanis/github/depj-proj/eShop"
+  },
+  "summary": {
+    "input_count": 50,
+    "duplicates": 9,
+    "false_positives": 32,
+    "true_positives": 9,
+    "needs_manual_test": 1,
+    "by_severity": {
+      "HIGH": 3,
+      "MEDIUM": 4,
+      "LOW": 2
+    }
+  },
+  "findings": [
+    {
+      "id": "f001",
+      "source": "VULN-FINDINGS.json#0 (F-001)",
+      "title": "GET /api/orders/{orderId} returns any user's order (no ownership check)",
+      "file": "src/Ordering.API/Apis/OrdersApi.cs",
+      "line": 80,
+      "category": "idor",
+      "claimed_severity": "HIGH",
+      "verdict": "true_positive",
+      "verify_verdict": "exploitable",
+      "confidence": 9.0,
+      "severity": "HIGH",
+      "severity_label": "HIGH",
+      "severity_alignment": 3,
+      "preconditions": [
+        "Attacker holds a valid Ordering.API bearer token (any self-registered shopper; only group-level RequireAuthorization, Program.cs:21-22)",
+        "Request sent as GET /api/orders/{id}?api-version=1.0 via public mobile-bff (Extensions.cs:146)",
+        "Attacker enumerates target orderId (sequential HiLo ints)"
+      ],
+      "access_level": "authenticated",
+      "threat_match": "Tenant-to-tenant data leakage (plus compliance-scoped PII: street, city, state, zip, country, items)",
+      "rationale": "GetOrderAsync (src/Ordering.API/Apis/OrdersApi.cs:80-91) passes the route orderId straight to OrderQueries.GetOrderAsync, which runs FirstOrDefaultAsync(o => o.Id == id) with no Buyer.IdentityGuid filter (src/Ordering.API/Application/Queries/OrderQueries.cs:8-10) and returns shipping address, items and total (L15-34). The only gate is group-level RequireAuthorization (src/Ordering.API/Program.cs:21-22) with no named policies; the sibling GetOrdersByUserAsync (OrdersApi.cs:95-96) filters by user, so ownership was intended. mobile-bff publicly proxies /api/orders/{*any} (src/eShop.AppHost/Extensions.cs:146) and order ids are sequential HiLo ints (OrderingContextModelSnapshot.cs:161), so any logged-in user can enumerate other customers' orders.\n\nTable gives MEDIUM (cheap preconditions, authenticated-only, self-registration available); a direct match on the cross-tenant leakage and PII threats raises it one step to HIGH. The sibling list endpoint filters by user, so the missing check is a real gap. Textbook production IDOR with enumerable ids.",
+      "vote_breakdown": {
+        "true_positive": 3,
+        "false_positive": 0,
+        "cannot_verify": 0
+      },
+      "refute_reasons": [],
+      "exclusion_rule": null,
+      "first_links": [
+        "src/Ordering.API/Apis/OrdersApi.cs:13",
+        "src/eShop.AppHost/Extensions.cs:146"
+      ],
+      "duplicate_of": null,
+      "absorbed": [
+        "f010"
+      ],
+      "owner_hint": "component: src/Ordering.API/; no CODEOWNERS; recent committers Rob Conery, David Fowler (1/4 each)",
+      "missing_fields": []
+    },
+    {
+      "id": "f003",
+      "source": "VULN-FINDINGS.json#2 (F-003)",
+      "title": "Catalog create/update/delete endpoints have no authentication and are reachable from the internet via mobile-bff",
+      "file": "src/Catalog.API/Apis/CatalogApi.cs",
+      "line": 100,
+      "category": "auth-bypass",
+      "claimed_severity": "HIGH",
+      "verdict": "true_positive",
+      "verify_verdict": "exploitable",
+      "confidence": 8.3,
+      "severity": "HIGH",
+      "severity_label": "HIGH",
+      "severity_alignment": 4,
+      "preconditions": [
+        "Attacker can reach the public mobile-bff (AppHost.cs:62-63 WithExternalHttpEndpoints)",
+        "Request carries an allowed api-version query parameter (trivial)"
+      ],
+      "access_level": "unauthenticated_remote",
+      "threat_match": "Privilege escalation to admin (anonymous caller gets admin-equivalent catalog create/update/delete)",
+      "rationale": "Catalog.API maps PUT/POST/DELETE item endpoints at CatalogApi.cs:100-117 with no RequireAuthorization, and Program.cs registers no auth middleware or fallback policy (unlike Basket, Ordering and Webhooks). mobile-bff is published with WithExternalHttpEndpoints (AppHost.cs:62-64) and its YARP routes (Extensions.cs:105, :142) match only on path and api-version, so anonymous PUT/DELETE reach the handlers. UpdateItem mass-assigns via SetValues (CatalogApi.cs:390) and publishes a price-change event, so anyone can reprice, delete or plant catalog items. Rule 3 (sample design) rejected given the stated internet-facing environment.\n\nCatalogApi.cs:100-117 write routes have no RequireAuthorization, Catalog.API has no auth middleware or fallback policy, and BFF routes do not restrict methods, so an anonymous internet request reaches the write handlers. Impact is integrity (repricing that propagates to baskets, deletion, planted items), and an access-free internet-reachable write path justifies HIGH.",
+      "vote_breakdown": {
+        "true_positive": 3,
+        "false_positive": 0,
+        "cannot_verify": 0
+      },
+      "refute_reasons": [],
+      "exclusion_rule": null,
+      "first_links": [
+        "src/eShop.AppHost/Extensions.cs:105"
+      ],
+      "duplicate_of": null,
+      "absorbed": [
+        "f009"
+      ],
+      "owner_hint": "component: src/Catalog.API/; no CODEOWNERS; top committer Mike Kistler (3/11)",
+      "missing_fields": []
+    },
+    {
+      "id": "f004",
+      "source": "VULN-FINDINGS.json#3 (F-004)",
+      "title": "IdentityServer RSA signing private key is committed to git and shipped in build output",
+      "file": "src/Identity.API/tempkey.jwk",
+      "line": 1,
+      "category": "hardcoded-secret",
+      "claimed_severity": "HIGH",
+      "verdict": "true_positive",
+      "verify_verdict": "exploitable",
+      "confidence": 8.0,
+      "severity": "HIGH",
+      "severity_label": "HIGH",
+      "severity_alignment": 3,
+      "preconditions": [
+        "Deployed Identity.API runs as shipped (KeyManagement disabled Program.cs:29, AddDeveloperSigningCredential Program.cs:37, tempkey.jwk copied to output)",
+        "Attacker reads the private key from the public git repository"
+      ],
+      "access_level": "unauthenticated_remote",
+      "threat_match": "Unauthenticated remote code execution (incl. forging tokens for arbitrary users)",
+      "rationale": "src/Identity.API/tempkey.jwk is a git-tracked complete RSA-2048 private key (D/P/Q present, HasPrivateKey true) and Identity.API.csproj:50 copies it into build output. Program.cs:29 disables automatic key management and Program.cs:37 AddDeveloperSigningCredential() loads that file as the token-signing key. The consuming APIs (AuthenticationExtensions.cs:33-49) trust the issuer's JWKS, skip audience validation, and take identity from the sub claim (Ordering IdentityService.cs:6), so anyone with the repo can forge tokens as any user. The only mitigation is a 'not for production' comment; rule 3 does not apply to an internet-facing deployment.\n\nAnyone who can read the repo holds the token-signing private key; consuming APIs trust the issuer JWKS, skip audience validation and take identity from sub, so tokens for any user can be forged and sent via mobile-bff or webapp. One deployment precondition gives MEDIUM by the table; the verbatim threat-model match raises it to HIGH. Only a 'not for production' comment mitigates it.",
+      "vote_breakdown": {
+        "true_positive": 3,
+        "false_positive": 0,
+        "cannot_verify": 0
+      },
+      "refute_reasons": [],
+      "exclusion_rule": null,
+      "first_links": [
+        "src/Identity.API/Program.cs:37"
+      ],
+      "duplicate_of": null,
+      "absorbed": [],
+      "owner_hint": "component: src/Identity.API/; no CODEOWNERS; added by Aditya Mandaleeka (1/1, initial commit fc61f90)",
+      "missing_fields": []
+    },
+    {
+      "id": "f011",
+      "source": "VULN-FINDINGS.json#10 (F-011)",
+      "title": "PUT /api/orders/ship (admin action) is open to any authenticated user for any order",
+      "file": "src/Ordering.API/Apis/OrdersApi.cs",
+      "line": 12,
+      "category": "privilege-escalation",
+      "claimed_severity": "MEDIUM",
+      "verdict": "true_positive",
+      "verify_verdict": "exploitable",
+      "confidence": 8.0,
+      "severity": "MEDIUM",
+      "severity_label": "MEDIUM",
+      "severity_alignment": 1,
+      "preconditions": [
+        "Attacker holds a valid token as any self-registered shopper",
+        "Target order is in Paid status (reached automatically)",
+        "Attacker supplies target OrderNumber (sequential ints)",
+        "Non-empty x-requestid header via public mobile-bff /api/orders/{*any} (trivial)"
+      ],
+      "access_level": "authenticated",
+      "threat_match": "Privilege escalation to admin (partial: performs one admin-documented action, ShipOrderCommandHandler.cs:14-15; no admin role gained; no raise applied)",
+      "rationale": "PUT /api/orders/ship (OrdersApi.cs:12, L51-78) is reachable via the public mobile-bff route (Extensions.cs:146) and gated only by a policy-less group RequireAuthorization (Program.cs:22) that accepts any audience (AuthenticationExtensions.cs:49); no role or policy exists anywhere in src. ShipOrderCommandHandler.cs:21-27 loads any order by client-supplied sequential OrderNumber with no ownership or admin check despite its L14-15 comment saying administrators run it, and SetShippedStatus (Order.cs:130-140) only requires Paid status, which orders reach automatically. Any registered shopper can mark other customers' paid orders shipped, blocking cancellation and firing shipped events.\n\nShipOrderCommandHandler ships any order by client-supplied number with no ownership or role check, and no RequireRole/AddPolicy/IsInRole exists in src. Any shopper can mark others' Paid orders Shipped, blocking cancellation and emitting spurious shipped events. Integrity-only impact with authenticated access gives MEDIUM.",
+      "vote_breakdown": {
+        "true_positive": 3,
+        "false_positive": 0,
+        "cannot_verify": 0
+      },
+      "refute_reasons": [],
+      "exclusion_rule": null,
+      "first_links": [
+        "src/Ordering.API/Apis/OrdersApi.cs:12",
+        "src/eShop.AppHost/Extensions.cs:146",
+        "src/eShop.AppHost/Extensions.cs:146 -> src/Ordering.API/Apis/OrdersApi.cs:12"
+      ],
+      "duplicate_of": null,
+      "absorbed": [],
+      "owner_hint": "component: src/Ordering.API/; no CODEOWNERS; recent committers Rob Conery, David Fowler (1/4 each)",
+      "missing_fields": []
+    },
+    {
+      "id": "f006",
+      "source": "VULN-FINDINGS.json#5 (F-006)",
+      "title": "Order item prices and product names are taken from the client request",
+      "file": "src/Ordering.API/Extensions/BasketItemExtensions.cs",
+      "line": 20,
+      "category": "business-logic",
+      "claimed_severity": "HIGH",
+      "verdict": "true_positive",
+      "verify_verdict": "exploitable",
+      "confidence": 7.7,
+      "severity": "MEDIUM",
+      "severity_label": "MEDIUM",
+      "severity_alignment": -2,
+      "preconditions": [
+        "Attacker is an authenticated shopper (open self-registration) with a bearer token",
+        "Attacker sends POST /api/orders directly via the public mobile-bff route with a crafted Items[].UnitPrice/ProductName, bypassing WebApp's catalog price reconciliation"
+      ],
+      "access_level": "authenticated",
+      "threat_match": null,
+      "rationale": "CreateOrderAsync (OrdersApi.cs:141) builds the command from client request.Items and ToOrderItemDTO (BasketItemExtensions.cs:20) copies the client UnitPrice and ProductName unchanged. OrderItem (OrderItem.cs:25-33) checks only units > 0 and discount <= price*units; Ordering never compares against catalog prices, which only the WebApp client does (BasketState.cs:117-141). Any authenticated shopper reaches it via mobile-bff (Extensions.cs:146), so the order total is attacker-controlled. Payment is a stub, but the authoritative order record stores the forged prices.\n\nCreateOrderAsync passes client Items into the command and ToOrderItemDTO (BasketItemExtensions.cs:20) copies UnitPrice/ProductName unchanged, so any shopper sets their own order total. Authenticated plus a direct API call gives MEDIUM; no threat-model entry matches. Damage is on the attacker's own order and payment is a stub, so real loss depends on whether fulfilment trusts the stored total.",
+      "vote_breakdown": {
+        "true_positive": 3,
+        "false_positive": 0,
+        "cannot_verify": 0
+      },
+      "refute_reasons": [],
+      "exclusion_rule": null,
+      "first_links": [
+        "src/Ordering.API/Apis/OrdersApi.cs:120",
+        "src/Ordering.API/Apis/OrdersApi.cs:141",
+        "src/Ordering.API/Apis/OrdersApi.cs:17"
+      ],
+      "duplicate_of": null,
+      "absorbed": [],
+      "owner_hint": "component: src/Ordering.API/; no CODEOWNERS; top committer Aditya Mandaleeka (1/1)",
+      "missing_fields": []
+    },
+    {
+      "id": "f005",
+      "source": "VULN-FINDINGS.json#4 (F-005)",
+      "title": "CreateOrder trusts body-supplied UserId/UserName instead of the JWT subject",
+      "file": "src/Ordering.API/Apis/OrdersApi.cs",
+      "line": 141,
+      "category": "auth-bypass",
+      "claimed_severity": "HIGH",
+      "verdict": "true_positive",
+      "verify_verdict": "exploitable",
+      "confidence": 7.0,
+      "severity": "MEDIUM",
+      "severity_label": "MEDIUM",
+      "severity_alignment": -2,
+      "preconditions": [
+        "Attacker holds a valid Ordering.API token (self-registration)",
+        "Attacker knows the victim's random GUID sub (no confirmed enumeration path)",
+        "Attacker reaches POST /api/orders via mobile-bff with a non-empty x-requestid (trivial)"
+      ],
+      "access_level": "authenticated",
+      "threat_match": "Tenant-to-tenant data leakage (partial: cross-tenant write/integrity, not disclosure; no raise applied)",
+      "rationale": "CreateOrderAsync (src/Ordering.API/Apis/OrdersApi.cs:141) takes UserId/UserName from the request body; CreateOrderCommandHandler injects IIdentityService but never uses it, so the order, OrderStartedIntegrationEvent and Buyer/payment-method update all go to the body-supplied id. Basket.API deletes that user's basket (OrderStartedIntegrationEventHandler.cs:14). The endpoint is public via mobile-bff (Extensions.cs:146) and gated only by RequireAuthorization (Program.cs:22). Severity is reduced because a targeted attack needs the victim's random GUID sub.\n\nCreateOrderAsync passes body UserId/UserName into the command (OrdersApi.cs:141) and the handler never uses IIdentityService, so the attacker chooses whose buyer record gets the order, payment method and basket deletion. Nothing is read back (GetOrders uses the token identity). Authenticated plus an unguessable victim GUID makes it MEDIUM; claimed HIGH is one level inflated.",
+      "vote_breakdown": {
+        "true_positive": 3,
+        "false_positive": 0,
+        "cannot_verify": 0
+      },
+      "refute_reasons": [],
+      "exclusion_rule": null,
+      "first_links": [
+        "src/eShop.AppHost/Extensions.cs:146",
+        "src/eShop.AppHost/Extensions.cs:146 -> src/Ordering.API/Apis/OrdersApi.cs:141"
+      ],
+      "duplicate_of": null,
+      "absorbed": [],
+      "owner_hint": "component: src/Ordering.API/; no CODEOWNERS; recent committers Rob Conery, David Fowler (1/4 each)",
+      "missing_fields": []
+    },
+    {
+      "id": "f012",
+      "source": "VULN-FINDINGS.json#11 (F-012)",
+      "title": "Indirect prompt injection via catalog content plus GetUserInfo tool plus auto-rendered images exfiltrates user PII with zero clicks",
+      "file": "src/WebApp/Components/Chatbot/MessageProcessor.cs",
+      "line": 24,
+      "category": "prompt-injection",
+      "claimed_severity": "HIGH",
+      "verdict": "true_positive",
+      "verify_verdict": "needs_manual_test",
+      "confidence": 6.7,
+      "severity": "MEDIUM",
+      "severity_label": "MEDIUM",
+      "severity_alignment": -2,
+      "preconditions": [
+        "Chatbot is enabled (off by default: useOllama hardcoded false, Foundry opt-in; IChatClient only registered with a chat model)",
+        "Attacker writes a malicious catalog Description anonymously via the mobile-bff catch-all",
+        "A logged-in shopper uses the chatbot and the poisoned item appears in SearchCatalog's top results",
+        "The LLM follows the injected instructions, auto-invokes GetUserInfo and emits a PII-bearing image URL",
+        "No CSP blocks the outbound image fetch (none set in WebApp)"
+      ],
+      "access_level": "unauthenticated_remote",
+      "threat_match": "Compliance-scoped data exposure (PII: name, address, email, phone)",
+      "rationale": "An anonymous attacker can overwrite a catalog Description via PUT /api/catalog/items/{id} through the public mobile-bff catch-all (Extensions.cs:142); Catalog.API has no auth. SearchCatalog (ChatState.cs:118-128) passes that text to the model and GetUserInfo (ChatState.cs:97-111) returns PII and is auto-invoked (WebApp Extensions.cs:108). AllowImages (MessageProcessor.cs:24,33) turns any markdown link into <img src> with no allowlist, rendered as MarkupString (Chatbot.razor:46), and WebApp sets no CSP, so the shopper's browser sends PII to the attacker host. Rule 6 rejected: the chain ends in a concrete code sink, not just prompt input. Depends on model compliance and the chatbot being configured.\n\nNo account needed, but five preconditions including a default-off feature and non-deterministic model compliance give LOW, raised one step to MEDIUM for the PII threat match. The zero-click <img src> sink with no allowlist is real. A human should enable a chat model and measure compliance before raising severity.",
+      "vote_breakdown": {
+        "true_positive": 3,
+        "false_positive": 0,
+        "cannot_verify": 0
+      },
+      "refute_reasons": [],
+      "exclusion_rule": null,
+      "first_links": [
+        "src/WebApp/Components/Chatbot/Chatbot.razor:46",
+        "src/eShop.AppHost/Extensions.cs:142"
+      ],
+      "duplicate_of": null,
+      "absorbed": [],
+      "owner_hint": "component: src/WebApp/; no CODEOWNERS; committers Stephen Toub, Aditya Mandaleeka (1/2 each)",
+      "missing_fields": []
+    },
+    {
+      "id": "f002",
+      "source": "VULN-FINDINGS.json#1 (F-002)",
+      "title": "PUT /api/orders/cancel cancels any user's order",
+      "file": "src/Ordering.API/Application/Commands/CancelOrderCommandHandler.cs",
+      "line": 21,
+      "category": "idor",
+      "claimed_severity": "HIGH",
+      "verdict": "true_positive",
+      "verify_verdict": "exploitable",
+      "confidence": 8.3,
+      "severity": "LOW",
+      "severity_label": "LOW",
+      "severity_alignment": -4,
+      "preconditions": [
+        "Attacker holds a valid token with the orders scope (any self-registered shopper, via mobile-bff)",
+        "Attacker knows or guesses the victim OrderNumber (sequential ints, no ownership check)",
+        "Victim order is still pre-Paid (SetCancelledStatus refuses Paid/Shipped; default flow reaches Paid quickly after the grace period)"
+      ],
+      "access_level": "authenticated",
+      "threat_match": null,
+      "rationale": "PUT /api/orders/cancel (OrdersApi.cs:11, 22-49) is internet-reachable via the mobile-bff YARP route (AppHost/Extensions.cs:146) and gated only by default RequireAuthorization (Program.cs:22), which any self-registered shopper with the orders scope satisfies. CancelOrderCommandHandler.cs:21 loads the order by sequential int id through a plain FindAsync (OrderRepository.cs:23) with no ownership check, and the validator only checks NotEmpty. SetCancelledStatus (Order.cs:142-153) cancels any order not Paid or Shipped and raises OrderCancelledDomainEvent, enabling bulk cancellation of other customers' pending orders.\n\nThe IDOR is real: CancelOrderCommandHandler loads by sequential id and cancels without comparing Buyer.IdentityGuid. Authentication plus three conditions, including landing inside the short pre-Paid window, gives LOW by the lower-column rule. Impact is griefing (cancelling others' pending orders) with no disclosure or privilege gain, so no threat-model bump; a scripted loop during the grace window makes it practical, but HIGH is inflated.",
+      "vote_breakdown": {
+        "true_positive": 3,
+        "false_positive": 0,
+        "cannot_verify": 0
+      },
+      "refute_reasons": [],
+      "exclusion_rule": null,
+      "first_links": [
+        "src/Ordering.API/Apis/OrdersApi.cs:11"
+      ],
+      "duplicate_of": null,
+      "absorbed": [],
+      "owner_hint": "component: src/Ordering.API/; no CODEOWNERS; top committer Aditya Mandaleeka (1/1)",
+      "missing_fields": []
+    },
+    {
+      "id": "f031",
+      "source": "VULN-FINDINGS.json#30 (F-031)",
+      "title": "CreateItem accepts a client-supplied primary key, allowing sequence collisions that block item creation",
+      "file": "src/Catalog.API/Apis/CatalogApi.cs",
+      "line": 421,
+      "category": "business-logic",
+      "claimed_severity": "LOW",
+      "verdict": "true_positive",
+      "verify_verdict": "exploitable",
+      "confidence": 6.0,
+      "severity": "LOW",
+      "severity_label": "LOW",
+      "severity_alignment": 3,
+      "preconditions": [
+        "Attacker reaches anonymous POST /catalog-api/api/catalog/items via public mobile-bff (no method filter, no RequireAuthorization)",
+        "Attacker predicts upcoming identity values (sequential, readable via anonymous GETs)",
+        "Some legitimate consumer later creates items relying on the identity sequence (no shipped admin UI calls CreateItem)"
+      ],
+      "access_level": "unauthenticated_remote",
+      "threat_match": null,
+      "rationale": "CreateItem (CatalogApi.cs:415-437) inserts the body-supplied Id (L421) into a Postgres identity-by-default column (CatalogContextModelSnapshot.cs:33), which does not advance the sequence. The POST route (L110) is anonymous and forwarded by the external mobile-bff (Extensions.cs:97), so an anonymous user can pre-claim upcoming ids and make later inserts fail with PK conflicts. Low impact and largely subsumed by the unauthenticated catalog write (f003).\n\nCreateItem copies the client Id (CatalogApi.cs:421) so an unauthenticated attacker can pre-claim identity values and make later sequence-assigned inserts fail. The rank agent derived MEDIUM; impact is only denial of catalog-item creation and is largely subsumed by f003, which already lets an attacker overwrite or delete items. Orchestrator override: rank agent listed 3 preconditions but scored MEDIUM; the rubric lower-column rule (3+ preconditions -> LOW) applied, consistent with f002.",
+      "vote_breakdown": {
+        "true_positive": 2,
+        "false_positive": 1,
+        "cannot_verify": 0
+      },
+      "refute_reasons": [
+        "not_actionable"
+      ],
+      "exclusion_rule": "12",
+      "first_links": [
+        "src/Catalog.API/Apis/CatalogApi.cs:110",
+        "src/Catalog.API/Program.cs:26"
+      ],
+      "duplicate_of": null,
+      "absorbed": [],
+      "owner_hint": "component: src/Catalog.API/; no CODEOWNERS; top committer Mike Kistler (3/11)",
+      "missing_fields": []
+    },
+    {
+      "id": "f009",
+      "source": "VULN-FINDINGS.json#8 (F-009)",
+      "title": "mobile-bff catch-all /api/catalog/{*any} exposes unauthenticated catalog write endpoints to the internet",
+      "file": "src/eShop.AppHost/Extensions.cs",
+      "line": 142,
+      "category": "auth-bypass",
+      "claimed_severity": "HIGH",
+      "verdict": "duplicate",
+      "verify_verdict": null,
+      "confidence": null,
+      "severity": null,
+      "severity_label": null,
+      "severity_alignment": null,
+      "preconditions": [],
+      "access_level": null,
+      "threat_match": null,
+      "rationale": null,
+      "vote_breakdown": null,
+      "refute_reasons": [],
+      "exclusion_rule": null,
+      "first_links": [],
+      "duplicate_of": "f003",
+      "absorbed": [],
+      "owner_hint": null,
+      "missing_fields": []
+    },
+    {
+      "id": "f010",
+      "source": "VULN-FINDINGS.json#9 (F-010)",
+      "title": "/api/orders/{*any} BFF route exposes ship/cancel/get-by-id endpoints that lack ownership and role checks",
+      "file": "src/eShop.AppHost/Extensions.cs",
+      "line": 146,
+      "category": "idor",
+      "claimed_severity": "HIGH",
+      "verdict": "duplicate",
+      "verify_verdict": null,
+      "confidence": null,
+      "severity": null,
+      "severity_label": null,
+      "severity_alignment": null,
+      "preconditions": [],
+      "access_level": null,
+      "threat_match": null,
+      "rationale": null,
+      "vote_breakdown": null,
+      "refute_reasons": [],
+      "exclusion_rule": null,
+      "first_links": [],
+      "duplicate_of": "f001",
+      "absorbed": [],
+      "owner_hint": null,
+      "missing_fields": []
+    },
+    {
+      "id": "f017",
+      "source": "VULN-FINDINGS.json#16 (F-017)",
+      "title": "Mobile app ships client secret \"secret\", which is also the confidential webapp client's secret (webapp has no PKCE)",
+      "file": "src/ClientApp/Services/Settings/SettingsService.cs",
+      "line": 15,
+      "category": "hardcoded-secret",
+      "claimed_severity": "MEDIUM",
+      "verdict": "duplicate",
+      "verify_verdict": null,
+      "confidence": null,
+      "severity": null,
+      "severity_label": null,
+      "severity_alignment": null,
+      "preconditions": [],
+      "access_level": null,
+      "threat_match": null,
+      "rationale": null,
+      "vote_breakdown": null,
+      "refute_reasons": [],
+      "exclusion_rule": null,
+      "first_links": [],
+      "duplicate_of": "f024",
+      "absorbed": [],
+      "owner_hint": null,
+      "missing_fields": []
+    },
+    {
+      "id": "f021",
+      "source": "VULN-FINDINGS.json#20 (F-021)",
+      "title": "ID tokens may be accepted as bearer access tokens (no typ check, audience off)",
+      "file": "src/eShop.ServiceDefaults/AuthenticationExtensions.cs",
+      "line": 33,
+      "category": "auth-bypass",
+      "claimed_severity": "LOW",
+      "verdict": "duplicate",
+      "verify_verdict": null,
+      "confidence": null,
+      "severity": null,
+      "severity_label": null,
+      "severity_alignment": null,
+      "preconditions": [],
+      "access_level": null,
+      "threat_match": null,
+      "rationale": null,
+      "vote_breakdown": null,
+      "refute_reasons": [],
+      "exclusion_rule": null,
+      "first_links": [],
+      "duplicate_of": "f016",
+      "absorbed": [],
+      "owner_hint": null,
+      "missing_fields": []
+    },
+    {
+      "id": "f039",
+      "source": "VULN-FINDINGS.json#38 (F-039)",
+      "title": "webapp OIDC client secret hardcoded as \"secret\", with RequireHttpsMetadata=false",
+      "file": "src/WebApp/Extensions/Extensions.cs",
+      "line": 78,
+      "category": "hardcoded-secret",
+      "claimed_severity": "LOW",
+      "verdict": "duplicate",
+      "verify_verdict": null,
+      "confidence": null,
+      "severity": null,
+      "severity_label": null,
+      "severity_alignment": null,
+      "preconditions": [],
+      "access_level": null,
+      "threat_match": null,
+      "rationale": null,
+      "vote_breakdown": null,
+      "refute_reasons": [],
+      "exclusion_rule": null,
+      "first_links": [],
+      "duplicate_of": "f024",
+      "absorbed": [],
+      "owner_hint": null,
+      "missing_fields": []
+    },
+    {
+      "id": "f040",
+      "source": "VULN-FINDINGS.json#39 (F-040)",
+      "title": "Hardcoded OIDC client secret and webhook token in WebhookClient",
+      "file": "src/WebhookClient/Extensions/Extensions.cs",
+      "line": 54,
+      "category": "hardcoded-secret",
+      "claimed_severity": "LOW",
+      "verdict": "duplicate",
+      "verify_verdict": null,
+      "confidence": null,
+      "severity": null,
+      "severity_label": null,
+      "severity_alignment": null,
+      "preconditions": [],
+      "access_level": null,
+      "threat_match": null,
+      "rationale": null,
+      "vote_breakdown": null,
+      "refute_reasons": [],
+      "exclusion_rule": null,
+      "first_links": [],
+      "duplicate_of": "f024",
+      "absorbed": [],
+      "owner_hint": null,
+      "missing_fields": []
+    },
+    {
+      "id": "f044",
+      "source": "VULN-FINDINGS.json#43 (F-044)",
+      "title": "Basket deletion driven by an unauthenticated UserId in a RabbitMQ OrderStarted event",
+      "file": "src/Basket.API/IntegrationEvents/EventHandling/OrderStartedIntegrationEventHandler.cs",
+      "line": 14,
+      "category": "message-forgery",
+      "claimed_severity": "LOW",
+      "verdict": "duplicate",
+      "verify_verdict": null,
+      "confidence": null,
+      "severity": null,
+      "severity_label": null,
+      "severity_alignment": null,
+      "preconditions": [],
+      "access_level": null,
+      "threat_match": null,
+      "rationale": null,
+      "vote_breakdown": null,
+      "refute_reasons": [],
+      "exclusion_rule": null,
+      "first_links": [],
+      "duplicate_of": "f023",
+      "absorbed": [],
+      "owner_hint": null,
+      "missing_fields": []
+    },
+    {
+      "id": "f047",
+      "source": "VULN-FINDINGS.json#46 (F-047)",
+      "title": "Localhost-only Diagnostics page reachable via spoofed X-Forwarded-For",
+      "file": "src/Identity.API/Quickstart/Diagnostics/DiagnosticsController.cs",
+      "line": 13,
+      "category": "access-control",
+      "claimed_severity": "LOW",
+      "verdict": "duplicate",
+      "verify_verdict": null,
+      "confidence": null,
+      "severity": null,
+      "severity_label": null,
+      "severity_alignment": null,
+      "preconditions": [],
+      "access_level": null,
+      "threat_match": null,
+      "rationale": null,
+      "vote_breakdown": null,
+      "refute_reasons": [],
+      "exclusion_rule": null,
+      "first_links": [],
+      "duplicate_of": "f042",
+      "absorbed": [],
+      "owner_hint": null,
+      "missing_fields": []
+    },
+    {
+      "id": "f050",
+      "source": "VULN-FINDINGS.json#49 (F-050)",
+      "title": "DEBUG builds trust an extra issuer https://10.0.2.2:5243",
+      "file": "src/eShop.ServiceDefaults/AuthenticationExtensions.cs",
+      "line": 44,
+      "category": "auth-bypass",
+      "claimed_severity": "LOW",
+      "verdict": "duplicate",
+      "verify_verdict": null,
+      "confidence": null,
+      "severity": null,
+      "severity_label": null,
+      "severity_alignment": null,
+      "preconditions": [],
+      "access_level": null,
+      "threat_match": null,
+      "rationale": null,
+      "vote_breakdown": null,
+      "refute_reasons": [],
+      "exclusion_rule": null,
+      "first_links": [],
+      "duplicate_of": "f016",
+      "absorbed": [],
+      "owner_hint": null,
+      "missing_fields": []
+    },
+    {
+      "id": "f007",
+      "source": "VULN-FINDINGS.json#6 (F-007)",
+      "title": "Webhook grant check and delivery send requests to any user-chosen URL, including internal service-discovery names",
+      "file": "src/Webhooks.API/Services/GrantUrlTesterService.cs",
+      "line": 21,
+      "category": "ssrf",
+      "claimed_severity": "HIGH",
+      "verdict": "false_positive",
+      "verify_verdict": null,
+      "confidence": 6.3,
+      "severity": null,
+      "severity_label": null,
+      "severity_alignment": null,
+      "preconditions": [],
+      "access_level": null,
+      "threat_match": null,
+      "rationale": "The sink is real: GrantUrlTesterService.cs:21 and WebhooksSender.cs:15-32 send requests to caller-chosen URLs and service discovery is on for all clients (ServiceDefaults/Extensions.cs:22-28). But webhooks-api (AppHost.cs:56-59) and its only UI caller webhooksclient (AppHost.cs:67-69) have no external endpoints, and mobile-bff routes nothing to /api/webhooks (AppHost/Extensions.cs:95-150). Untrusted shoppers cannot reach POST /api/webhooks in the stated environment; it would flip to TRUE_POSITIVE if a deployment exposes webhooks-api.",
+      "vote_breakdown": {
+        "true_positive": 0,
+        "false_positive": 3,
+        "cannot_verify": 0
+      },
+      "refute_reasons": [
+        "implausible_trigger"
+      ],
+      "exclusion_rule": null,
+      "first_links": [
+        "src/WebhookClient/Components/Pages/AddWebhook.razor:50; src/Webhooks.API/Apis/WebHooksApi.cs:41",
+        "src/Webhooks.API/Apis/WebHooksApi.cs:41"
+      ],
+      "duplicate_of": null,
+      "absorbed": [],
+      "owner_hint": null,
+      "missing_fields": []
+    },
+    {
+      "id": "f008",
+      "source": "VULN-FINDINGS.json#7 (F-008)",
+      "title": "Every customer's order events are delivered to every webhook subscriber regardless of order ownership",
+      "file": "src/Webhooks.API/Services/WebhooksRetriever.cs",
+      "line": 7,
+      "category": "auth-bypass",
+      "claimed_severity": "HIGH",
+      "verdict": "false_positive",
+      "verify_verdict": null,
+      "confidence": 6.0,
+      "severity": null,
+      "severity_label": null,
+      "severity_alignment": null,
+      "preconditions": [],
+      "access_level": null,
+      "threat_match": null,
+      "rationale": "WebhooksRetriever.cs:7 does skip the UserId filter and the Paid/Shipped handlers send BuyerName, order ids and line items to every subscriber (WebhookData.cs:15). But webhooks-api (AppHost.cs:56-59) and webhooksclient (AppHost.cs:67-69) have no external endpoints and mobile-bff (Extensions.cs:95-150) proxies only catalog, orders and identity, so a self-registered shopper cannot create a subscription. True positive in any deployment that exposes webhooks-api.",
+      "vote_breakdown": {
+        "true_positive": 0,
+        "false_positive": 3,
+        "cannot_verify": 0
+      },
+      "refute_reasons": [
+        "implausible_trigger"
+      ],
+      "exclusion_rule": null,
+      "first_links": [
+        "src/Webhooks.API/Apis/WebHooksApi.cs:35",
+        "src/Webhooks.API/Extensions/Extensions.cs:22",
+        "src/Webhooks.API/IntegrationEvents/OrderStatusChangedToShippedIntegrationEventHandler.cs:28"
+      ],
+      "duplicate_of": null,
+      "absorbed": [],
+      "owner_hint": null,
+      "missing_fields": []
+    },
+    {
+      "id": "f013",
+      "source": "VULN-FINDINGS.json#12 (F-013)",
+      "title": "Full card number and CVV logged when x-requestid is the empty GUID",
+      "file": "src/Ordering.API/Apis/OrdersApi.cs",
+      "line": 134,
+      "category": "sensitive-data-in-logs",
+      "claimed_severity": "MEDIUM",
+      "verdict": "false_positive",
+      "verify_verdict": null,
+      "confidence": 6.0,
+      "severity": null,
+      "severity_label": null,
+      "severity_alignment": null,
+      "preconditions": [],
+      "access_level": null,
+      "threat_match": null,
+      "rationale": "OrdersApi.cs:134 does log the full CreateOrderRequest record (PAN+CVV via record ToString, exported via IncludeFormattedMessage) before masking, but only when the client deliberately sends the all-zero GUID; WebApp (BasketState.cs:82, OrderingService.cs:15) and ClientApp (OrderService.cs:39 / RequestProvider.cs:136) always send Guid.NewGuid(), and a missing header fails binding. The only card data logged is the caller's own, so no third party is exposed: compliance hygiene, not an exploit. Fix is one line.",
+      "vote_breakdown": {
+        "true_positive": 0,
+        "false_positive": 3,
+        "cannot_verify": 0
+      },
+      "refute_reasons": [
+        "implausible_trigger"
+      ],
+      "exclusion_rule": "12",
+      "first_links": [
+        "src/Ordering.API/Apis/OrdersApi.cs:17",
+        "src/WebApp/Services/OrderingService.cs:15"
+      ],
+      "duplicate_of": null,
+      "absorbed": [],
+      "owner_hint": null,
+      "missing_fields": []
+    },
+    {
+      "id": "f014",
+      "source": "VULN-FINDINGS.json#13 (F-014)",
+      "title": "Received hook payloads and the webhook shared-secret token are shown to anonymous visitors",
+      "file": "src/WebhookClient/Components/Pages/Home/ReceivedMessages.razor",
+      "line": 13,
+      "category": "sensitive-data-exposure",
+      "claimed_severity": "MEDIUM",
+      "verdict": "false_positive",
+      "verify_verdict": null,
+      "confidence": 7.0,
+      "severity": null,
+      "severity_label": null,
+      "severity_alignment": null,
+      "preconditions": [],
+      "access_level": null,
+      "threat_match": null,
+      "rationale": "Home.razor:22 renders ReceivedMessages outside AuthorizeView and ReceivedMessages.razor:13 shows the token stored at WebhookEndpoints.cs:44, but webhooksclient is registered without WithExternalHttpEndpoints (AppHost.cs:67-69), so anonymous internet visitors cannot reach it. The token is already a committed GUID in appsettings.json and validation is off by default, so displaying it enables nothing new; showing received hooks is the demo app's purpose.",
+      "vote_breakdown": {
+        "true_positive": 0,
+        "false_positive": 3,
+        "cannot_verify": 0
+      },
+      "refute_reasons": [
+        "implausible_trigger"
+      ],
+      "exclusion_rule": "3",
+      "first_links": [
+        "src/WebhookClient/Components/Pages/Home/Home.razor:22"
+      ],
+      "duplicate_of": null,
+      "absorbed": [],
+      "owner_hint": null,
+      "missing_fields": []
+    },
+    {
+      "id": "f015",
+      "source": "VULN-FINDINGS.json#14 (F-015)",
+      "title": "WebhookClient token validation is off by default, so anyone can inject received hooks",
+      "file": "src/WebhookClient/Endpoints/WebhookEndpoints.cs",
+      "line": 13,
+      "category": "auth-bypass",
+      "claimed_severity": "MEDIUM",
+      "verdict": "false_positive",
+      "verify_verdict": null,
+      "confidence": 6.7,
+      "severity": null,
+      "severity_label": null,
+      "severity_alignment": null,
+      "preconditions": [],
+      "access_level": null,
+      "threat_match": null,
+      "rationale": "The config-key mismatch is real (WebhookEndpoints.cs:13 reads top-level ValidateToken, options bind WebhookClientOptions:ValidateToken, neither is set), so token checks at L18/L37 always pass. But webhooksclient has no external endpoint (AppHost.cs:67-69) and mobile-bff does not route to it, so internet attackers cannot reach /webhook-received; impact if reached is encoded fake text in a demo client (rule 12).",
+      "vote_breakdown": {
+        "true_positive": 0,
+        "false_positive": 3,
+        "cannot_verify": 0
+      },
+      "refute_reasons": [
+        "implausible_trigger"
+      ],
+      "exclusion_rule": "12",
+      "first_links": [
+        "src/WebhookClient/Program.cs:29"
+      ],
+      "duplicate_of": null,
+      "absorbed": [],
+      "owner_hint": null,
+      "missing_fields": []
+    },
+    {
+      "id": "f016",
+      "source": "VULN-FINDINGS.json#15 (F-016)",
+      "title": "JWT audience validation disabled with no scope enforcement: a token minted for any client/API is accepted by Basket, Ordering and Webhooks",
+      "file": "src/eShop.ServiceDefaults/AuthenticationExtensions.cs",
+      "line": 49,
+      "category": "auth-bypass",
+      "claimed_severity": "MEDIUM",
+      "verdict": "false_positive",
+      "verify_verdict": null,
+      "confidence": 6.3,
+      "severity": null,
+      "severity_label": null,
+      "severity_alignment": null,
+      "preconditions": [],
+      "access_level": null,
+      "threat_match": null,
+      "rationale": "ValidateAudience=false (AuthenticationExtensions.cs:49) applies to Basket/Ordering/Webhooks and there are no scope policies, but every token is bound to its own user's sub and a self-registered shopper can already obtain orders/basket/webhooks scopes for themselves (Config.cs:59-68, 99-107), so cross-API reuse grants no new access. Exploitation needs another user's token stolen first; the claimed swagger implicit-flow leak needs a Development-only docs UI (OpenApi.Extensions.cs:26) and Webhooks.API never forwards user JWTs (WebhooksSender.cs:24). Missing defense-in-depth (upstream fix 6b18dda unmerged).",
+      "vote_breakdown": {
+        "true_positive": 0,
+        "false_positive": 3,
+        "cannot_verify": 0
+      },
+      "refute_reasons": [
+        "implausible_trigger",
+        "not_actionable"
+      ],
+      "exclusion_rule": "13",
+      "first_links": [
+        "src/Ordering.API/Extensions/Extensions.cs:10",
+        "src/Ordering.API/Program.cs:22"
+      ],
+      "duplicate_of": null,
+      "absorbed": [
+        "f021",
+        "f050"
+      ],
+      "owner_hint": null,
+      "missing_fields": []
+    },
+    {
+      "id": "f018",
+      "source": "VULN-FINDINGS.json#17 (F-018)",
+      "title": "Card number, CVV, expiry and address issued as claims in every token and userinfo response",
+      "file": "src/Identity.API/Services/ProfileService.cs",
+      "line": 77,
+      "category": "sensitive-data-exposure",
+      "claimed_severity": "MEDIUM",
+      "verdict": "false_positive",
+      "verify_verdict": null,
+      "confidence": 6.3,
+      "severity": null,
+      "severity_label": null,
+      "severity_alignment": null,
+      "preconditions": [],
+      "access_level": null,
+      "threat_match": null,
+      "rationale": "ProfileService.cs:22-23,77 issues unfiltered card claims and Config.cs:72/89/125 put them in id_tokens, so the mechanism is real. But card/CVV fields on ApplicationUser are only populated by fixture data in UsersSeed.cs (masked PAN, fake CVVs for alice/bob); there is no registration flow, ExternalController.cs:200-204 sets only UserName, and checkout card data goes to Ordering without being saved to the identity user. Tokens only carry their holder's own data, and the WebApp cookie is Data Protection-encrypted. Missing hardening/PCI design issue with no concrete exploit.",
+      "vote_breakdown": {
+        "true_positive": 0,
+        "false_positive": 3,
+        "cannot_verify": 0
+      },
+      "refute_reasons": [
+        "implausible_trigger",
+        "intentional_behavior",
+        "not_actionable"
+      ],
+      "exclusion_rule": "13",
+      "first_links": [
+        "src/Identity.API/Program.cs:39",
+        "src/Identity.API/Services/ProfileService.cs:22"
+      ],
+      "duplicate_of": null,
+      "absorbed": [],
+      "owner_hint": null,
+      "missing_fields": []
+    },
+    {
+      "id": "f019",
+      "source": "VULN-FINDINGS.json#18 (F-019)",
+      "title": "Injected catalog text can make the agent call AddToCart on the victim's basket without confirmation",
+      "file": "src/WebApp/Components/Chatbot/ChatState.cs",
+      "line": 136,
+      "category": "prompt-injection",
+      "claimed_severity": "MEDIUM",
+      "verdict": "false_positive",
+      "verify_verdict": null,
+      "confidence": 6.0,
+      "severity": null,
+      "severity_label": null,
+      "severity_alignment": null,
+      "preconditions": [],
+      "access_level": null,
+      "threat_match": null,
+      "rationale": "The chain is real: anonymously writable catalog text (CatalogApi.cs:100-117, mobile-bff catch-all Extensions.cs:142) reaches SearchCatalog (ChatState.cs:118-128) and the auto-invoked AddToCart tool (ChatState.cs:45, 136-153) writes the victim's basket. But the only effect is visible, editable extra cart items; checkout still needs an explicit Place order (Checkout.razor:56), and the chat is off unless an AI model is configured. Low-impact nuisance (rule 12, also rule 6); the real flaw is the unauthenticated catalog write (f003).",
+      "vote_breakdown": {
+        "true_positive": 0,
+        "false_positive": 3,
+        "cannot_verify": 0
+      },
+      "refute_reasons": [
+        "not_actionable"
+      ],
+      "exclusion_rule": "12",
+      "first_links": [
+        "src/WebApp/Components/Chatbot/ChatState.cs:45",
+        "src/WebApp/Components/Chatbot/Chatbot.razor:107"
+      ],
+      "duplicate_of": null,
+      "absorbed": [],
+      "owner_hint": null,
+      "missing_fields": []
+    },
+    {
+      "id": "f020",
+      "source": "VULN-FINDINGS.json#19 (F-020)",
+      "title": "Debug hook drops and acks any message containing \"throw-fake-exception\"; user-controlled strings reach event payloads",
+      "file": "src/EventBusRabbitMQ/RabbitMQEventBus.cs",
+      "line": 163,
+      "category": "business-logic",
+      "claimed_severity": "LOW",
+      "verdict": "false_positive",
+      "verify_verdict": null,
+      "confidence": 7.7,
+      "severity": null,
+      "severity_label": null,
+      "severity_alignment": null,
+      "preconditions": [],
+      "access_level": null,
+      "threat_match": null,
+      "rationale": "The fault-injection hook (RabbitMQEventBus.cs:163) and ack-on-error (L180) are deliberate and documented. The only attacker-controlled string in event bodies is BuyerName from request.UserName (OrdersApi.cs:141), bound to the caller's own Buyer (ValidateOrAddBuyer...Handler.cs:28), so a user can only stall their own orders; product names never appear in integration events.",
+      "vote_breakdown": {
+        "true_positive": 0,
+        "false_positive": 3,
+        "cannot_verify": 0
+      },
+      "refute_reasons": [
+        "implausible_trigger",
+        "intentional_behavior"
+      ],
+      "exclusion_rule": "12",
+      "first_links": [
+        "src/Ordering.API/Apis/OrdersApi.cs:141"
+      ],
+      "duplicate_of": null,
+      "absorbed": [],
+      "owner_hint": null,
+      "missing_fields": []
+    },
+    {
+      "id": "f022",
+      "source": "VULN-FINDINGS.json#21 (F-022)",
+      "title": "Default mobile gateway endpoints are plain HTTP, sending bearer tokens and full PAN+CVV in cleartext",
+      "file": "src/ClientApp/ViewModels/SettingsViewModel.cs",
+      "line": 58,
+      "category": "cleartext-transmission",
+      "claimed_severity": "MEDIUM",
+      "verdict": "false_positive",
+      "verify_verdict": null,
+      "confidence": 8.0,
+      "severity": null,
+      "severity_label": null,
+      "severity_alignment": null,
+      "preconditions": [],
+      "access_level": null,
+      "threat_match": null,
+      "rationale": "The HTTP defaults at SettingsViewModel.cs:55-68 resolve to localhost or 10.0.2.2 (_baseAddress, line 16), so default traffic never crosses a network a passive attacker can watch; Android network_security_config.xml permits cleartext only to 10.0.2.2 and SettingsService.cs:25 defaults to mocks. Any other endpoint is user/operator-configured (trusted). The MacCatalyst NSAllowsArbitraryLoads flag is missing hardening with no attacker-driven exploit.",
+      "vote_breakdown": {
+        "true_positive": 0,
+        "false_positive": 3,
+        "cannot_verify": 0
+      },
+      "refute_reasons": [
+        "implausible_trigger",
+        "intentional_behavior"
+      ],
+      "exclusion_rule": "8",
+      "first_links": [
+        "src/ClientApp/ViewModels/SettingsViewModel.cs:16"
+      ],
+      "duplicate_of": null,
+      "absorbed": [],
+      "owner_hint": null,
+      "missing_fields": []
+    },
+    {
+      "id": "f023",
+      "source": "VULN-FINDINGS.json#22 (F-023)",
+      "title": "Event bus dispatches on attacker-chosen routing key with no publisher authentication, so any broker-credential holder can forge order/payment transitions",
+      "file": "src/EventBusRabbitMQ/RabbitMQEventBus.cs",
+      "line": 192,
+      "category": "message-forgery",
+      "claimed_severity": "MEDIUM",
+      "verdict": "false_positive",
+      "verify_verdict": null,
+      "confidence": 8.0,
+      "severity": null,
+      "severity_label": null,
+      "severity_alignment": null,
+      "preconditions": [],
+      "access_level": null,
+      "threat_match": null,
+      "rationale": "RabbitMQEventBus.cs:156/192 does dispatch on the routing key without publisher authentication, limited to subscribed event types (L192-196). Every legitimate publisher sets the routing key from the CLR type name (L33, L97-99), so untrusted HTTP input cannot choose it. Forging events needs direct AMQP access to the internal broker, which per the environment requires a compromised service or leaked credentials: post-compromise lateral movement; publisher auth would be defense-in-depth (rule 13, arguably 3).",
+      "vote_breakdown": {
+        "true_positive": 0,
+        "false_positive": 3,
+        "cannot_verify": 0
+      },
+      "refute_reasons": [
+        "implausible_trigger"
+      ],
+      "exclusion_rule": "13",
+      "first_links": [
+        "src/EventBusRabbitMQ/RabbitMQEventBus.cs:156",
+        "src/EventBusRabbitMQ/RabbitMQEventBus.cs:33"
+      ],
+      "duplicate_of": null,
+      "absorbed": [
+        "f044"
+      ],
+      "owner_hint": null,
+      "missing_fields": []
+    },
+    {
+      "id": "f024",
+      "source": "VULN-FINDINGS.json#23 (F-024)",
+      "title": "Confidential clients share the hardcoded secret \"secret\" and webapp disables PKCE",
+      "file": "src/Identity.API/Configuration/Config.cs",
+      "line": 82,
+      "category": "hardcoded-secret",
+      "claimed_severity": "MEDIUM",
+      "verdict": "false_positive",
+      "verify_verdict": null,
+      "confidence": 6.5,
+      "severity": null,
+      "severity_label": null,
+      "severity_alignment": null,
+      "preconditions": [],
+      "access_level": null,
+      "threat_match": null,
+      "rationale": "Config.cs:52/82/118 and WebApp Extensions.cs:78 hardcode the secret 'secret', but the webapp's AddOpenIdConnect (Extensions.cs:72-87) leaves UsePkce at its default (true), so Duende binds each code to a code_verifier the attacker lacks despite RequirePkce=false (Config.cs:90); the webapp never requests offline_access so no refresh token is issued, and all clients are Code-grant only. A publicly known weak secret is hardening, not a concrete exploit.",
+      "vote_breakdown": {
+        "true_positive": 1,
+        "false_positive": 2,
+        "cannot_verify": 0
+      },
+      "refute_reasons": [
+        "already_handled"
+      ],
+      "exclusion_rule": "13",
+      "first_links": [
+        "src/Identity.API/Program.cs:34"
+      ],
+      "duplicate_of": null,
+      "absorbed": [
+        "f017",
+        "f039",
+        "f040"
+      ],
+      "owner_hint": null,
+      "missing_fields": []
+    },
+    {
+      "id": "f025",
+      "source": "VULN-FINDINGS.json#24 (F-025)",
+      "title": "Known-password demo users are seeded in every environment and the login page prints the credentials",
+      "file": "src/Identity.API/UsersSeed.cs",
+      "line": 33,
+      "category": "hardcoded-credentials",
+      "claimed_severity": "MEDIUM",
+      "verdict": "false_positive",
+      "verify_verdict": null,
+      "confidence": 6.3,
+      "severity": null,
+      "severity_label": null,
+      "severity_alignment": null,
+      "preconditions": [],
+      "access_level": null,
+      "threat_match": null,
+      "rationale": "UsersSeed.cs:33/:78 seed alice/bob with Pass123$ unconditionally (Program.cs:12) and Login.cshtml:46 advertises it, but these are deliberate demo fixtures with placeholder data (masked card, fake phone) and no roles (IdentityRole only registered at Program.cs:14). Logging in as alice gives only a shopper session, the same as the self-registration the threat model already allows; at most a deployment-hygiene note.",
+      "vote_breakdown": {
+        "true_positive": 0,
+        "false_positive": 3,
+        "cannot_verify": 0
+      },
+      "refute_reasons": [
+        "intentional_behavior"
+      ],
+      "exclusion_rule": "3",
+      "first_links": [
+        "src/Identity.API/Program.cs:12"
+      ],
+      "duplicate_of": null,
+      "absorbed": [],
+      "owner_hint": null,
+      "missing_fields": []
+    },
+    {
+      "id": "f026",
+      "source": "VULN-FINDINGS.json#25 (F-026)",
+      "title": "GET /Account/Logout signs the user out with no prompt or antiforgery check",
+      "file": "src/Identity.API/Quickstart/Account/AccountOptions.cs",
+      "line": 12,
+      "category": "csrf",
+      "claimed_severity": "LOW",
+      "verdict": "false_positive",
+      "verify_verdict": null,
+      "confidence": 9.0,
+      "severity": null,
+      "severity_label": null,
+      "severity_alignment": null,
+      "preconditions": [],
+      "access_level": null,
+      "threat_match": null,
+      "rationale": "GET Logout (AccountController.cs:146-156) calls the POST handler directly when ShowLogoutPrompt is false (AccountOptions.cs:12), bypassing [ValidateAntiForgeryToken] (L165-166) and reaching SignOutAsync (L175), so a cross-site GET signs the user out. This is CSRF on logout, named in rule 12 as low-impact nuisance; the phishing setup is speculative and this is the Duende Quickstart default.",
+      "vote_breakdown": {
+        "true_positive": 0,
+        "false_positive": 3,
+        "cannot_verify": 0
+      },
+      "refute_reasons": [
+        "not_actionable"
+      ],
+      "exclusion_rule": "12",
+      "first_links": [
+        "src/Identity.API/Quickstart/Account/AccountController.cs:146",
+        "src/Identity.API/Quickstart/Account/AccountController.cs:147",
+        "src/Identity.API/Quickstart/Account/AccountController.cs:156"
+      ],
+      "duplicate_of": null,
+      "absorbed": [],
+      "owner_hint": null,
+      "missing_fields": []
+    },
+    {
+      "id": "f027",
+      "source": "VULN-FINDINGS.json#26 (F-027)",
+      "title": "IsActiveAsync checks the wrong claim type for the security stamp, so revocation by stamp never happens",
+      "file": "src/Identity.API/Services/ProfileService.cs",
+      "line": 39,
+      "category": "session-management",
+      "claimed_severity": "LOW",
+      "verdict": "false_positive",
+      "verify_verdict": null,
+      "confidence": 7.0,
+      "severity": null,
+      "severity_label": null,
+      "severity_alignment": null,
+      "preconditions": [],
+      "access_level": null,
+      "threat_match": null,
+      "rationale": "The claim-type mismatch at ProfileService.cs:39 is real (default SecurityStampClaimType kept at Program.cs:14) so the comparison never runs, but Identity.API has no password reset/change or UpdateSecurityStamp call site, so the 'victim resets password' trigger cannot occur; lockout (L48-51) and grant revocation still work. Defense-in-depth gap.",
+      "vote_breakdown": {
+        "true_positive": 0,
+        "false_positive": 3,
+        "cannot_verify": 0
+      },
+      "refute_reasons": [
+        "implausible_trigger"
+      ],
+      "exclusion_rule": "13",
+      "first_links": [
+        "src/Identity.API/Program.cs:39"
+      ],
+      "duplicate_of": null,
+      "absorbed": [],
+      "owner_hint": null,
+      "missing_fields": []
+    },
+    {
+      "id": "f028",
+      "source": "VULN-FINDINGS.json#27 (F-028)",
+      "title": "CreateOrderCommand carrying the unmasked CVV is destructured into logs at several points",
+      "file": "src/Ordering.API/Application/Commands/IdentifiedCommandHandler.cs",
+      "line": 79,
+      "category": "sensitive-data-in-logs",
+      "claimed_severity": "LOW",
+      "verdict": "false_positive",
+      "verify_verdict": null,
+      "confidence": 7.3,
+      "severity": null,
+      "severity_label": null,
+      "severity_alignment": null,
+      "preconditions": [],
+      "access_level": null,
+      "threat_match": null,
+      "rationale": "CreateOrderCommand (CreateOrderCommand.cs:16) is a plain class with no ToString override and the repo configures no destructuring logger (no Serilog/NLog; ServiceDefaults Extensions.cs:52-55 uses default MEL + OpenTelemetry), so {@Command} logs (IdentifiedCommandHandler.cs:79/89, LoggingBehavior.cs:9, TransactionBehavior.cs:41/59) emit only the type name; CVV never reaches log text.",
+      "vote_breakdown": {
+        "true_positive": 0,
+        "false_positive": 3,
+        "cannot_verify": 0
+      },
+      "refute_reasons": [
+        "misread_code"
+      ],
+      "exclusion_rule": "13",
+      "first_links": [
+        "src/Ordering.API/Apis/OrdersApi.cs:142",
+        "src/Ordering.API/Apis/OrdersApi.cs:146",
+        "src/Ordering.API/Apis/OrdersApi.cs:148"
+      ],
+      "duplicate_of": null,
+      "absorbed": [],
+      "owner_hint": null,
+      "missing_fields": []
+    },
+    {
+      "id": "f029",
+      "source": "VULN-FINDINGS.json#28 (F-029)",
+      "title": "Duplicate productId lines overflow Units (unchecked int add), producing negative quantity and total",
+      "file": "src/Ordering.Domain/AggregatesModel/OrderAggregate/OrderItem.cs",
+      "line": 61,
+      "category": "integer-overflow",
+      "claimed_severity": "LOW",
+      "verdict": "false_positive",
+      "verify_verdict": null,
+      "confidence": 6.0,
+      "severity": null,
+      "severity_label": null,
+      "severity_alignment": null,
+      "preconditions": [],
+      "access_level": null,
+      "threat_match": null,
+      "rationale": "The unchecked Units += units (OrderItem.cs:61) wraps on merged duplicate lines and is reachable by any shopper, but a negative total is already trivially reachable via client UnitPrice/discount (BasketItem.cs:8), so the overflow grants no new capability; RemoveStock (CatalogItem.cs:69-72) rejects non-positive quantities. Low-impact integrity nuisance.",
+      "vote_breakdown": {
+        "true_positive": 1,
+        "false_positive": 2,
+        "cannot_verify": 0
+      },
+      "refute_reasons": [
+        "not_actionable"
+      ],
+      "exclusion_rule": "12",
+      "first_links": [
+        "src/Ordering.API/Apis/OrdersApi.cs:141",
+        "src/Ordering.API/Application/Commands/CreateOrderCommandHandler.cs:44"
+      ],
+      "duplicate_of": null,
+      "absorbed": [],
+      "owner_hint": null,
+      "missing_fields": []
+    },
+    {
+      "id": "f030",
+      "source": "VULN-FINDINGS.json#29 (F-030)",
+      "title": "Payment simulation approves any OrderId from an unauthenticated event without checking amount, buyer or order state",
+      "file": "src/PaymentProcessor/IntegrationEvents/EventHandling/OrderStatusChangedToStockConfirmedIntegrationEventHandler.cs",
+      "line": 21,
+      "category": "business-logic",
+      "claimed_severity": "MEDIUM",
+      "verdict": "false_positive",
+      "verify_verdict": null,
+      "confidence": 8.0,
+      "severity": null,
+      "severity_label": null,
+      "severity_alignment": null,
+      "preconditions": [],
+      "access_level": null,
+      "threat_match": null,
+      "rationale": "The handler (OrderStatusChangedToStockConfirmedIntegrationEventHandler.cs:15-23) is a documented payment simulation switched by config, reachable only from the internal RabbitMQ bus whose sole legitimate publisher is Ordering (OrderStatusChangedToStockConfirmedDomainEventHandler.cs:30). An attacker with broker access could publish OrderPaymentSucceeded directly, so this handler adds no capability, and Order.cs:119-121 only sets Paid from StockConfirmed.",
+      "vote_breakdown": {
+        "true_positive": 0,
+        "false_positive": 3,
+        "cannot_verify": 0
+      },
+      "refute_reasons": [
+        "intentional_behavior"
+      ],
+      "exclusion_rule": "3",
+      "first_links": [
+        "src/Ordering.API/Application/DomainEventHandlers/OrderStatusChangedToStockConfirmedDomainEventHandler.cs:30"
+      ],
+      "duplicate_of": null,
+      "absorbed": [],
+      "owner_hint": null,
+      "missing_fields": []
+    },
+    {
+      "id": "f032",
+      "source": "VULN-FINDINGS.json#31 (F-032)",
+      "title": "Unauthenticated callers can drive paid embedding-provider calls with unbounded input",
+      "file": "src/Catalog.API/Apis/CatalogApi.cs",
+      "line": 431,
+      "category": "unrestricted-resource-consumption",
+      "claimed_severity": "LOW",
+      "verdict": "false_positive",
+      "verify_verdict": null,
+      "confidence": 7.0,
+      "severity": null,
+      "severity_label": null,
+      "severity_alignment": null,
+      "preconditions": [],
+      "access_level": null,
+      "threat_match": null,
+      "rationale": "CreateItem (CatalogApi.cs:431) embeds attacker Name/Description via CatalogAI.cs:75 on an anonymous route reachable through the BFF, but provider token limits cap per-request cost, so harm reduces to request volume draining budget (rule 1); embedding is off by default (AppHost.cs:81, 88). The unauthenticated write itself is f003.",
+      "vote_breakdown": {
+        "true_positive": 0,
+        "false_positive": 3,
+        "cannot_verify": 0
+      },
+      "refute_reasons": [
+        "not_actionable"
+      ],
+      "exclusion_rule": "1",
+      "first_links": [
+        "src/Catalog.API/Apis/CatalogApi.cs:109",
+        "src/Catalog.API/Apis/CatalogApi.cs:110",
+        "src/eShop.AppHost/Extensions.cs:117"
+      ],
+      "duplicate_of": null,
+      "absorbed": [],
+      "owner_hint": null,
+      "missing_fields": []
+    },
+    {
+      "id": "f033",
+      "source": "VULN-FINDINGS.json#32 (F-033)",
+      "title": "Stock validation confirms orders with unknown product ids and reserves nothing, allowing overselling",
+      "file": "src/Catalog.API/IntegrationEvents/EventHandling/OrderStatusChangedToAwaitingValidationIntegrationEventHandler.cs",
+      "line": 17,
+      "category": "business-logic",
+      "claimed_severity": "LOW",
+      "verdict": "false_positive",
+      "verify_verdict": null,
+      "confidence": 7.0,
+      "severity": null,
+      "severity_label": null,
+      "severity_alignment": null,
+      "preconditions": [],
+      "access_level": null,
+      "threat_match": null,
+      "rationale": "Unknown ProductIds are skipped and stock-confirmed (L17-29), reachable via client CreateOrderRequest.Items, but confirming a nonexistent product reserves and ships nothing. No stock reservation is deliberate (Paid handler L12 comment), overselling is a concurrent-checkout race (rule 16), and the RemoveStock throw (CatalogItem.cs:64-66) is a reliability defect.",
+      "vote_breakdown": {
+        "true_positive": 0,
+        "false_positive": 3,
+        "cannot_verify": 0
+      },
+      "refute_reasons": [
+        "intentional_behavior"
+      ],
+      "exclusion_rule": "3",
+      "first_links": [
+        "src/Ordering.API/Application/Commands/CreateOrderCommandHandler.cs:44",
+        "src/Ordering.API/Application/DomainEventHandlers/OrderStatusChangedToAwaitingValidationDomainEventHandler.cs:30",
+        "src/Ordering.API/Application/DomainEventHandlers/OrderStatusChangedToAwaitingValidationDomainEventHandler.cs:33"
+      ],
+      "duplicate_of": null,
+      "absorbed": [],
+      "owner_hint": null,
+      "missing_fields": []
+    },
+    {
+      "id": "f034",
+      "source": "VULN-FINDINGS.json#33 (F-034)",
+      "title": "DEBUG handlers accept any cert issued by CN=localhost (Android) or any URL starting with https://localhost (iOS) for every host",
+      "file": "src/ClientApp/MauiProgram.cs",
+      "line": 127,
+      "category": "broken-cert-validation",
+      "claimed_severity": "LOW",
+      "verdict": "false_positive",
+      "verify_verdict": null,
+      "confidence": 7.0,
+      "severity": null,
+      "severity_label": null,
+      "severity_alignment": null,
+      "preconditions": [],
+      "access_level": null,
+      "threat_match": null,
+      "rationale": "The lax validators at MauiProgram.cs:127 and :138 exist but the whole registration is inside #if DEBUG (L118-147); Release builds get null from GetKeyedService (L81, L89) and use default TLS validation. Microsoft's documented local-dev pattern; needs a non-shipped DEBUG build on a hostile network.",
+      "vote_breakdown": {
+        "true_positive": 0,
+        "false_positive": 3,
+        "cannot_verify": 0
+      },
+      "refute_reasons": [
+        "intentional_behavior"
+      ],
+      "exclusion_rule": "2",
+      "first_links": [
+        "src/ClientApp/MauiProgram.cs:81",
+        "src/ClientApp/MauiProgram.cs:89"
+      ],
+      "duplicate_of": null,
+      "absorbed": [],
+      "owner_hint": null,
+      "missing_fields": []
+    },
+    {
+      "id": "f035",
+      "source": "VULN-FINDINGS.json#34 (F-035)",
+      "title": "Trace-header parsing outside try/catch leaves header-less or malformed messages unacked forever",
+      "file": "src/EventBusRabbitMQ/RabbitMQEventBus.cs",
+      "line": 136,
+      "category": "improper-input-validation",
+      "claimed_severity": "LOW",
+      "verdict": "false_positive",
+      "verify_verdict": null,
+      "confidence": 7.7,
+      "severity": null,
+      "severity_label": null,
+      "severity_alignment": null,
+      "preconditions": [],
+      "access_level": null,
+      "threat_match": null,
+      "rationale": "The unchecked header dereference (L136, L138-139) runs before the try (L145 vs L159) so malformed messages are never acked (L180), but only a party publishing directly to the internal broker can craft such headers; app messages from PublishAsync (L86) are well-formed. Reliability/hardening issue.",
+      "vote_breakdown": {
+        "true_positive": 0,
+        "false_positive": 3,
+        "cannot_verify": 0
+      },
+      "refute_reasons": [
+        "implausible_trigger"
+      ],
+      "exclusion_rule": "12",
+      "first_links": [
+        "src/EventBusRabbitMQ/RabbitMQEventBus.cs:132",
+        "src/EventBusRabbitMQ/RabbitMQEventBus.cs:272"
+      ],
+      "duplicate_of": null,
+      "absorbed": [],
+      "owner_hint": null,
+      "missing_fields": []
+    },
+    {
+      "id": "f036",
+      "source": "VULN-FINDINGS.json#35 (F-036)",
+      "title": "Shared credentials and well-known queue names let any bus participant steal or read other services' events",
+      "file": "src/EventBusRabbitMQ/RabbitMQEventBus.cs",
+      "line": 258,
+      "category": "information-disclosure",
+      "claimed_severity": "LOW",
+      "verdict": "false_positive",
+      "verify_verdict": null,
+      "confidence": 8.0,
+      "severity": null,
+      "severity_label": null,
+      "severity_alignment": null,
+      "preconditions": [],
+      "access_level": null,
+      "threat_match": null,
+      "rationale": "Non-exclusive, config-named durable queues on a shared exchange with one shared broker resource (RabbitMQEventBus.cs:20,25,258-263; AppHost.cs:10) are confirmed, but exploitation needs a compromised service or leaked broker credentials, which the environment places internally. Missing per-service broker ACLs and bodies in logs/traces (L161, L172) are hardening gaps.",
+      "vote_breakdown": {
+        "true_positive": 0,
+        "false_positive": 3,
+        "cannot_verify": 0
+      },
+      "refute_reasons": [
+        "implausible_trigger"
+      ],
+      "exclusion_rule": "13",
+      "first_links": [
+        "src/EventBusRabbitMQ/RabbitMQEventBus.cs:226",
+        "src/EventBusRabbitMQ/RabbitMQEventBus.cs:25",
+        "src/eShop.AppHost/AppHost.cs:10"
+      ],
+      "duplicate_of": null,
+      "absorbed": [],
+      "owner_hint": null,
+      "missing_fields": []
+    },
+    {
+      "id": "f037",
+      "source": "VULN-FINDINGS.json#36 (F-037)",
+      "title": "Idempotency request ids are global, not scoped to caller or command",
+      "file": "src/Ordering.Infrastructure/Idempotency/RequestManager.cs",
+      "line": 13,
+      "category": "business-logic",
+      "claimed_severity": "LOW",
+      "verdict": "false_positive",
+      "verify_verdict": null,
+      "confidence": 8.0,
+      "severity": null,
+      "severity_label": null,
+      "severity_alignment": null,
+      "preconditions": [],
+      "access_level": null,
+      "threat_match": null,
+      "rationale": "Idempotency lookup is global by GUID (RequestManager.cs:13-19; IdentifiedCommandHandler.cs:41-44), but the attack needs the victim's random Guid.NewGuid() request id in advance (BasketState.cs:80-82; RequestProvider.cs:136) with no leak path (rule 15); the non-atomic check-insert is backstopped by the ClientRequest.Id key constraint (rule 16).",
+      "vote_breakdown": {
+        "true_positive": 0,
+        "false_positive": 3,
+        "cannot_verify": 0
+      },
+      "refute_reasons": [
+        "implausible_trigger"
+      ],
+      "exclusion_rule": "15",
+      "first_links": [
+        "src/Ordering.API/Apis/OrdersApi.cs:119",
+        "src/Ordering.API/Apis/OrdersApi.cs:146"
+      ],
+      "duplicate_of": null,
+      "absorbed": [],
+      "owner_hint": null,
+      "missing_fields": []
+    },
+    {
+      "id": "f038",
+      "source": "VULN-FINDINGS.json#37 (F-038)",
+      "title": "Quadratic regex on unbounded chat messages, rerun on every render",
+      "file": "src/WebApp/Components/Chatbot/MessageProcessor.cs",
+      "line": 33,
+      "category": "redos",
+      "claimed_severity": "LOW",
+      "verdict": "false_positive",
+      "verify_verdict": null,
+      "confidence": 7.5,
+      "severity": null,
+      "severity_label": null,
+      "severity_alignment": null,
+      "preconditions": [],
+      "access_level": null,
+      "threat_match": null,
+      "rationale": "The regex (MessageProcessor.cs:33) is at worst O(n^2) without timeout, but the ~32KB SignalR cap bounds n and the net10 source generator vectorizes the loops, so worst case is tens of ms per render; each send already costs a far pricier LLM call. Real exhaustion needs volume (rule 1).",
+      "vote_breakdown": {
+        "true_positive": 1,
+        "false_positive": 2,
+        "cannot_verify": 0
+      },
+      "refute_reasons": [
+        "implausible_trigger"
+      ],
+      "exclusion_rule": "1",
+      "first_links": [
+        "src/WebApp/Components/Chatbot/Chatbot.razor:45",
+        "src/WebApp/Components/Chatbot/Chatbot.razor:46"
+      ],
+      "duplicate_of": null,
+      "absorbed": [],
+      "owner_hint": null,
+      "missing_fields": []
+    },
+    {
+      "id": "f041",
+      "source": "VULN-FINDINGS.json#40 (F-041)",
+      "title": "Webhook secret tokens logged at Information level",
+      "file": "src/Webhooks.API/Services/GrantUrlTesterService.cs",
+      "line": 17,
+      "category": "sensitive-data-in-logs",
+      "claimed_severity": "LOW",
+      "verdict": "false_positive",
+      "verify_verdict": null,
+      "confidence": 6.0,
+      "severity": null,
+      "severity_label": null,
+      "severity_alignment": null,
+      "preconditions": [],
+      "access_level": null,
+      "threat_match": null,
+      "rationale": "Tokens are logged in plaintext (GrantUrlTesterService.cs:17,25; WebhookEndpoints.cs:35), but only privileged log-pipeline readers see them, and the same token is already stored in plaintext in the DB (WebhookSubscription.cs:11) and sent with every delivery (WebhooksSender.cs:24). Hardening only.",
+      "vote_breakdown": {
+        "true_positive": 0,
+        "false_positive": 3,
+        "cannot_verify": 0
+      },
+      "refute_reasons": [
+        "implausible_trigger",
+        "not_actionable"
+      ],
+      "exclusion_rule": "13",
+      "first_links": [
+        "src/Webhooks.API/Apis/WebHooksApi.cs:41"
+      ],
+      "duplicate_of": null,
+      "absorbed": [],
+      "owner_hint": null,
+      "missing_fields": []
+    },
+    {
+      "id": "f042",
+      "source": "VULN-FINDINGS.json#41 (F-042)",
+      "title": "ASPNETCORE_FORWARDEDHEADERS_ENABLED=true on every project, including internet-facing identity-api and webapp",
+      "file": "src/eShop.AppHost/Extensions.cs",
+      "line": 36,
+      "category": "header-spoofing",
+      "claimed_severity": "LOW",
+      "verdict": "false_positive",
+      "verify_verdict": null,
+      "confidence": 7.7,
+      "severity": null,
+      "severity_label": null,
+      "severity_alignment": null,
+      "preconditions": [],
+      "access_level": null,
+      "threat_match": null,
+      "rationale": "ASPNETCORE_FORWARDEDHEADERS_ENABLED (Extensions.cs:36) is set for an Azure Container Apps deployment (AppHost.cs:7) behind platform ingress, and handles only X-Forwarded-For/Proto. No server code reads RemoteIpAddress for access control beyond the authenticated Diagnostics self-view, so what remains is log IP spoofing and scheme spoofing on the attacker's own request (rules 12/13).",
+      "vote_breakdown": {
+        "true_positive": 0,
+        "false_positive": 3,
+        "cannot_verify": 0
+      },
+      "refute_reasons": [
+        "intentional_behavior",
+        "not_actionable"
+      ],
+      "exclusion_rule": "13",
+      "first_links": [
+        "src/eShop.AppHost/AppHost.cs:6"
+      ],
+      "duplicate_of": null,
+      "absorbed": [
+        "f047"
+      ],
+      "owner_hint": null,
+      "missing_fields": []
+    },
+    {
+      "id": "f043",
+      "source": "VULN-FINDINGS.json#42 (F-043)",
+      "title": "RequireHttpsMetadata=false lets OIDC discovery/JWKS be fetched over plain HTTP",
+      "file": "src/eShop.ServiceDefaults/AuthenticationExtensions.cs",
+      "line": 39,
+      "category": "broken-cert-validation",
+      "claimed_severity": "LOW",
+      "verdict": "false_positive",
+      "verify_verdict": null,
+      "confidence": 7.0,
+      "severity": null,
+      "severity_label": null,
+      "severity_alignment": null,
+      "preconditions": [],
+      "access_level": null,
+      "threat_match": null,
+      "rationale": "AuthenticationExtensions.cs:39 disables RequireHttpsMetadata, but the Authority is operator config (AppHost.cs:30,35) and the default https launch profile (AppHost.cs:22) keeps discovery/JWKS on TLS. Spoofing JWKS needs an on-path position inside the internal network, i.e. a prior compromise. Missing hardening (rule 13; rule 8 partly).",
+      "vote_breakdown": {
+        "true_positive": 0,
+        "false_positive": 3,
+        "cannot_verify": 0
+      },
+      "refute_reasons": [
+        "implausible_trigger"
+      ],
+      "exclusion_rule": "13",
+      "first_links": [
+        "src/Basket.API/Extensions/Extensions.cs:12",
+        "src/eShop.AppHost/AppHost.cs:35"
+      ],
+      "duplicate_of": null,
+      "absorbed": [],
+      "owner_hint": null,
+      "missing_fields": []
+    },
+    {
+      "id": "f045",
+      "source": "VULN-FINDINGS.json#44 (F-045)",
+      "title": "Attacker-controlled PictureFileName used as a file path in the picture endpoint (contained by PhysicalFileProvider)",
+      "file": "src/Catalog.API/Apis/CatalogApi.cs",
+      "line": 263,
+      "category": "path-traversal",
+      "claimed_severity": "LOW",
+      "verdict": "false_positive",
+      "verify_verdict": null,
+      "confidence": 8.3,
+      "severity": null,
+      "severity_label": null,
+      "severity_alignment": null,
+      "preconditions": [],
+      "access_level": null,
+      "threat_match": null,
+      "rationale": "The anonymous /items/{id}/pic route (CatalogApi.cs:47) passes PictureFileName to a PhysicalFileProvider rooted at ContentRoot/Pics (Program.cs:7-9, fix 913acea), which rejects absolute paths, '..' escapes and dotfiles, returning 404 (L264-267). Catalog.API has no upload path and Pics holds only .webp, so the svg residual cannot trigger.",
+      "vote_breakdown": {
+        "true_positive": 0,
+        "false_positive": 3,
+        "cannot_verify": 0
+      },
+      "refute_reasons": [
+        "already_handled"
+      ],
+      "exclusion_rule": "13",
+      "first_links": [
+        "src/Catalog.API/Apis/CatalogApi.cs:47"
+      ],
+      "duplicate_of": null,
+      "absorbed": [],
+      "owner_hint": null,
+      "missing_fields": []
+    },
+    {
+      "id": "f046",
+      "source": "VULN-FINDINGS.json#45 (F-046)",
+      "title": "Singleton HttpClient's DefaultRequestHeaders mutated per call, so concurrent requests can carry another call's bearer token",
+      "file": "src/ClientApp/Services/RequestProvider/RequestProvider.cs",
+      "line": 116,
+      "category": "race-condition",
+      "claimed_severity": "LOW",
+      "verdict": "false_positive",
+      "verify_verdict": null,
+      "confidence": 8.0,
+      "severity": null,
+      "severity_label": null,
+      "severity_alignment": null,
+      "preconditions": [],
+      "access_level": null,
+      "threat_match": null,
+      "rationale": "RequestProvider.cs:116 mutates DefaultRequestHeaders.Authorization on a singleton HttpClient (MauiProgram.cs:78) and :136 accumulates x-requestid, but this is the MAUI client: the token is the device user's own and can only reach a host that user configured, after a misconfiguration plus race timing no external attacker controls. The x-requestid buildup is a correctness bug.",
+      "vote_breakdown": {
+        "true_positive": 0,
+        "false_positive": 3,
+        "cannot_verify": 0
+      },
+      "refute_reasons": [
+        "implausible_trigger"
+      ],
+      "exclusion_rule": "16",
+      "first_links": [
+        "src/ClientApp/MauiProgram.cs:78",
+        "src/ClientApp/Services/Order/OrderService.cs:39"
+      ],
+      "duplicate_of": null,
+      "absorbed": [],
+      "owner_hint": null,
+      "missing_fields": []
+    },
+    {
+      "id": "f048",
+      "source": "VULN-FINDINGS.json#47 (F-048)",
+      "title": "Order-status event handlers log the full event including BuyerName and BuyerIdentityGuid",
+      "file": "src/WebApp/Services/OrderStatus/IntegrationEvents/EventHandling/OrderStatusChangedToPaidIntegrationEventHandler.cs",
+      "line": 12,
+      "category": "sensitive-data-in-logs",
+      "claimed_severity": "LOW",
+      "verdict": "false_positive",
+      "verify_verdict": null,
+      "confidence": 7.0,
+      "severity": null,
+      "severity_label": null,
+      "severity_alignment": null,
+      "preconditions": [],
+      "access_level": null,
+      "threat_match": null,
+      "rationale": "The WebApp handler logs the full event including BuyerName and BuyerIdentityGuid (set at OrderStatusChangedToPaidDomainEventHandler.cs:32-35), a convention used 22 times across src. No untrusted HTTP actor can read logs or the OTel sink; PII-in-logs hardening with no attacker path.",
+      "vote_breakdown": {
+        "true_positive": 0,
+        "false_positive": 3,
+        "cannot_verify": 0
+      },
+      "refute_reasons": [
+        "not_actionable"
+      ],
+      "exclusion_rule": "13",
+      "first_links": [
+        "src/Ordering.API/Application/DomainEventHandlers/OrderStatusChangedToPaidDomainEventHandler.cs:32",
+        "src/WebApp/Extensions/Extensions.cs:46"
+      ],
+      "duplicate_of": null,
+      "absorbed": [],
+      "owner_hint": null,
+      "missing_fields": []
+    },
+    {
+      "id": "f049",
+      "source": "VULN-FINDINGS.json#48 (F-049)",
+      "title": "User access token forwarded unchanged to every AddAuthToken client, including plaintext basket-api and catalog-api",
+      "file": "src/eShop.ServiceDefaults/HttpClientExtensions.cs",
+      "line": 43,
+      "category": "sensitive-data-exposure",
+      "claimed_severity": "LOW",
+      "verdict": "false_positive",
+      "verify_verdict": null,
+      "confidence": 7.0,
+      "severity": null,
+      "severity_label": null,
+      "severity_alignment": null,
+      "preconditions": [],
+      "access_level": null,
+      "threat_match": null,
+      "rationale": "HttpClientExtensions.cs:42-44 attaches the user's token only to clients registered at WebApp/Extensions/Extensions.cs:31-40, whose destinations are hard-coded internal services, so users cannot redirect it. Harvesting tokens needs internal network access or a compromised service. Forwarding user tokens to first-party backends is intended; lack of per-audience scoping is missing hardening.",
+      "vote_breakdown": {
+        "true_positive": 0,
+        "false_positive": 3,
+        "cannot_verify": 0
+      },
+      "refute_reasons": [
+        "intentional_behavior"
+      ],
+      "exclusion_rule": "13",
+      "first_links": [
+        "src/WebApp/Extensions/Extensions.cs:31"
+      ],
+      "duplicate_of": null,
+      "absorbed": [],
+      "owner_hint": null,
+      "missing_fields": []
+    }
+  ]
+}

@@ -1,0 +1,129 @@
+--- a/src/Identity.API/Configuration/Config.cs
++++ b/src/Identity.API/Configuration/Config.cs
+@@ -49,8 +49,6 @@
+-                    //Used to retrieve the access token on the back channel.
+-                    ClientSecrets =
+-                    {
+-                        new Secret("secret".Sha256())
+-                    },
++                    // MAUI is a public native client: it cannot keep a secret, so PKCE (below)
++                    // binds the authorization code to the app instance instead.
++                    RequireClientSecret = false,
+                     RedirectUris = { configuration["MauiCallback"] },
+                     RequireConsent = false,
+                     RequirePkce = true,
+@@ -80,4 +78,4 @@
+                     ClientSecrets = new List<Secret>
+                     {
+-                        new Secret("secret".Sha256())
++                        new Secret(GetClientSecret(configuration, "webapp").Sha256())
+                     },
+@@ -89,3 +87,3 @@
+                     AlwaysIncludeUserClaimsInIdToken = true,
+-                    RequirePkce = false,
++                    RequirePkce = true,
+                     RedirectUris = new List<string>
+@@ -116,4 +114,4 @@
+                     ClientSecrets = new List<Secret>
+                     {
+-                        new Secret("secret".Sha256())
++                        new Secret(GetClientSecret(configuration, "webhooksclient").Sha256())
+                     },
+@@ -187,6 +185,19 @@
+                     }
+                 }
+             };
+         }
++
++        // Client secrets are supplied per environment and per client. They are never
++        // committed to source control and should be rotated independently.
++        private static string GetClientSecret(IConfiguration configuration, string clientId)
++        {
++            var secret = configuration[$"ClientSecrets:{clientId}"];
++            if (string.IsNullOrWhiteSpace(secret))
++            {
++                throw new InvalidOperationException($"Configuration missing value for: ClientSecrets:{clientId}");
++            }
++
++            return secret;
++        }
+     }
+ }
+--- a/src/WebApp/Extensions/Extensions.cs
++++ b/src/WebApp/Extensions/Extensions.cs
+@@ -60,3 +60,4 @@
+         var identityUrl = configuration.GetRequiredValue("IdentityUrl");
+         var callBackUrl = configuration.GetRequiredValue("CallBackUrl");
++        var clientSecret = configuration.GetRequiredValue("ClientSecret");
+         var sessionCookieLifetime = configuration.GetValue("SessionCookieLifetimeMinutes", 60);
+@@ -77,4 +78,5 @@
+             options.ClientId = "webapp";
+-            options.ClientSecret = "secret";
++            options.ClientSecret = clientSecret;
+             options.ResponseType = "code";
++            options.UsePkce = true;
+             options.SaveTokens = true;
+--- a/src/WebhookClient/Extensions/Extensions.cs
++++ b/src/WebhookClient/Extensions/Extensions.cs
+@@ -29,3 +29,4 @@
+         var identityUrl = configuration.GetRequiredValue("IdentityUrl");
+         var callBackUrl = configuration.GetRequiredValue("CallBackUrl");
++        var clientSecret = configuration.GetRequiredValue("ClientSecret");
+         var sessionCookieLifetime = configuration.GetValue("SessionCookieLifetimeMinutes", 60);
+@@ -53,2 +54,2 @@
+             options.ClientId = "webhooksclient";
+-            options.ClientSecret = "secret";
++            options.ClientSecret = clientSecret;
+--- a/src/ClientApp/Services/Settings/SettingsService.cs
++++ b/src/ClientApp/Services/Settings/SettingsService.cs
+@@ -14,3 +14,3 @@
+     private const string DefaultClientId = "maui";
+-    private const string DefaultClientSecret = "secret";
++    private const string DefaultClientSecret = "";
+     private const string DefaultCallbackUri = "maui://authcallback";
+--- a/tests/Application.UnitTests/IdentityConfigurationTests.cs
++++ b/tests/Application.UnitTests/IdentityConfigurationTests.cs
+@@ -1,3 +1,4 @@
++using Duende.IdentityServer.Models;
+ using eShop.Identity.API.Configuration;
+ using eShop.Identity.API.Services;
+ using Microsoft.Extensions.Configuration;
+@@ -29,4 +30,6 @@
+             ["OrderingApiClient"] = "https://ordering.test",
+-            ["WebhooksApiClient"] = "https://webhooks.test"
++            ["WebhooksApiClient"] = "https://webhooks.test",
++            ["ClientSecrets:webapp"] = "webapp-test-secret",
++            ["ClientSecrets:webhooksclient"] = "webhooks-test-secret"
+         };
+@@ -38,5 +41,31 @@
+         CollectionAssert.Contains(clients["maui"].AllowedScopes.ToList(), "basket");
+         CollectionAssert.Contains(clients["maui"].AllowedScopes.ToList(), "orders");
+     }
+ 
++    [TestMethod]
++    public void ConfidentialClientsUseConfiguredSecretsAndPkce()
++    {
++        var values = new Dictionary<string, string?>
++        {
++            ["MauiCallback"] = "maui://callback",
++            ["WebAppClient"] = "https://webapp.test",
++            ["WebhooksWebClient"] = "https://webhooks-client.test",
++            ["BasketApiClient"] = "https://basket.test",
++            ["OrderingApiClient"] = "https://ordering.test",
++            ["WebhooksApiClient"] = "https://webhooks.test",
++            ["ClientSecrets:webapp"] = "webapp-test-secret",
++            ["ClientSecrets:webhooksclient"] = "webhooks-test-secret"
++        };
++        var configuration = new ConfigurationBuilder().AddInMemoryCollection(values).Build();
++
++        var clients = Config.GetClients(configuration).ToDictionary(client => client.ClientId);
++
++        Assert.IsTrue(clients["webapp"].RequirePkce);
++        Assert.AreEqual("webapp-test-secret".Sha256(), clients["webapp"].ClientSecrets.Single().Value);
++        Assert.AreEqual("webhooks-test-secret".Sha256(), clients["webhooksclient"].ClientSecrets.Single().Value);
++
++        Assert.IsFalse(clients["maui"].RequireClientSecret);
++        Assert.AreEqual(0, clients["maui"].ClientSecrets.Count);
++    }
++
+     [TestMethod]

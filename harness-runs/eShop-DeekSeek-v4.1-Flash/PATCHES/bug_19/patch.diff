@@ -1,0 +1,80 @@
+--- a/src/WebhookClient/Endpoints/WebhookEndpoints.cs
++++ b/src/WebhookClient/Endpoints/WebhookEndpoints.cs
+@@ -31,10 +31,9 @@ public static class WebhookEndpoints
+         app.MapPost("/webhook-received", async (WebhookData hook, HttpRequest request, ILogger<Program> logger, HooksRepository hooksRepository) =>
+         {
+             var token = request.Headers[webhookCheckHeader];
+ 
+-            logger.LogInformation("Received hook with token {Token}. My token is {MyToken}. Token validation is set to {ValidateToken}", token, tokenToValidate, validateToken);
++            logger.LogInformation("Received hook request. Token validation is set to {ValidateToken}", validateToken);
+ 
+             if (!validateToken || tokenToValidate == token)
+             {
+                 logger.LogInformation("Received hook is going to be processed");
+--- a/tests/Application.UnitTests/WebhookClientTests.cs
++++ b/tests/Application.UnitTests/WebhookClientTests.cs
+@@ -4,6 +4,8 @@
+ using Microsoft.AspNetCore.Hosting;
+ using Microsoft.AspNetCore.TestHost;
+ using Microsoft.Extensions.DependencyInjection;
++using Microsoft.Extensions.Logging;
++using System.Collections.Concurrent;
+ using System.Net;
+ using System.Net.Http.Json;
+ 
+@@ -95,6 +97,49 @@
+         var repository = app.Services.GetRequiredService<HooksRepository>();
+         var received = (await repository.GetAll()).Single();
+         Assert.AreEqual("payload", received.Data);
+         Assert.AreEqual("expected", received.Token);
+     }
++
++    [TestMethod]
++    public async Task WebhookEndpointDoesNotLogTokenValues()
++    {
++        var capture = new CapturingLoggerProvider();
++        var builder = WebApplication.CreateBuilder();
++        builder.WebHost.UseTestServer();
++        builder.Configuration["ValidateToken"] = "true";
++        builder.Configuration["WebhookClientOptions:Token"] = "expected-secret";
++        builder.Logging.AddProvider(capture);
++        builder.Services.AddSingleton<HooksRepository>();
++        await using var app = builder.Build();
++        app.MapWebhookEndpoints();
++        await app.StartAsync(TestContext.CancellationToken);
++        var client = app.GetTestClient();
++
++        using var request = new HttpRequestMessage(HttpMethod.Post, "/webhook-received")
++        {
++            Content = JsonContent.Create(new WebhookData { When = DateTime.UtcNow, Payload = "payload", Type = "OrderPaid" })
++        };
++        request.Headers.Add("X-eshop-whtoken", "caller-secret");
++        await client.SendAsync(request, TestContext.CancellationToken);
++
++        Assert.IsTrue(capture.Messages.Count > 0, "No log messages were captured");
++        var logged = string.Join(Environment.NewLine, capture.Messages);
++        Assert.IsFalse(logged.Contains("expected-secret"), logged);
++        Assert.IsFalse(logged.Contains("caller-secret"), logged);
++    }
++
++    private sealed class CapturingLoggerProvider : ILoggerProvider
++    {
++        public ConcurrentQueue<string> Messages { get; } = new();
++
++        public ILogger CreateLogger(string categoryName) => new CapturingLogger(Messages);
++
++        public void Dispose()
++        {
++        }
++
++        private sealed class CapturingLogger(ConcurrentQueue<string> messages) : ILogger
++        {
++            public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
++
++            public bool IsEnabled(LogLevel logLevel) => true;
++
++            public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
++                => messages.Enqueue(formatter(state, exception));
++        }
++    }
+ }

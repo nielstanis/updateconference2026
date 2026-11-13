@@ -1,0 +1,23 @@
+{
+  "id": "f025",
+  "bug_nn": "bug_18",
+  "source": "TRIAGE.json#bug_18",
+  "title": "GET /Account/Logout signs the user out without a prompt, enabling logout CSRF",
+  "file": "src/Identity.API/Quickstart/Account/AccountController.cs",
+  "line": 152,
+  "category": "csrf",
+  "severity": "LOW",
+  "owner_hint": "top committer: Aditya Mandaleeka (1 of 1 recent commit); no CODEOWNERS entry",
+  "mode": "static",
+  "verified": "static_review_only",
+  "status": "patch",
+  "review": "ACCEPT",
+  "style_score": 6,
+  "out_of_scope_hunks": [],
+  "rationale": "ShowLogoutPrompt=false makes the anonymous GET handler call the POST logout action in-process, bypassing antiforgery. The diff restores the prompt default and only auto-signs-out when the user is authenticated, a logoutId was supplied, and the prompt was suppressed.",
+  "variants_checked": "Other GET handlers are read-only or begin external auth; all state-changing POSTs keep antiforgery.",
+  "bypass_considered": "A bare cross-site GET now renders the prompt and the follow-up POST needs an antiforgery token. Residual: a valid RP-initiated logoutId with ShowSignoutPrompt=false still auto-signs-out by design.",
+  "test_note": "Added LogoutPromptStaysEnabled asserting the restored default.",
+  "review_reason": "Restoring the prompt default fixes the root cause that made the GET handler sign out unconditionally; the added guard only strengthens the condition. The logoutId check is effectively dead given the prompt-suppression path already requires a context, and the test only asserts the static default.",
+  "verdict": null
+}

@@ -1,0 +1,40 @@
+--- a/src/Ordering.API/Application/Commands/CreateOrderCommand.cs
++++ b/src/Ordering.API/Application/Commands/CreateOrderCommand.cs
+@@ -80,5 +80,9 @@
+         CardExpiration = cardExpiration;
+         CardSecurityNumber = cardSecurityNumber;
+         CardTypeId = cardTypeId;
+     }
++
++    // Never render the card fields through ToString(): the command flows into structured log
++    // state ({@Command}) in the mediator pipeline behaviors, where ToString() may be emitted.
++    public override string ToString() => $"CreateOrderCommand(UserId: {UserId})";
+ }
+--- /dev/null
++++ b/tests/Ordering.UnitTests/Application/CreateOrderCommandTest.cs
+@@ -0,0 +1,24 @@
++namespace eShop.Ordering.UnitTests.Application;
++
++[TestClass]
++public class CreateOrderCommandTest
++{
++    [TestMethod]
++    public void Create_Order_Command_ToString_Check_No_Card_Data()
++    {
++        // Arrange - upstream masks the card number (OrdersApi), the security number stays raw,
++        // so neither value may ever be reachable through ToString() ({@Command} log sinks).
++        var command = new CreateOrderCommand(
++            new List<BasketItem>(), "user-id-1", "johndoe", "City", "Street", "State", "Country", "ZipCode",
++            "4111111111111111", "CARD HOLDER", DateTime.MaxValue, "456", 1);
++
++        // Act
++        var rendered = command.ToString();
++
++        //Assert - only the command identity is rendered, never the payment data
++        Assert.IsTrue(rendered.Contains("user-id-1"));
++        Assert.IsFalse(rendered.Contains("4111"), "CardNumber must not be rendered");
++        Assert.IsFalse(rendered.Contains("456"), "CardSecurityNumber must not be rendered");
++        Assert.IsFalse(rendered.Contains("CARD HOLDER"), "CardHolderName must not be rendered");
++        Assert.IsFalse(rendered.Contains("9999"), "CardExpiration must not be rendered");
++    }
++}

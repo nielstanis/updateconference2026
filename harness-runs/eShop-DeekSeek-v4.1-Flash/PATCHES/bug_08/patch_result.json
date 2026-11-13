@@ -1,0 +1,23 @@
+{
+  "id": "f005",
+  "bug_nn": "bug_08",
+  "source": "TRIAGE.json#bug_08",
+  "title": "GET /api/orders/{orderId} returns any order without an ownership check",
+  "file": "src/Ordering.API/Application/Queries/OrderQueries.cs",
+  "line": 6,
+  "category": "idor",
+  "severity": "MEDIUM",
+  "owner_hint": "top committer: Srushti (1 of 1 recent commit); no CODEOWNERS entry",
+  "mode": "static",
+  "verified": "static_review_only",
+  "status": "patch",
+  "review": "ACCEPT",
+  "style_score": 8,
+  "out_of_scope_hunks": [],
+  "rationale": "The query filters only on order id and returns the full shipping address and items. The diff adds userId to GetOrderAsync and filters on Buyer.IdentityGuid, threading the authenticated identity from the endpoint; foreign ids collapse to the existing NotFound path.",
+  "variants_checked": "GetOrderAsync fixed; GetOrdersFromUserAsync already scoped; GetCardTypes has no owner; cancel/ship are separate findings.",
+  "bypass_considered": "A null or empty sub matches no buyer and returns 404; Buyer is a mapped navigation so the predicate is evaluated in SQL, and the endpoint group is already authenticated.",
+  "test_note": "Added Get_order_passes_authenticated_user_to_query and updated the two mock signatures.",
+  "review_reason": "Adds the ownership predicate at the data-access layer, mirroring the already-correct list query, so a foreign id is indistinguishable from a missing one. No parsing or validation weakened; residual gaps are a missing explicit null-identity guard and no foreign-id integration test.",
+  "verdict": null
+}

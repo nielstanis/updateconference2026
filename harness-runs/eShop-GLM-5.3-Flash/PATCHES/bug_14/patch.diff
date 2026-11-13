@@ -1,0 +1,147 @@
+--- a/src/Ordering.API/Application/Commands/IdentifiedCommandHandler.cs
++++ b/src/Ordering.API/Application/Commands/IdentifiedCommandHandler.cs
+@@ -46,60 +46,57 @@ namespace eShop.Ordering.API.Application.Commands;
+         else
+         {
+             await _requestManager.CreateRequestForCommandAsync<T>(message.Id);
+-            try
+-            {
+-                var command = message.Command;
+-                var commandName = command.GetGenericTypeName();
+-                var idProperty = string.Empty;
+-                var commandId = string.Empty;
+-
+-                switch (command)
+-                {
+-                    case CreateOrderCommand createOrderCommand:
+-                        idProperty = nameof(createOrderCommand.UserId);
+-                        commandId = createOrderCommand.UserId;
+-                        break;
+-
+-                    case CancelOrderCommand cancelOrderCommand:
+-                        idProperty = nameof(cancelOrderCommand.OrderNumber);
+-                        commandId = $"{cancelOrderCommand.OrderNumber}";
+-                        break;
+-
+-                    case ShipOrderCommand shipOrderCommand:
+-                        idProperty = nameof(shipOrderCommand.OrderNumber);
+-                        commandId = $"{shipOrderCommand.OrderNumber}";
+-                        break;
+-
+-                    default:
+-                        idProperty = "Id?";
+-                        commandId = "n/a";
+-                        break;
+-                }
+-
+-                _logger.LogInformation(
+-                    "Sending command: {CommandName} - {IdProperty}: {CommandId} ({@Command})",
+-                    commandName,
+-                    idProperty,
+-                    commandId,
+-                    command);
+-
+-                // Send the embedded business command to mediator so it runs its related CommandHandler 
+-                var result = await _mediator.Send(command, cancellationToken);
+-
+-                _logger.LogInformation(
+-                    "Command result: {@Result} - {CommandName} - {IdProperty}: {CommandId} ({@Command})",
+-                    result,
+-                    commandName,
+-                    idProperty,
+-                    commandId,
+-                    command);
+-
+-                return result;
+-            }
+-            catch
+-            {
+-                return default;
+-            }
++
++            var command = message.Command;
++            var commandName = command.GetGenericTypeName();
++            var idProperty = string.Empty;
++            var commandId = string.Empty;
++
++            switch (command)
++            {
++                case CreateOrderCommand createOrderCommand:
++                    idProperty = nameof(createOrderCommand.UserId);
++                    commandId = createOrderCommand.UserId;
++                    break;
++
++                case CancelOrderCommand cancelOrderCommand:
++                    idProperty = nameof(cancelOrderCommand.OrderNumber);
++                    commandId = $"{cancelOrderCommand.OrderNumber}";
++                    break;
++
++                case ShipOrderCommand shipOrderCommand:
++                    idProperty = nameof(shipOrderCommand.OrderNumber);
++                    commandId = $"{shipOrderCommand.OrderNumber}";
++                    break;
++
++                default:
++                    idProperty = "Id?";
++                    commandId = "n/a";
++                    break;
++            }
++
++            _logger.LogInformation(
++                "Sending command: {CommandName} - {IdProperty}: {CommandId} ({@Command})",
++                commandName,
++                idProperty,
++                commandId,
++                command);
++
++            // Send the embedded business command to mediator so it runs its related CommandHandler
++            // without swallowing exceptions: letting a failure propagate makes TransactionBehavior
++            // roll back the idempotency marker created above together with the failed command,
++            // so retries are not answered with a fabricated duplicate-success result.
++            var result = await _mediator.Send(command, cancellationToken);
++
++            _logger.LogInformation(
++                "Command result: {@Result} - {CommandName} - {IdProperty}: {CommandId} ({@Command})",
++                result,
++                commandName,
++                idProperty,
++                commandId,
++                command);
++
++            return result;
+         }
+     }
+ }
+--- a/tests/Ordering.UnitTests/Application/IdentifiedCommandHandlerTest.cs
++++ b/tests/Ordering.UnitTests/Application/IdentifiedCommandHandlerTest.cs
+@@ -56,6 +56,30 @@ namespace eShop.Ordering.UnitTests.Application;
+         // Assert
+        await  _mediator.DidNotReceive().Send(Arg.Any<IRequest<bool>>(), default);
+     }
++
++    [TestMethod]
++    public async Task Handler_throws_when_inner_command_fails()
++    {
++        // Arrange
++        var fakeGuid = Guid.NewGuid();
++        var fakeOrderCmd = new IdentifiedCommand<CreateOrderCommand, bool>(FakeOrderRequest(), fakeGuid);
++
++        _requestManager.ExistAsync(Arg.Any<Guid>())
++            .Returns(Task.FromResult(false));
++
++        _mediator.Send(Arg.Any<IRequest<bool>>(), default)
++            .Returns(Task.FromException<bool>(new InvalidOperationException()));
++
++        // Act
++        var handler = new CreateOrderIdentifiedCommandHandler(_mediator, _requestManager, _loggerMock);
++
++        // Assert: the failure must propagate out of Handle so TransactionBehavior rolls
++        // back the idempotency marker instead of committing it with fabricated success.
++        await Assert.ThrowsExceptionAsync<InvalidOperationException>(
++            () => handler.Handle(fakeOrderCmd, CancellationToken.None));
++
++        await _requestManager.Received().CreateRequestForCommandAsync<CreateOrderCommand>(fakeGuid);
++    }
+ 
+     private CreateOrderCommand FakeOrderRequest(Dictionary<string, object> args = null)
+     {

@@ -1,0 +1,26 @@
+{
+  "id": "f021",
+  "bug_nn": "bug_13",
+  "source": "TRIAGE.json#bug_13",
+  "title": "Authenticated user can force server-side requests to arbitrary hosts",
+  "file": "src/Webhooks.API/Services/GrantUrlTesterService.cs",
+  "line": 21,
+  "category": "ssrf",
+  "severity": "MEDIUM",
+  "owner_hint": "top committer: Aditya Mandaleeka (1 of 1 recent commit); no CODEOWNERS entry",
+  "mode": "static",
+  "verified": "static_review_only",
+  "status": "patch",
+  "review": "REJECT",
+  "style_score": 8,
+  "out_of_scope_hunks": [
+    "src/Webhooks.API/Services/WebhooksSender.cs:7",
+    "src/Webhooks.API/Services/WebhooksSender.cs:15-20"
+  ],
+  "rationale": "The grant tester fetches a caller-supplied URL after only a format check and a same-origin comparison of two attacker URLs. The diff adds a WebhookUrlValidator policy (http/https only, no userinfo, block loopback/private/link-local/metadata/numeric hosts/single-label names), applies it at validation and at both egress points, and disables auto-redirects on a named client.",
+  "variants_checked": "Grant tester, sender, and request validation all use the validator; other outbound clients use fixed base addresses.",
+  "bypass_considered": "Validation is pre-DNS, so a dotted attacker hostname resolving to an internal address still reaches the sink; closing that needs resolve-time pinning. Redirect pivots are blocked.",
+  "test_note": "Added WebhookUrlValidatorTests with public and internal URL cases.",
+  "review_reason": "The allowlist and redirect suppression are the right layer, but IsAllowed accepts any dotted hostname without resolving it, so a name pointing at 169.254.169.254 still reaches SendAsync; IsPublicAddress only applies to literals. Move validation to resolution/connect time with a pinned ConnectCallback, and keep the sibling sender hunks separate.",
+  "verdict": null
+}

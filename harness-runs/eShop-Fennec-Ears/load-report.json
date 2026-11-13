@@ -1,0 +1,405 @@
+{
+  "MsBuild": {
+    "Name": ".NET Core SDK",
+    "Version": "10.0.302",
+    "MsBuildPath": "/home/niels/.dotnet/sdk/10.0.302"
+  },
+  "RequestedPaths": [
+    "/home/niels/github/UpdateConference2026/eShop/eShop.slnx"
+  ],
+  "ProjectsDiscovered": 33,
+  "ProjectsLoaded": 19,
+  "ProjectsSkippedByTargetFramework": 5,
+  "ProjectsSkippedAsTests": [
+    {
+      "Name": "Application.UnitTests",
+      "FilePath": "/home/niels/github/UpdateConference2026/eShop/tests/Application.UnitTests/Application.UnitTests.csproj",
+      "Signal": "sdk MSTest.Sdk"
+    },
+    {
+      "Name": "Basket.FunctionalTests",
+      "FilePath": "/home/niels/github/UpdateConference2026/eShop/tests/Basket.FunctionalTests/Basket.FunctionalTests.csproj",
+      "Signal": "package xunit.v3.mtp-v2"
+    },
+    {
+      "Name": "Basket.UnitTests",
+      "FilePath": "/home/niels/github/UpdateConference2026/eShop/tests/Basket.UnitTests/Basket.UnitTests.csproj",
+      "Signal": "sdk MSTest.Sdk"
+    },
+    {
+      "Name": "Catalog.FunctionalTests",
+      "FilePath": "/home/niels/github/UpdateConference2026/eShop/tests/Catalog.FunctionalTests/Catalog.FunctionalTests.csproj",
+      "Signal": "package xunit.v3.mtp-v2"
+    },
+    {
+      "Name": "ClientApp.UnitTests",
+      "FilePath": "/home/niels/github/UpdateConference2026/eShop/tests/ClientApp.UnitTests/ClientApp.UnitTests.csproj",
+      "Signal": "sdk MSTest.Sdk"
+    },
+    {
+      "Name": "Ordering.FunctionalTests",
+      "FilePath": "/home/niels/github/UpdateConference2026/eShop/tests/Ordering.FunctionalTests/Ordering.FunctionalTests.csproj",
+      "Signal": "package xunit.v3.mtp-v2"
+    },
+    {
+      "Name": "Ordering.UnitTests",
+      "FilePath": "/home/niels/github/UpdateConference2026/eShop/tests/Ordering.UnitTests/Ordering.UnitTests.csproj",
+      "Signal": "sdk MSTest.Sdk"
+    },
+    {
+      "Name": "Webhooks.FunctionalTests",
+      "FilePath": "/home/niels/github/UpdateConference2026/eShop/tests/Webhooks.FunctionalTests/Webhooks.FunctionalTests.csproj",
+      "Signal": "package xunit.v3.mtp-v2"
+    },
+    {
+      "Name": "eShop.AppHost.UnitTests",
+      "FilePath": "/home/niels/github/UpdateConference2026/eShop/tests/eShop.AppHost.UnitTests/eShop.AppHost.UnitTests.csproj",
+      "Signal": "sdk MSTest.Sdk"
+    }
+  ],
+  "ProjectsUnsupported": 0,
+  "Projects": [
+    {
+      "Name": "Basket.API",
+      "FilePath": "/home/niels/github/UpdateConference2026/eShop/src/Basket.API/Basket.API.csproj",
+      "TargetFramework": null,
+      "AssemblyName": "Basket.API",
+      "DocumentCount": 16,
+      "SyntaxTreeCount": 34,
+      "GeneratedDocumentsImported": 0,
+      "ErrorCount": 0,
+      "MissingReferenceErrorCount": 0,
+      "DuplicateDefinitionErrorCount": 0,
+      "SampleErrors": [],
+      "CompileMs": 3062,
+      "TimedOut": false
+    },
+    {
+      "Name": "Catalog.API",
+      "FilePath": "/home/niels/github/UpdateConference2026/eShop/src/Catalog.API/Catalog.API.csproj",
+      "TargetFramework": null,
+      "AssemblyName": "Catalog.API",
+      "DocumentCount": 45,
+      "SyntaxTreeCount": 46,
+      "GeneratedDocumentsImported": 0,
+      "ErrorCount": 0,
+      "MissingReferenceErrorCount": 0,
+      "DuplicateDefinitionErrorCount": 0,
+      "SampleErrors": [],
+      "CompileMs": 838,
+      "TimedOut": false
+    },
+    {
+      "Name": "ClientApp(net10.0-maccatalyst)",
+      "FilePath": "/home/niels/github/UpdateConference2026/eShop/src/ClientApp/ClientApp.csproj",
+      "TargetFramework": "net10.0-maccatalyst",
+      "AssemblyName": "ClientApp",
+      "DocumentCount": 140,
+      "SyntaxTreeCount": 163,
+      "GeneratedDocumentsImported": 0,
+      "ErrorCount": 810,
+      "MissingReferenceErrorCount": 377,
+      "DuplicateDefinitionErrorCount": 4,
+      "SampleErrors": [
+        "CS0101: The namespace \u0027eShop.ClientApp\u0027 already contains a definition for \u0027AppDelegate\u0027",
+        "CS0101: The namespace \u0027eShop.ClientApp\u0027 already contains a definition for \u0027Program\u0027",
+        "CS0246: The type or namespace name \u0027CommunityToolkit\u0027 could not be found (are you missing a using directive or an assembly reference?)",
+        "CS0246: The type or namespace name \u0027CommunityToolkit\u0027 could not be found (are you missing a using directive or an assembly reference?)",
+        "CS0246: The type or namespace name \u0027CommunityToolkit\u0027 could not be found (are you missing a using directive or an assembly reference?)"
+      ],
+      "CompileMs": 452,
+      "TimedOut": false
+    },
+    {
+      "Name": "eShop.AppHost",
+      "FilePath": "/home/niels/github/UpdateConference2026/eShop/src/eShop.AppHost/eShop.AppHost.csproj",
+      "TargetFramework": null,
+      "AssemblyName": "eShop.AppHost",
+      "DocumentCount": 6,
+      "SyntaxTreeCount": 7,
+      "GeneratedDocumentsImported": 0,
+      "ErrorCount": 0,
+      "MissingReferenceErrorCount": 0,
+      "DuplicateDefinitionErrorCount": 0,
+      "SampleErrors": [],
+      "CompileMs": 400,
+      "TimedOut": false
+    },
+    {
+      "Name": "eShop.ServiceDefaults",
+      "FilePath": "/home/niels/github/UpdateConference2026/eShop/src/eShop.ServiceDefaults/eShop.ServiceDefaults.csproj",
+      "TargetFramework": null,
+      "AssemblyName": "eShop.ServiceDefaults",
+      "DocumentCount": 10,
+      "SyntaxTreeCount": 11,
+      "GeneratedDocumentsImported": 0,
+      "ErrorCount": 0,
+      "MissingReferenceErrorCount": 0,
+      "DuplicateDefinitionErrorCount": 0,
+      "SampleErrors": [],
+      "CompileMs": 64,
+      "TimedOut": false
+    },
+    {
+      "Name": "EventBus",
+      "FilePath": "/home/niels/github/UpdateConference2026/eShop/src/EventBus/EventBus.csproj",
+      "TargetFramework": null,
+      "AssemblyName": "EventBus",
+      "DocumentCount": 11,
+      "SyntaxTreeCount": 11,
+      "GeneratedDocumentsImported": 0,
+      "ErrorCount": 0,
+      "MissingReferenceErrorCount": 0,
+      "DuplicateDefinitionErrorCount": 0,
+      "SampleErrors": [],
+      "CompileMs": 6,
+      "TimedOut": false
+    },
+    {
+      "Name": "EventBusRabbitMQ",
+      "FilePath": "/home/niels/github/UpdateConference2026/eShop/src/EventBusRabbitMQ/EventBusRabbitMQ.csproj",
+      "TargetFramework": null,
+      "AssemblyName": "EventBusRabbitMQ",
+      "DocumentCount": 9,
+      "SyntaxTreeCount": 10,
+      "GeneratedDocumentsImported": 0,
+      "ErrorCount": 0,
+      "MissingReferenceErrorCount": 0,
+      "DuplicateDefinitionErrorCount": 0,
+      "SampleErrors": [],
+      "CompileMs": 96,
+      "TimedOut": false
+    },
+    {
+      "Name": "HybridApp(net10.0-maccatalyst)",
+      "FilePath": "/home/niels/github/UpdateConference2026/eShop/src/HybridApp/HybridApp.csproj",
+      "TargetFramework": "net10.0-maccatalyst",
+      "AssemblyName": "HybridApp",
+      "DocumentCount": 20,
+      "SyntaxTreeCount": 41,
+      "GeneratedDocumentsImported": 0,
+      "ErrorCount": 162,
+      "MissingReferenceErrorCount": 135,
+      "DuplicateDefinitionErrorCount": 6,
+      "SampleErrors": [
+        "CS0101: The namespace \u0027eShop.HybridApp\u0027 already contains a definition for \u0027AppDelegate\u0027",
+        "CS0101: The namespace \u0027eShop.HybridApp\u0027 already contains a definition for \u0027Program\u0027",
+        "CS0101: The namespace \u0027eShop.HybridApp\u0027 already contains a definition for \u0027Program\u0027",
+        "CS0234: The type or namespace name \u0027Logging\u0027 does not exist in the namespace \u0027Microsoft.Extensions\u0027 (are you missing an assembly reference?)",
+        "CS0246: The type or namespace name \u0027Android\u0027 could not be found (are you missing a using directive or an assembly reference?)"
+      ],
+      "CompileMs": 557,
+      "TimedOut": false
+    },
+    {
+      "Name": "Identity.API",
+      "FilePath": "/home/niels/github/UpdateConference2026/eShop/src/Identity.API/Identity.API.csproj",
+      "TargetFramework": null,
+      "AssemblyName": "Identity.API",
+      "DocumentCount": 69,
+      "SyntaxTreeCount": 89,
+      "GeneratedDocumentsImported": 0,
+      "ErrorCount": 0,
+      "MissingReferenceErrorCount": 0,
+      "DuplicateDefinitionErrorCount": 0,
+      "SampleErrors": [],
+      "CompileMs": 914,
+      "TimedOut": false
+    },
+    {
+      "Name": "IntegrationEventLogEF",
+      "FilePath": "/home/niels/github/UpdateConference2026/eShop/src/IntegrationEventLogEF/IntegrationEventLogEF.csproj",
+      "TargetFramework": null,
+      "AssemblyName": "IntegrationEventLogEF",
+      "DocumentCount": 10,
+      "SyntaxTreeCount": 10,
+      "GeneratedDocumentsImported": 0,
+      "ErrorCount": 0,
+      "MissingReferenceErrorCount": 0,
+      "DuplicateDefinitionErrorCount": 0,
+      "SampleErrors": [],
+      "CompileMs": 52,
+      "TimedOut": false
+    },
+    {
+      "Name": "Ordering.API",
+      "FilePath": "/home/niels/github/UpdateConference2026/eShop/src/Ordering.API/Ordering.API.csproj",
+      "TargetFramework": null,
+      "AssemblyName": "Ordering.API",
+      "DocumentCount": 73,
+      "SyntaxTreeCount": 75,
+      "GeneratedDocumentsImported": 0,
+      "ErrorCount": 0,
+      "MissingReferenceErrorCount": 0,
+      "DuplicateDefinitionErrorCount": 0,
+      "SampleErrors": [],
+      "CompileMs": 455,
+      "TimedOut": false
+    },
+    {
+      "Name": "Ordering.Domain",
+      "FilePath": "/home/niels/github/UpdateConference2026/eShop/src/Ordering.Domain/Ordering.Domain.csproj",
+      "TargetFramework": null,
+      "AssemblyName": "Ordering.Domain",
+      "DocumentCount": 26,
+      "SyntaxTreeCount": 26,
+      "GeneratedDocumentsImported": 0,
+      "ErrorCount": 0,
+      "MissingReferenceErrorCount": 0,
+      "DuplicateDefinitionErrorCount": 0,
+      "SampleErrors": [],
+      "CompileMs": 40,
+      "TimedOut": false
+    },
+    {
+      "Name": "Ordering.Infrastructure",
+      "FilePath": "/home/niels/github/UpdateConference2026/eShop/src/Ordering.Infrastructure/Ordering.Infrastructure.csproj",
+      "TargetFramework": null,
+      "AssemblyName": "Ordering.Infrastructure",
+      "DocumentCount": 26,
+      "SyntaxTreeCount": 26,
+      "GeneratedDocumentsImported": 0,
+      "ErrorCount": 0,
+      "MissingReferenceErrorCount": 0,
+      "DuplicateDefinitionErrorCount": 0,
+      "SampleErrors": [],
+      "CompileMs": 111,
+      "TimedOut": false
+    },
+    {
+      "Name": "OrderProcessor",
+      "FilePath": "/home/niels/github/UpdateConference2026/eShop/src/OrderProcessor/OrderProcessor.csproj",
+      "TargetFramework": null,
+      "AssemblyName": "OrderProcessor",
+      "DocumentCount": 10,
+      "SyntaxTreeCount": 20,
+      "GeneratedDocumentsImported": 0,
+      "ErrorCount": 0,
+      "MissingReferenceErrorCount": 0,
+      "DuplicateDefinitionErrorCount": 0,
+      "SampleErrors": [],
+      "CompileMs": 175,
+      "TimedOut": false
+    },
+    {
+      "Name": "PaymentProcessor",
+      "FilePath": "/home/niels/github/UpdateConference2026/eShop/src/PaymentProcessor/PaymentProcessor.csproj",
+      "TargetFramework": null,
+      "AssemblyName": "PaymentProcessor",
+      "DocumentCount": 10,
+      "SyntaxTreeCount": 12,
+      "GeneratedDocumentsImported": 0,
+      "ErrorCount": 0,
+      "MissingReferenceErrorCount": 0,
+      "DuplicateDefinitionErrorCount": 0,
+      "SampleErrors": [],
+      "CompileMs": 95,
+      "TimedOut": false
+    },
+    {
+      "Name": "WebApp",
+      "FilePath": "/home/niels/github/UpdateConference2026/eShop/src/WebApp/WebApp.csproj",
+      "TargetFramework": null,
+      "AssemblyName": "WebApp",
+      "DocumentCount": 33,
+      "SyntaxTreeCount": 54,
+      "GeneratedDocumentsImported": 0,
+      "ErrorCount": 0,
+      "MissingReferenceErrorCount": 0,
+      "DuplicateDefinitionErrorCount": 0,
+      "SampleErrors": [],
+      "CompileMs": 1018,
+      "TimedOut": false
+    },
+    {
+      "Name": "WebAppComponents",
+      "FilePath": "/home/niels/github/UpdateConference2026/eShop/src/WebAppComponents/WebAppComponents.csproj",
+      "TargetFramework": null,
+      "AssemblyName": "WebAppComponents",
+      "DocumentCount": 12,
+      "SyntaxTreeCount": 15,
+      "GeneratedDocumentsImported": 0,
+      "ErrorCount": 0,
+      "MissingReferenceErrorCount": 0,
+      "DuplicateDefinitionErrorCount": 0,
+      "SampleErrors": [],
+      "CompileMs": 55,
+      "TimedOut": false
+    },
+    {
+      "Name": "WebhookClient",
+      "FilePath": "/home/niels/github/UpdateConference2026/eShop/src/WebhookClient/WebhookClient.csproj",
+      "TargetFramework": null,
+      "AssemblyName": "WebhookClient",
+      "DocumentCount": 18,
+      "SyntaxTreeCount": 31,
+      "GeneratedDocumentsImported": 0,
+      "ErrorCount": 0,
+      "MissingReferenceErrorCount": 0,
+      "DuplicateDefinitionErrorCount": 0,
+      "SampleErrors": [],
+      "CompileMs": 357,
+      "TimedOut": false
+    },
+    {
+      "Name": "Webhooks.API",
+      "FilePath": "/home/niels/github/UpdateConference2026/eShop/src/Webhooks.API/Webhooks.API.csproj",
+      "TargetFramework": null,
+      "AssemblyName": "Webhooks.API",
+      "DocumentCount": 32,
+      "SyntaxTreeCount": 34,
+      "GeneratedDocumentsImported": 0,
+      "ErrorCount": 0,
+      "MissingReferenceErrorCount": 0,
+      "DuplicateDefinitionErrorCount": 0,
+      "SampleErrors": [],
+      "CompileMs": 215,
+      "TimedOut": false
+    }
+  ],
+  "Failures": [
+    {
+      "Kind": "Failure",
+      "Message": "Msbuild failed when processing the file \u0027/home/niels/github/UpdateConference2026/eShop/tests/Basket.FunctionalTests/Basket.FunctionalTests.csproj\u0027 with message: Package \u0027MessagePack\u0027 2.5.302 has a known moderate severity vulnerability, https://github.com/advisories/GHSA-qhrr-8q5h-9q3h",
+      "ProjectPath": "/home/niels/github/UpdateConference2026/eShop/tests/Basket.FunctionalTests/Basket.FunctionalTests.csproj",
+      "Class": 1
+    },
+    {
+      "Kind": "Failure",
+      "Message": "Msbuild failed when processing the file \u0027/home/niels/github/UpdateConference2026/eShop/tests/Catalog.FunctionalTests/Catalog.FunctionalTests.csproj\u0027 with message: Package \u0027MessagePack\u0027 2.5.302 has a known moderate severity vulnerability, https://github.com/advisories/GHSA-qhrr-8q5h-9q3h",
+      "ProjectPath": "/home/niels/github/UpdateConference2026/eShop/tests/Catalog.FunctionalTests/Catalog.FunctionalTests.csproj",
+      "Class": 1
+    },
+    {
+      "Kind": "Failure",
+      "Message": "Msbuild failed when processing the file \u0027/home/niels/github/UpdateConference2026/eShop/tests/Ordering.FunctionalTests/Ordering.FunctionalTests.csproj\u0027 with message: Package \u0027MessagePack\u0027 2.5.302 has a known moderate severity vulnerability, https://github.com/advisories/GHSA-qhrr-8q5h-9q3h",
+      "ProjectPath": "/home/niels/github/UpdateConference2026/eShop/tests/Ordering.FunctionalTests/Ordering.FunctionalTests.csproj",
+      "Class": 1
+    },
+    {
+      "Kind": "Failure",
+      "Message": "Msbuild failed when processing the file \u0027/home/niels/github/UpdateConference2026/eShop/tests/Webhooks.FunctionalTests/Webhooks.FunctionalTests.csproj\u0027 with message: Package \u0027MessagePack\u0027 2.5.302 has a known moderate severity vulnerability, https://github.com/advisories/GHSA-qhrr-8q5h-9q3h",
+      "ProjectPath": "/home/niels/github/UpdateConference2026/eShop/tests/Webhooks.FunctionalTests/Webhooks.FunctionalTests.csproj",
+      "Class": 1
+    }
+  ],
+  "PackageAdvisories": [
+    {
+      "Project": "Basket.FunctionalTests",
+      "Detail": "Package \u0027MessagePack\u0027 2.5.302 has a known moderate severity vulnerability, https://github.com/advisories/GHSA-qhrr-8q5h-9q3h"
+    }
+  ],
+  "DiagnosticsSkipped": false,
+  "OpenMs": 8067,
+  "TotalMs": 17324,
+  "Degraded": true,
+  "DegradedReasons": [
+    "2 project(s) have unresolved references: ClientApp(net10.0-maccatalyst), HybridApp(net10.0-maccatalyst)"
+  ],
+  "TotalErrors": 972,
+  "TotalMissingReferenceErrors": 512,
+  "ProjectsWithMissingReferences": 2,
+  "MissingProjects": [],
+  "BlockingFailures": 0,
+  "ProjectsTimedOut": 0
+}

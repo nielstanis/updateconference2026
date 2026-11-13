@@ -1,0 +1,23 @@
+{
+  "id": "f007",
+  "bug_nn": "bug_06",
+  "source": "TRIAGE.json#bug_06",
+  "title": "JWT bearer disables audience validation, so any token from the IdP is accepted by every API",
+  "file": "src/eShop.ServiceDefaults/AuthenticationExtensions.cs",
+  "line": 49,
+  "category": "auth-bypass",
+  "severity": "HIGH",
+  "owner_hint": "top committer: Michael Stonis (1 of 1 recent commit); no CODEOWNERS entry",
+  "mode": "static",
+  "verified": "static_review_only",
+  "status": "patch",
+  "review": "ACCEPT",
+  "style_score": 7,
+  "out_of_scope_hunks": [],
+  "rationale": "AddDefaultAuthentication sets the per-service Audience then disables ValidateAudience, so tokens minted for another API or client ID tokens are accepted. The diff flips ValidateAudience to true, making the already-configured audience authoritative.",
+  "variants_checked": "Audience values in Basket/Ordering/Webhooks appsettings match the IdP API resources; WebApp requests both orders and basket, so its token still works; no service forwards a token across APIs.",
+  "bypass_considered": "ID tokens (aud = client id) and tokens for a different API are now rejected; a missing audience fails closed because ValidateAudience defaults to requiring one.",
+  "test_note": "Added AuthenticationExtensionsTests.DefaultAuthenticationValidatesConfiguredAudience asserting ValidateAudience=true and ValidAudience=orders.",
+  "review_reason": "One-line flip re-enables audience validation using the value already read from required config, matching the IdP's disjoint API resources. No in-repo flow needs a cross-audience token; remaining https-metadata and fail-open issues are separate findings.",
+  "verdict": null
+}

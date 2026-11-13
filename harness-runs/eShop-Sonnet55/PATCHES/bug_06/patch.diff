@@ -1,0 +1,72 @@
+--- a/src/Ordering.API/Extensions/Extensions.cs
++++ b/src/Ordering.API/Extensions/Extensions.cs
+@@ -9,4 +9,8 @@
+         // Add the authentication services to DI
+         builder.AddDefaultAuthentication();
+ 
++        // Policy for administrative order actions (e.g. shipping). Deployer must issue a role claim "admin" to administrators.
++        services.AddAuthorizationBuilder()
++            .AddPolicy("OrderAdministrator", policy => policy.RequireAssertion(ctx =>
++                ctx.User.IsInRole("admin") || ctx.User.HasClaim("role", "admin")));
++
+         // Pooling is disabled because of the following error:
+--- a/src/Ordering.API/Apis/OrdersApi.cs
++++ b/src/Ordering.API/Apis/OrdersApi.cs
+@@ -11,3 +11,3 @@
+         api.MapPut("/cancel", CancelOrderAsync);
+-        api.MapPut("/ship", ShipOrderAsync);
++        api.MapPut("/ship", ShipOrderAsync).RequireAuthorization("OrderAdministrator");
+         api.MapGet("{orderId:int}", GetOrderAsync);
+--- a/tests/Ordering.FunctionalTests/AutoAuthorizeMiddleware.cs
++++ b/tests/Ordering.FunctionalTests/AutoAuthorizeMiddleware.cs
+@@ -17,5 +17,10 @@
+         identity.AddClaim(new Claim("sub", IDENTITY_ID));
+         identity.AddClaim(new Claim("unique_name", IDENTITY_ID));
+         identity.AddClaim(new Claim(ClaimTypes.Name, IDENTITY_ID));
+ 
++        if (httpContext.Request.Headers.TryGetValue("x-test-role", out var role))
++        {
++            identity.AddClaim(new Claim(ClaimTypes.Role, role.ToString()));
++        }
++
+         httpContext.User.AddIdentity(identity);
+--- a/tests/Ordering.FunctionalTests/OrderingApiTests.cs
++++ b/tests/Ordering.FunctionalTests/OrderingApiTests.cs
+@@ -69,7 +69,8 @@
+     public async Task ShipWithEmptyGuidFails()
+     {
+         // Act
+         var content = new StringContent(BuildOrder(), UTF8Encoding.UTF8, "application/json")
+         {
+-            Headers = { { "x-requestid", Guid.Empty.ToString() } }
++            Headers = { { "x-requestid", Guid.Empty.ToString() }, { "x-test-role", "admin" } }
+         };
+@@ -84,13 +85,28 @@
+     public async Task ShipNonExistentOrderFails()
+     {
+         // Act
+         var content = new StringContent(BuildOrder(), UTF8Encoding.UTF8, "application/json")
+         {
+-            Headers = { { "x-requestid", Guid.NewGuid().ToString() } }
++            Headers = { { "x-requestid", Guid.NewGuid().ToString() }, { "x-test-role", "admin" } }
+         };
+         var response = await _httpClient.PutAsync("api/orders/ship", content, TestContext.Current.CancellationToken);
+ 
+         // Assert
+         Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
+     }
++
++    [Fact]
++    public async Task ShipByNonAdminIsForbidden()
++    {
++        // Act
++        var content = new StringContent(BuildOrder(), UTF8Encoding.UTF8, "application/json")
++        {
++            Headers = { { "x-requestid", Guid.NewGuid().ToString() } }
++        };
++        var response = await _httpClient.PutAsync("api/orders/ship", content, TestContext.Current.CancellationToken);
++
++        // Assert
++        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
++    }
+

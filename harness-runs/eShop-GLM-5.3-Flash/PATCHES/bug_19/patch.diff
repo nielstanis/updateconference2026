@@ -1,0 +1,48 @@
+--- a/src/Webhooks.API/Services/GrantUrlTesterService.cs
++++ b/src/Webhooks.API/Services/GrantUrlTesterService.cs
+@@ -1,3 +1,5 @@
++using System.Security.Cryptography;
++
+ namespace Webhooks.API.Services;
+ 
+ class GrantUrlTesterService(IHttpClientFactory factory, ILogger<IGrantUrlTesterService> logger) : IGrantUrlTesterService
+@@ -15,15 +17,23 @@
+         msg.Headers.Add("X-eshop-whtoken", token);
+ 
+-        logger.LogInformation("Sending the OPTIONS message to {Url} with token \"{Token}\"", url, token ?? string.Empty);
++        if (logger.IsEnabled(LogLevel.Debug))
++        {
++            logger.LogDebug("Sending the OPTIONS message to {Url} with token {TokenMasked}", url, MaskToken(token));
++        }
+ 
+         try
+         {
+             var response = await client.SendAsync(msg);
+             var tokenReceived = response.Headers.TryGetValues("X-eshop-whtoken", out var tokenValues) ? tokenValues.FirstOrDefault() : null;
+             var tokenExpected = string.IsNullOrWhiteSpace(token) ? null : token;
+ 
+-            logger.LogInformation("Response code is {StatusCode} for url {Url} and token in header was {TokenReceived} (expected token was {TokenExpected})", response.StatusCode, url, tokenReceived, tokenExpected);
++            if (logger.IsEnabled(LogLevel.Debug))
++            {
++                logger.LogDebug("Response code is {StatusCode} for url {Url} and token in header was {TokenReceived} (expected token was {TokenExpected})", response.StatusCode, url, MaskToken(tokenReceived), MaskToken(tokenExpected));
++            }
+ 
+             return response.IsSuccessStatusCode && tokenReceived == tokenExpected;
+         }
+         catch (Exception ex)
+@@ -44,3 +52,15 @@
+             firstUrl.Host == secondUrl.Host;
+     }
+ 
++    private static string MaskToken(string? token)
++    {
++        if (string.IsNullOrWhiteSpace(token))
++        {
++            return "<absent>";
++        }
++
++        var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(token)))[..8];
++
++        return $"<present sha256={hash}>";
++    }
+ }

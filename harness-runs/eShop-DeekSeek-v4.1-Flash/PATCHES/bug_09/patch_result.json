@@ -1,0 +1,25 @@
+{
+  "id": "f026",
+  "bug_nn": "bug_09",
+  "source": "TRIAGE.json#bug_09",
+  "title": "Full PAN and CVV are written to logs on order creation",
+  "file": "src/Ordering.API/Apis/OrdersApi.cs",
+  "line": 134,
+  "category": "sensitive-data-in-logs",
+  "severity": "MEDIUM",
+  "owner_hint": "top committer: Rob Conery (1 of 1 recent commit); no CODEOWNERS entry",
+  "mode": "static",
+  "verified": "static_review_only",
+  "status": "patch",
+  "review": "REJECT",
+  "style_score": 6,
+  "out_of_scope_hunks": [
+    "src/Ordering.API/Application/Commands/CreateOrderCommand.cs:84-93"
+  ],
+  "rationale": "Line 134 logs the raw CreateOrderRequest record, whose synthesized ToString prints PAN and CVV before masking. The diff logs only UserId and adds ToString overrides that mask the PAN and CVV on CreateOrderRequest and CreateOrderCommand.",
+  "variants_checked": "The warning sink and command log sites checked; other order commands carry no card data; MediatR behaviors log the command object.",
+  "bypass_considered": "Serilog-style object destructuring ignores ToString and would still print CardSecurityNumber; there is no such sink in the repo today, so the masking is defense-in-depth rather than a complete guarantee.",
+  "test_note": "Added Create_order_does_not_log_pan_or_cvv capturing logger arguments and asserting PAN/CVV are absent.",
+  "review_reason": "The line-134 change is the correct root-cause fix, but the patch also modifies the unrelated CreateOrderCommand class and relies on ToString masking, which serializer sinks bypass; the CVV still enters the command unmasked and is logged via {@Command}. The test asserts ToString rather than the rendered template.",
+  "verdict": null
+}

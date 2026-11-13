@@ -1,0 +1,68 @@
+--- a/src/eShop.AppHost/Extensions.cs
++++ b/src/eShop.AppHost/Extensions.cs
+@@ -94,53 +94,65 @@
+         {
+             var catalogCluster = yarp.AddCluster(catalogApi);
+ 
+             yarp.AddRoute("/catalog-api/api/catalog/items", catalogCluster)
++                .WithMatchMethods("GET", "HEAD")
+                 .WithMatchRouteQueryParameter([new() { Name = "api-version", Values = ["1.0", "1", "2.0"], Mode = QueryParameterMatchMode.Exact }])
+                 .WithTransformPathRemovePrefix("/catalog-api");
+ 
+             yarp.AddRoute("/catalog-api/api/catalog/items/by", catalogCluster)
++                .WithMatchMethods("GET", "HEAD")
+                 .WithMatchRouteQueryParameter([new() { Name = "api-version", Values = ["1.0", "1", "2.0"], Mode = QueryParameterMatchMode.Exact }])
+                 .WithTransformPathRemovePrefix("/catalog-api");
+ 
+             yarp.AddRoute("/catalog-api/api/catalog/items/{id}", catalogCluster)
++                .WithMatchMethods("GET", "HEAD")
+                 .WithMatchRouteQueryParameter([new() { Name = "api-version", Values = ["1.0", "1", "2.0"], Mode = QueryParameterMatchMode.Exact }])
+                 .WithTransformPathRemovePrefix("/catalog-api");
+ 
+             yarp.AddRoute("/catalog-api/api/catalog/items/by/{name}", catalogCluster)
++                .WithMatchMethods("GET", "HEAD")
+                 .WithMatchRouteQueryParameter([new() { Name = "api-version", Values = ["1.0", "1"], Mode = QueryParameterMatchMode.Exact }])
+                 .WithTransformPathRemovePrefix("/catalog-api");
+ 
+             yarp.AddRoute("/catalog-api/api/catalog/items/withsemanticrelevance/{text}", catalogCluster)
++                .WithMatchMethods("GET", "HEAD")
+                 .WithMatchRouteQueryParameter([new() { Name = "api-version", Values = ["1.0", "1"], Mode = QueryParameterMatchMode.Exact }])
+                 .WithTransformPathRemovePrefix("/catalog-api");
+ 
+             yarp.AddRoute("/catalog-api/api/catalog/items/withsemanticrelevance", catalogCluster)
++                .WithMatchMethods("GET", "HEAD")
+                 .WithMatchRouteQueryParameter([new() { Name = "api-version", Values = ["2.0"], Mode = QueryParameterMatchMode.Exact }])
+                 .WithTransformPathRemovePrefix("/catalog-api");
+ 
+             yarp.AddRoute("/catalog-api/api/catalog/items/type/{typeId}/brand/{brandId?}", catalogCluster)
++                .WithMatchMethods("GET", "HEAD")
+                 .WithMatchRouteQueryParameter([new() { Name = "api-version", Values = ["1.0", "1"], Mode = QueryParameterMatchMode.Exact }])
+                 .WithTransformPathRemovePrefix("/catalog-api");
+ 
+             yarp.AddRoute("/catalog-api/api/catalog/items/type/all/brand/{brandId?}", catalogCluster)
++                .WithMatchMethods("GET", "HEAD")
+                 .WithMatchRouteQueryParameter([new() { Name = "api-version", Values = ["1.0", "1"], Mode = QueryParameterMatchMode.Exact }])
+                 .WithTransformPathRemovePrefix("/catalog-api");
+ 
+             yarp.AddRoute("/catalog-api/api/catalog/catalogTypes", catalogCluster)
++                .WithMatchMethods("GET", "HEAD")
+                 .WithMatchRouteQueryParameter([new() { Name = "api-version", Values = ["1.0", "1", "2.0"], Mode = QueryParameterMatchMode.Exact }])
+                 .WithTransformPathRemovePrefix("/catalog-api");
+ 
+             yarp.AddRoute("/catalog-api/api/catalog/catalogBrands", catalogCluster)
++                .WithMatchMethods("GET", "HEAD")
+                 .WithMatchRouteQueryParameter([new() { Name = "api-version", Values = ["1.0", "1", "2.0"], Mode = QueryParameterMatchMode.Exact }])
+                 .WithTransformPathRemovePrefix("/catalog-api");
+ 
+             yarp.AddRoute("/catalog-api/api/catalog/items/{id}/pic", catalogCluster)
++                .WithMatchMethods("GET", "HEAD")
+                 .WithMatchRouteQueryParameter([new() { Name = "api-version", Values = ["1.0", "1", "2.0"], Mode = QueryParameterMatchMode.Exact }])
+                 .WithTransformPathRemovePrefix("/catalog-api");
+ 
+             // Generic catalog catch-all route
+             yarp.AddRoute("/api/catalog/{*any}", catalogCluster)
++                .WithMatchMethods("GET", "HEAD")
+                 .WithMatchRouteQueryParameter([new() { Name = "api-version", Values = ["1.0", "1", "2.0"], Mode = QueryParameterMatchMode.Exact }]);
+ 
+             // Ordering routes
+

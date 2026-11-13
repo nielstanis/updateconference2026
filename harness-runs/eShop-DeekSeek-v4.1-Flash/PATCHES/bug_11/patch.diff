@@ -1,0 +1,118 @@
+--- a/src/Ordering.API/Apis/OrdersApi.cs
++++ b/src/Ordering.API/Apis/OrdersApi.cs
+@@ -126,17 +126,32 @@
++        // The buyer identity is derived from the authenticated principal (JWT "sub" claim),
++        // never from the request body.
++        var userId = services.IdentityService.GetUserIdentity();
++        var userName = services.IdentityService.GetUserName();
++
+         services.Logger.LogInformation(
+             "Sending command: {CommandName} - {IdProperty}: {CommandId}",
+             request.GetGenericTypeName(),
+-            nameof(request.UserId),
+-            request.UserId); //don't log the request as it has CC number
++            nameof(userId),
++            userId); //don't log the request as it has CC number
+ 
+         if (requestId == Guid.Empty)
+         {
+             services.Logger.LogWarning("Invalid IntegrationEvent - RequestId is missing - {@IntegrationEvent}", request);
+             return TypedResults.BadRequest("RequestId is missing.");
+         }
+ 
++        if (string.IsNullOrEmpty(userId))
++        {
++            services.Logger.LogWarning("CreateOrder rejected - authenticated user identity is missing");
++            return TypedResults.BadRequest("User identity is missing.");
++        }
++
++        // Buyer.Name is required, so fall back to the subject when the token has no name claim.
++        userName ??= userId;
++
+         using (services.Logger.BeginScope(new List<KeyValuePair<string, object>> { new("IdentifiedCommandId", requestId) }))
+         {
+             var maskedCCNumber = request.CardNumber.Substring(request.CardNumber.Length - 4).PadLeft(request.CardNumber.Length, 'X');
+-            var createOrderCommand = new CreateOrderCommand(request.Items, request.UserId, request.UserName, request.City, request.Street,
++            var createOrderCommand = new CreateOrderCommand(request.Items, userId, userName, request.City, request.Street,
+                 request.State, request.Country, request.ZipCode,
+@@ -171,15 +186,12 @@
+ public record CreateOrderRequest(
+-    string UserId,
+-    string UserName,
+     string City,
+     string Street,
+     string State,
+     string Country,
+     string ZipCode,
+     string CardNumber,
+     string CardHolderName,
+     DateTime CardExpiration,
+     string CardSecurityNumber,
+     int CardTypeId,
+-    string Buyer,
+     List<BasketItem> Items);
+--- a/src/Ordering.API/Application/Commands/CreateOrderCommandHandler.cs
++++ b/src/Ordering.API/Application/Commands/CreateOrderCommandHandler.cs
+@@ -31,3 +31,7 @@
++        // The authenticated principal is the authoritative source of buyer identity.
++        var userId = _identityService.GetUserIdentity() ?? message.UserId;
++        var userName = _identityService.GetUserName() ?? message.UserName;
++
+         // Add Integration event to clean the basket
+-        var orderStartedIntegrationEvent = new OrderStartedIntegrationEvent(message.UserId);
++        var orderStartedIntegrationEvent = new OrderStartedIntegrationEvent(userId);
+@@ -39,2 +43,2 @@
+         var address = new Address(message.Street, message.City, message.State, message.Country, message.ZipCode);
+-        var order = new Order(message.UserId, message.UserName, address, message.CardTypeId, message.CardNumber, message.CardSecurityNumber, message.CardHolderName, message.CardExpiration);
++        var order = new Order(userId, userName, address, message.CardTypeId, message.CardNumber, message.CardSecurityNumber, message.CardHolderName, message.CardExpiration);
+--- a/tests/Ordering.FunctionalTests/OrderingApiTests.cs
++++ b/tests/Ordering.FunctionalTests/OrderingApiTests.cs
+@@ -149,3 +149,3 @@
+         var cardExpirationDate = Convert.ToDateTime("2023-12-22T12:34:24.334Z");
+-        var OrderRequest = new CreateOrderRequest("1", "TestUser", null, null, null, null, null, "XXXXXXXXXXXX0005", "Test User", cardExpirationDate, "test buyer", 1, null, new List<BasketItem> { item });
++        var OrderRequest = new CreateOrderRequest(null, null, null, null, null, "XXXXXXXXXXXX0005", "Test User", cardExpirationDate, "test buyer", 1, new List<BasketItem> { item });
+         var content = new StringContent(JsonSerializer.Serialize(OrderRequest), UTF8Encoding.UTF8, "application/json")
+--- a/tests/Ordering.UnitTests/Application/OrdersWebApiTest.cs
++++ b/tests/Ordering.UnitTests/Application/OrdersWebApiTest.cs
+@@ -179,4 +179,41 @@
+         var problem = Assert.IsInstanceOfType<ProblemHttpResult>(result.Result);
+         Assert.AreEqual(500, problem.StatusCode);
+     }
++
++    [TestMethod]
++    public async Task Create_order_uses_authenticated_user_identity()
++    {
++        // Arrange
++        const string authenticatedUserId = "authenticated-user";
++        const string authenticatedUserName = "Authenticated User";
++        _identityServiceMock.GetUserIdentity().Returns(authenticatedUserId);
++        _identityServiceMock.GetUserName().Returns(authenticatedUserName);
++        _mediatorMock.Send(Arg.Any<IdentifiedCommand<CreateOrderCommand, bool>>(), default)
++            .Returns(Task.FromResult(true));
++
++        var request = new CreateOrderRequest(
++            City: "city",
++            Street: "street",
++            State: "state",
++            Country: "country",
++            ZipCode: "zip",
++            CardNumber: "XXXXXXXXXXXX0005",
++            CardHolderName: "Test User",
++            CardExpiration: DateTime.UtcNow.AddYears(1),
++            CardSecurityNumber: "123",
++            CardTypeId: 1,
++            Items: []);
++
++        // Act
++        var orderServices = new OrderServices(_mediatorMock, _orderQueriesMock, _identityServiceMock, _loggerMock);
++        var result = await OrdersApi.CreateOrderAsync(Guid.NewGuid(), request, orderServices);
++
++        // Assert
++        Assert.IsInstanceOfType<Ok>(result.Result);
++        await _mediatorMock.Received(1).Send(
++            Arg.Is<IdentifiedCommand<CreateOrderCommand, bool>>(cmd =>
++                cmd.Command.UserId == authenticatedUserId &&
++                cmd.Command.UserName == authenticatedUserName),
++            Arg.Any<CancellationToken>());
++    }
+ }

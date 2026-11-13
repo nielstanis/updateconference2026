@@ -1,0 +1,17 @@
+{
+  "note": "FD-066 step 3. The static call graph, without taint: every number is an upper bound. No schema.",
+  "summary": {
+    "maxCallDepth": 6,
+    "entryPoints": 70,
+    "methods": 153,
+    "recursiveGroups": 0,
+    "sinksPastCap": 0,
+    "entryPointsWithSinkPastCap": 0,
+    "entryPointsWithChainPastCap": 0,
+    "longestChain": 4,
+    "elapsedMs": 35.6397
+  },
+  "recursiveGroups": [],
+  "sinksPastCap": [],
+  "entryPoints": []
+}

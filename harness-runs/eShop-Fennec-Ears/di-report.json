@@ -1,0 +1,789 @@
+{
+  "summary": {
+    "registrations": 52,
+    "unresolvedRegistrations": 6,
+    "unresolvedRegistrationsOutsideTests": 6,
+    "decorators": 2,
+    "conventionScans": 0,
+    "typesIndexed": 672,
+    "injectedServiceTypes": 52,
+    "byProvenance": {
+      "ExplicitRegistration": 15,
+      "SingleImplementer": 10,
+      "AllImplementersFallback": 5
+    },
+    "byLifetime": {
+      "Scoped": 5,
+      "Singleton": 4,
+      "Transient": 6,
+      "Unknown": 20
+    },
+    "externalServices": 22,
+    "unresolvedInScope": 0,
+    "inScopeResolutionRate": 1,
+    "cappedResolutions": 0,
+    "elapsedMs": 611
+  },
+  "decorators": [
+    {
+      "service": "IQueryAttributable",
+      "decorator": "eShop.ClientApp.ViewModels.CheckoutViewModel",
+      "order": 1,
+      "explicitRegistration": false,
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/ClientApp/ViewModels/CheckoutViewModel.cs",
+      "line": 13
+    },
+    {
+      "service": "eShop.ClientApp.ViewModels.Base.IViewModelBase",
+      "decorator": "eShop.ClientApp.ViewModels.CheckoutViewModel",
+      "order": 0,
+      "explicitRegistration": false,
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/ClientApp/ViewModels/CheckoutViewModel.cs",
+      "line": 13
+    }
+  ],
+  "conventionScans": [],
+  "unresolvedRegistrations": [
+    {
+      "service": "Microsoft.AspNetCore.Hosting.IDbSeeder\u00601",
+      "method": "AddScoped",
+      "reason": "registered by interface with no implementation type and no readable factory",
+      "lifetime": "Scoped",
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/Shared/MigrateDbContextExtensions.cs",
+      "line": 27
+    },
+    {
+      "service": "Microsoft.AspNetCore.Hosting.IDbSeeder\u00601",
+      "method": "AddScoped",
+      "reason": "registered by interface with no implementation type and no readable factory",
+      "lifetime": "Scoped",
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/Shared/MigrateDbContextExtensions.cs",
+      "line": 27
+    },
+    {
+      "service": "Microsoft.AspNetCore.Hosting.IDbSeeder\u00601",
+      "method": "AddScoped",
+      "reason": "registered by interface with no implementation type and no readable factory",
+      "lifetime": "Scoped",
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/Shared/MigrateDbContextExtensions.cs",
+      "line": 27
+    },
+    {
+      "service": "Microsoft.AspNetCore.Hosting.IDbSeeder\u00601",
+      "method": "AddScoped",
+      "reason": "registered by interface with no implementation type and no readable factory",
+      "lifetime": "Scoped",
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/Shared/MigrateDbContextExtensions.cs",
+      "line": 27
+    },
+    {
+      "service": "Microsoft.Extensions.Hosting.IHostedService",
+      "method": "AddSingleton",
+      "reason": "registered by interface with no implementation type and no readable factory",
+      "lifetime": "Singleton",
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/EventBusRabbitMQ/RabbitMqDependencyInjectionExtensions.cs",
+      "line": 37
+    },
+    {
+      "service": "eShop.EventBus.Abstractions.IIntegrationEventHandler",
+      "method": "AddKeyedTransient",
+      "reason": "registered by interface with no implementation type and no readable factory",
+      "lifetime": "Transient",
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/EventBus/Extensions/EventBusBuilderExtensions.cs",
+      "line": 27
+    }
+  ],
+  "resolutions": [
+    {
+      "service": "Duende.IdentityServer.Services.IDeviceFlowInteractionService",
+      "outcome": "ExternalService",
+      "provenance": null,
+      "capped": false,
+      "totalBeforeCap": 0,
+      "candidates": []
+    },
+    {
+      "service": "Duende.IdentityServer.Services.IEventService",
+      "outcome": "ExternalService",
+      "provenance": null,
+      "capped": false,
+      "totalBeforeCap": 0,
+      "candidates": []
+    },
+    {
+      "service": "Duende.IdentityServer.Services.IIdentityServerInteractionService",
+      "outcome": "ExternalService",
+      "provenance": null,
+      "capped": false,
+      "totalBeforeCap": 0,
+      "candidates": []
+    },
+    {
+      "service": "Duende.IdentityServer.Stores.IClientStore",
+      "outcome": "ExternalService",
+      "provenance": null,
+      "capped": false,
+      "totalBeforeCap": 0,
+      "candidates": []
+    },
+    {
+      "service": "Duende.IdentityServer.Stores.IResourceStore",
+      "outcome": "ExternalService",
+      "provenance": null,
+      "capped": false,
+      "totalBeforeCap": 0,
+      "candidates": []
+    },
+    {
+      "service": "MediatR.IMediator",
+      "outcome": "ExternalService",
+      "provenance": null,
+      "capped": false,
+      "totalBeforeCap": 0,
+      "candidates": []
+    },
+    {
+      "service": "Microsoft.AspNetCore.Authentication.IAuthenticationHandlerProvider",
+      "outcome": "ExternalService",
+      "provenance": null,
+      "capped": false,
+      "totalBeforeCap": 0,
+      "candidates": []
+    },
+    {
+      "service": "Microsoft.AspNetCore.Authentication.IAuthenticationSchemeProvider",
+      "outcome": "ExternalService",
+      "provenance": null,
+      "capped": false,
+      "totalBeforeCap": 0,
+      "candidates": []
+    },
+    {
+      "service": "Microsoft.AspNetCore.Hosting.IWebHostEnvironment",
+      "outcome": "ExternalService",
+      "provenance": null,
+      "capped": false,
+      "totalBeforeCap": 0,
+      "candidates": []
+    },
+    {
+      "service": "Microsoft.AspNetCore.Http.IHttpContextAccessor",
+      "outcome": "ExternalService",
+      "provenance": null,
+      "capped": false,
+      "totalBeforeCap": 0,
+      "candidates": []
+    },
+    {
+      "service": "Microsoft.Extensions.AI.IChatClient",
+      "outcome": "ExternalService",
+      "provenance": null,
+      "capped": false,
+      "totalBeforeCap": 0,
+      "candidates": []
+    },
+    {
+      "service": "Microsoft.Extensions.AI.IEmbeddingGenerator\u00602",
+      "outcome": "ExternalService",
+      "provenance": null,
+      "capped": false,
+      "totalBeforeCap": 0,
+      "candidates": []
+    },
+    {
+      "service": "Microsoft.Extensions.Configuration.IConfiguration",
+      "outcome": "ExternalService",
+      "provenance": null,
+      "capped": false,
+      "totalBeforeCap": 0,
+      "candidates": []
+    },
+    {
+      "service": "Microsoft.Extensions.Logging.ILoggerFactory",
+      "outcome": "ExternalService",
+      "provenance": null,
+      "capped": false,
+      "totalBeforeCap": 0,
+      "candidates": []
+    },
+    {
+      "service": "Microsoft.Extensions.Logging.ILogger\u00601",
+      "outcome": "ExternalService",
+      "provenance": null,
+      "capped": false,
+      "totalBeforeCap": 0,
+      "candidates": []
+    },
+    {
+      "service": "Microsoft.Extensions.Options.IOptionsMonitor\u00601",
+      "outcome": "ExternalService",
+      "provenance": null,
+      "capped": false,
+      "totalBeforeCap": 0,
+      "candidates": []
+    },
+    {
+      "service": "Microsoft.Extensions.Options.IOptions\u00601",
+      "outcome": "ExternalService",
+      "provenance": null,
+      "capped": false,
+      "totalBeforeCap": 0,
+      "candidates": []
+    },
+    {
+      "service": "StackExchange.Redis.IConnectionMultiplexer",
+      "outcome": "ExternalService",
+      "provenance": null,
+      "capped": false,
+      "totalBeforeCap": 0,
+      "candidates": []
+    },
+    {
+      "service": "System.Collections.Generic.IEnumerable\u00601",
+      "outcome": "ExternalService",
+      "provenance": null,
+      "capped": false,
+      "totalBeforeCap": 5,
+      "candidates": []
+    },
+    {
+      "service": "System.Collections.Generic.IReadOnlyList\u00601",
+      "outcome": "ExternalService",
+      "provenance": null,
+      "capped": false,
+      "totalBeforeCap": 1,
+      "candidates": []
+    },
+    {
+      "service": "System.IServiceProvider",
+      "outcome": "ExternalService",
+      "provenance": null,
+      "capped": false,
+      "totalBeforeCap": 0,
+      "candidates": []
+    },
+    {
+      "service": "System.Net.Http.IHttpClientFactory",
+      "outcome": "ExternalService",
+      "provenance": null,
+      "capped": false,
+      "totalBeforeCap": 0,
+      "candidates": []
+    },
+    {
+      "service": "Webhooks.API.Services.IWebhooksRetriever",
+      "outcome": "Resolved",
+      "provenance": "ExplicitRegistration",
+      "capped": false,
+      "totalBeforeCap": 1,
+      "candidates": [
+        {
+          "type": "Webhooks.API.Services.WebhooksRetriever",
+          "provenance": "ExplicitRegistration",
+          "lifetime": "Transient",
+          "confidence": 0.95,
+          "registeredAt": "/home/niels/github/UpdateConference2026/eShop/src/Webhooks.API/Extensions/Extensions.cs:15"
+        }
+      ]
+    },
+    {
+      "service": "Webhooks.API.Services.IWebhooksSender",
+      "outcome": "Resolved",
+      "provenance": "ExplicitRegistration",
+      "capped": false,
+      "totalBeforeCap": 1,
+      "candidates": [
+        {
+          "type": "Webhooks.API.Services.WebhooksSender",
+          "provenance": "ExplicitRegistration",
+          "lifetime": "Transient",
+          "confidence": 0.95,
+          "registeredAt": "/home/niels/github/UpdateConference2026/eShop/src/Webhooks.API/Extensions/Extensions.cs:16"
+        }
+      ]
+    },
+    {
+      "service": "eShop.Basket.API.Repositories.IBasketRepository",
+      "outcome": "Resolved",
+      "provenance": "ExplicitRegistration",
+      "capped": false,
+      "totalBeforeCap": 1,
+      "candidates": [
+        {
+          "type": "eShop.Basket.API.Repositories.RedisBasketRepository",
+          "provenance": "ExplicitRegistration",
+          "lifetime": "Singleton",
+          "confidence": 0.95,
+          "registeredAt": "/home/niels/github/UpdateConference2026/eShop/src/Basket.API/Extensions/Extensions.cs:16"
+        }
+      ]
+    },
+    {
+      "service": "eShop.Catalog.API.IntegrationEvents.ICatalogIntegrationEventService",
+      "outcome": "Resolved",
+      "provenance": "ExplicitRegistration",
+      "capped": false,
+      "totalBeforeCap": 1,
+      "candidates": [
+        {
+          "type": "eShop.Catalog.API.IntegrationEvents.CatalogIntegrationEventService",
+          "provenance": "ExplicitRegistration",
+          "lifetime": "Transient",
+          "confidence": 0.95,
+          "registeredAt": "/home/niels/github/UpdateConference2026/eShop/src/Catalog.API/Extensions/Extensions.cs:29"
+        }
+      ]
+    },
+    {
+      "service": "eShop.Catalog.API.Services.ICatalogAI",
+      "outcome": "Resolved",
+      "provenance": "ExplicitRegistration",
+      "capped": false,
+      "totalBeforeCap": 1,
+      "candidates": [
+        {
+          "type": "eShop.Catalog.API.Services.CatalogAI",
+          "provenance": "ExplicitRegistration",
+          "lifetime": "Scoped",
+          "confidence": 0.95,
+          "registeredAt": "/home/niels/github/UpdateConference2026/eShop/src/Catalog.API/Extensions/Extensions.cs:49"
+        }
+      ]
+    },
+    {
+      "service": "eShop.ClientApp.Services.AppEnvironment.IAppEnvironmentService",
+      "outcome": "Resolved",
+      "provenance": "SingleImplementer",
+      "capped": false,
+      "totalBeforeCap": 1,
+      "candidates": [
+        {
+          "type": "eShop.ClientApp.Services.AppEnvironment.AppEnvironmentService",
+          "provenance": "SingleImplementer",
+          "lifetime": "Unknown",
+          "confidence": 0.8,
+          "registeredAt": null
+        }
+      ]
+    },
+    {
+      "service": "eShop.ClientApp.Services.Basket.IBasketService",
+      "outcome": "Resolved",
+      "provenance": "AllImplementersFallback",
+      "capped": false,
+      "totalBeforeCap": 2,
+      "candidates": [
+        {
+          "type": "eShop.ClientApp.Services.Basket.BasketMockService",
+          "provenance": "AllImplementersFallback",
+          "lifetime": "Unknown",
+          "confidence": 0.25,
+          "registeredAt": null
+        },
+        {
+          "type": "eShop.ClientApp.Services.Basket.BasketService",
+          "provenance": "AllImplementersFallback",
+          "lifetime": "Unknown",
+          "confidence": 0.25,
+          "registeredAt": null
+        }
+      ]
+    },
+    {
+      "service": "eShop.ClientApp.Services.Catalog.ICatalogService",
+      "outcome": "Resolved",
+      "provenance": "AllImplementersFallback",
+      "capped": false,
+      "totalBeforeCap": 2,
+      "candidates": [
+        {
+          "type": "eShop.ClientApp.Services.Catalog.CatalogMockService",
+          "provenance": "AllImplementersFallback",
+          "lifetime": "Unknown",
+          "confidence": 0.25,
+          "registeredAt": null
+        },
+        {
+          "type": "eShop.ClientApp.Services.Catalog.CatalogService",
+          "provenance": "AllImplementersFallback",
+          "lifetime": "Unknown",
+          "confidence": 0.25,
+          "registeredAt": null
+        }
+      ]
+    },
+    {
+      "service": "eShop.ClientApp.Services.FixUri.IFixUriService",
+      "outcome": "Resolved",
+      "provenance": "SingleImplementer",
+      "capped": false,
+      "totalBeforeCap": 1,
+      "candidates": [
+        {
+          "type": "eShop.ClientApp.Services.FixUri.FixUriService",
+          "provenance": "SingleImplementer",
+          "lifetime": "Unknown",
+          "confidence": 0.8,
+          "registeredAt": null
+        }
+      ]
+    },
+    {
+      "service": "eShop.ClientApp.Services.IDialogService",
+      "outcome": "Resolved",
+      "provenance": "SingleImplementer",
+      "capped": false,
+      "totalBeforeCap": 1,
+      "candidates": [
+        {
+          "type": "eShop.ClientApp.Services.DialogService",
+          "provenance": "SingleImplementer",
+          "lifetime": "Unknown",
+          "confidence": 0.8,
+          "registeredAt": null
+        }
+      ]
+    },
+    {
+      "service": "eShop.ClientApp.Services.INavigationService",
+      "outcome": "Resolved",
+      "provenance": "SingleImplementer",
+      "capped": false,
+      "totalBeforeCap": 1,
+      "candidates": [
+        {
+          "type": "eShop.ClientApp.Services.MauiNavigationService",
+          "provenance": "SingleImplementer",
+          "lifetime": "Unknown",
+          "confidence": 0.8,
+          "registeredAt": null
+        }
+      ]
+    },
+    {
+      "service": "eShop.ClientApp.Services.Identity.IIdentityService",
+      "outcome": "Resolved",
+      "provenance": "AllImplementersFallback",
+      "capped": false,
+      "totalBeforeCap": 2,
+      "candidates": [
+        {
+          "type": "eShop.ClientApp.Services.Identity.IdentityMockService",
+          "provenance": "AllImplementersFallback",
+          "lifetime": "Unknown",
+          "confidence": 0.25,
+          "registeredAt": null
+        },
+        {
+          "type": "eShop.ClientApp.Services.Identity.IdentityService",
+          "provenance": "AllImplementersFallback",
+          "lifetime": "Unknown",
+          "confidence": 0.25,
+          "registeredAt": null
+        }
+      ]
+    },
+    {
+      "service": "eShop.ClientApp.Services.Location.ILocationService",
+      "outcome": "Resolved",
+      "provenance": "SingleImplementer",
+      "capped": false,
+      "totalBeforeCap": 1,
+      "candidates": [
+        {
+          "type": "eShop.ClientApp.Services.Location.LocationService",
+          "provenance": "SingleImplementer",
+          "lifetime": "Unknown",
+          "confidence": 0.8,
+          "registeredAt": null
+        }
+      ]
+    },
+    {
+      "service": "eShop.ClientApp.Services.OpenUrl.IOpenUrlService",
+      "outcome": "Resolved",
+      "provenance": "SingleImplementer",
+      "capped": false,
+      "totalBeforeCap": 1,
+      "candidates": [
+        {
+          "type": "eShop.ClientApp.Services.OpenUrl.OpenUrlService",
+          "provenance": "SingleImplementer",
+          "lifetime": "Unknown",
+          "confidence": 0.8,
+          "registeredAt": null
+        }
+      ]
+    },
+    {
+      "service": "eShop.ClientApp.Services.Order.IOrderService",
+      "outcome": "Resolved",
+      "provenance": "AllImplementersFallback",
+      "capped": false,
+      "totalBeforeCap": 2,
+      "candidates": [
+        {
+          "type": "eShop.ClientApp.Services.Order.OrderMockService",
+          "provenance": "AllImplementersFallback",
+          "lifetime": "Unknown",
+          "confidence": 0.25,
+          "registeredAt": null
+        },
+        {
+          "type": "eShop.ClientApp.Services.Order.OrderService",
+          "provenance": "AllImplementersFallback",
+          "lifetime": "Unknown",
+          "confidence": 0.25,
+          "registeredAt": null
+        }
+      ]
+    },
+    {
+      "service": "eShop.ClientApp.Services.RequestProvider.IRequestProvider",
+      "outcome": "Resolved",
+      "provenance": "SingleImplementer",
+      "capped": false,
+      "totalBeforeCap": 1,
+      "candidates": [
+        {
+          "type": "eShop.ClientApp.Services.RequestProvider.RequestProvider",
+          "provenance": "SingleImplementer",
+          "lifetime": "Unknown",
+          "confidence": 0.8,
+          "registeredAt": null
+        }
+      ]
+    },
+    {
+      "service": "eShop.ClientApp.Services.Settings.ISettingsService",
+      "outcome": "Resolved",
+      "provenance": "SingleImplementer",
+      "capped": false,
+      "totalBeforeCap": 1,
+      "candidates": [
+        {
+          "type": "eShop.ClientApp.Services.Settings.SettingsService",
+          "provenance": "SingleImplementer",
+          "lifetime": "Unknown",
+          "confidence": 0.8,
+          "registeredAt": null
+        }
+      ]
+    },
+    {
+      "service": "eShop.ClientApp.Services.Theme.ITheme",
+      "outcome": "Resolved",
+      "provenance": "SingleImplementer",
+      "capped": false,
+      "totalBeforeCap": 1,
+      "candidates": [
+        {
+          "type": "eShop.ClientApp.Services.Theme.Theme",
+          "provenance": "SingleImplementer",
+          "lifetime": "Unknown",
+          "confidence": 0.8,
+          "registeredAt": null
+        }
+      ]
+    },
+    {
+      "service": "eShop.EventBus.Abstractions.IEventBus",
+      "outcome": "Resolved",
+      "provenance": "ExplicitRegistration",
+      "capped": false,
+      "totalBeforeCap": 1,
+      "candidates": [
+        {
+          "type": "eShop.EventBusRabbitMQ.RabbitMQEventBus",
+          "provenance": "ExplicitRegistration",
+          "lifetime": "Singleton",
+          "confidence": 0.95,
+          "registeredAt": "/home/niels/github/UpdateConference2026/eShop/src/EventBusRabbitMQ/RabbitMqDependencyInjectionExtensions.cs:35"
+        }
+      ]
+    },
+    {
+      "service": "eShop.IntegrationEventLogEF.Services.IIntegrationEventLogService",
+      "outcome": "Resolved",
+      "provenance": "ExplicitRegistration",
+      "capped": false,
+      "totalBeforeCap": 2,
+      "candidates": [
+        {
+          "type": "eShop.IntegrationEventLogEF.Services.IntegrationEventLogService\u003CTContext\u003E",
+          "provenance": "ExplicitRegistration",
+          "lifetime": "Transient",
+          "confidence": 0.95,
+          "registeredAt": "/home/niels/github/UpdateConference2026/eShop/src/Catalog.API/Extensions/Extensions.cs:27"
+        }
+      ]
+    },
+    {
+      "service": "eShop.OrderProcessor.Services.IGracePeriodOrdersRepository",
+      "outcome": "Resolved",
+      "provenance": "ExplicitRegistration",
+      "capped": false,
+      "totalBeforeCap": 1,
+      "candidates": [
+        {
+          "type": "eShop.OrderProcessor.Services.GracePeriodOrdersRepository",
+          "provenance": "ExplicitRegistration",
+          "lifetime": "Singleton",
+          "confidence": 0.95,
+          "registeredAt": "/home/niels/github/UpdateConference2026/eShop/src/OrderProcessor/Extensions/Extensions.cs:18"
+        }
+      ]
+    },
+    {
+      "service": "eShop.Ordering.API.Application.IntegrationEvents.IOrderingIntegrationEventService",
+      "outcome": "Resolved",
+      "provenance": "ExplicitRegistration",
+      "capped": false,
+      "totalBeforeCap": 1,
+      "candidates": [
+        {
+          "type": "eShop.Ordering.API.Application.IntegrationEvents.OrderingIntegrationEventService",
+          "provenance": "ExplicitRegistration",
+          "lifetime": "Transient",
+          "confidence": 0.95,
+          "registeredAt": "/home/niels/github/UpdateConference2026/eShop/src/Ordering.API/Extensions/Extensions.cs:26"
+        }
+      ]
+    },
+    {
+      "service": "eShop.Ordering.API.Application.Queries.IOrderQueries",
+      "outcome": "Resolved",
+      "provenance": "ExplicitRegistration",
+      "capped": false,
+      "totalBeforeCap": 1,
+      "candidates": [
+        {
+          "type": "eShop.Ordering.API.Application.Queries.OrderQueries",
+          "provenance": "ExplicitRegistration",
+          "lifetime": "Scoped",
+          "confidence": 0.95,
+          "registeredAt": "/home/niels/github/UpdateConference2026/eShop/src/Ordering.API/Extensions/Extensions.cs:47"
+        }
+      ]
+    },
+    {
+      "service": "eShop.Ordering.API.Infrastructure.Services.IIdentityService",
+      "outcome": "Resolved",
+      "provenance": "ExplicitRegistration",
+      "capped": false,
+      "totalBeforeCap": 1,
+      "candidates": [
+        {
+          "type": "eShop.Ordering.API.Infrastructure.Services.IdentityService",
+          "provenance": "ExplicitRegistration",
+          "lifetime": "Transient",
+          "confidence": 0.95,
+          "registeredAt": "/home/niels/github/UpdateConference2026/eShop/src/Ordering.API/Extensions/Extensions.cs:32"
+        }
+      ]
+    },
+    {
+      "service": "eShop.Ordering.Domain.AggregatesModel.BuyerAggregate.IBuyerRepository",
+      "outcome": "Resolved",
+      "provenance": "ExplicitRegistration",
+      "capped": false,
+      "totalBeforeCap": 1,
+      "candidates": [
+        {
+          "type": "eShop.Ordering.Infrastructure.Repositories.BuyerRepository",
+          "provenance": "ExplicitRegistration",
+          "lifetime": "Scoped",
+          "confidence": 0.95,
+          "registeredAt": "/home/niels/github/UpdateConference2026/eShop/src/Ordering.API/Extensions/Extensions.cs:48"
+        }
+      ]
+    },
+    {
+      "service": "eShop.Ordering.Domain.AggregatesModel.OrderAggregate.IOrderRepository",
+      "outcome": "Resolved",
+      "provenance": "ExplicitRegistration",
+      "capped": false,
+      "totalBeforeCap": 1,
+      "candidates": [
+        {
+          "type": "eShop.Ordering.Infrastructure.Repositories.OrderRepository",
+          "provenance": "ExplicitRegistration",
+          "lifetime": "Scoped",
+          "confidence": 0.95,
+          "registeredAt": "/home/niels/github/UpdateConference2026/eShop/src/Ordering.API/Extensions/Extensions.cs:49"
+        }
+      ]
+    },
+    {
+      "service": "eShop.Ordering.Infrastructure.Idempotency.IRequestManager",
+      "outcome": "Resolved",
+      "provenance": "ExplicitRegistration",
+      "capped": false,
+      "totalBeforeCap": 1,
+      "candidates": [
+        {
+          "type": "eShop.Ordering.Infrastructure.Idempotency.RequestManager",
+          "provenance": "ExplicitRegistration",
+          "lifetime": "Scoped",
+          "confidence": 0.95,
+          "registeredAt": "/home/niels/github/UpdateConference2026/eShop/src/Ordering.API/Extensions/Extensions.cs:50"
+        }
+      ]
+    },
+    {
+      "service": "eShop.WebApp.Services.IBasketState",
+      "outcome": "Resolved",
+      "provenance": "SingleImplementer",
+      "capped": false,
+      "totalBeforeCap": 1,
+      "candidates": [
+        {
+          "type": "eShop.WebApp.Services.BasketState",
+          "provenance": "SingleImplementer",
+          "lifetime": "Unknown",
+          "confidence": 0.8,
+          "registeredAt": null
+        }
+      ]
+    },
+    {
+      "service": "eShop.WebAppComponents.Services.ICatalogService",
+      "outcome": "Resolved",
+      "provenance": "AllImplementersFallback",
+      "capped": false,
+      "totalBeforeCap": 2,
+      "candidates": [
+        {
+          "type": "eShop.HybridApp.Services.CatalogService",
+          "provenance": "AllImplementersFallback",
+          "lifetime": "Unknown",
+          "confidence": 0.25,
+          "registeredAt": null
+        },
+        {
+          "type": "eShop.WebAppComponents.Services.CatalogService",
+          "provenance": "AllImplementersFallback",
+          "lifetime": "Unknown",
+          "confidence": 0.25,
+          "registeredAt": null
+        }
+      ]
+    },
+    {
+      "service": "eShop.WebAppComponents.Services.IProductImageUrlProvider",
+      "outcome": "Resolved",
+      "provenance": "ExplicitRegistration",
+      "capped": false,
+      "totalBeforeCap": 1,
+      "candidates": [
+        {
+          "type": "eShop.WebApp.Services.ProductImageUrlProvider",
+          "provenance": "ExplicitRegistration",
+          "lifetime": "Singleton",
+          "confidence": 0.95,
+          "registeredAt": "/home/niels/github/UpdateConference2026/eShop/src/WebApp/Extensions/Extensions.cs:27"
+        }
+      ]
+    }
+  ]
+}

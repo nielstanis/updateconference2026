@@ -1,0 +1,23 @@
+{
+  "id": "f018",
+  "bug_nn": "bug_19",
+  "source": "TRIAGE.json#bug_19",
+  "title": "Expected webhook token is logged in cleartext on every unauthenticated request",
+  "file": "src/WebhookClient/Endpoints/WebhookEndpoints.cs",
+  "line": 35,
+  "category": "sensitive-data-exposure",
+  "severity": "LOW",
+  "owner_hint": "top committer: Steve Sanderson (1 of 1 recent commit); no CODEOWNERS entry",
+  "mode": "static",
+  "verified": "static_review_only",
+  "status": "patch",
+  "review": "ACCEPT",
+  "style_score": 8,
+  "out_of_scope_hunks": [],
+  "rationale": "The Information-level log writes both the caller token and the configured expected secret before the check, on every anonymous request. The diff removes both secret arguments and logs only whether validation is enabled, leaving the comparison untouched.",
+  "variants_checked": "No other copy of the leaking message exists; other webhook log sites carry no secret.",
+  "bypass_considered": "Deleting the arguments means the values never enter ILogger state, so no provider or exporter can recover them. The separate grant-tester log leak is its own finding.",
+  "test_note": "Added WebhookEndpointDoesNotLogTokenValues with a capturing logger provider asserting neither secret appears.",
+  "review_reason": "The production hunk removes both the caller and configured token from the Information log while leaving validation intact, eliminating the sink rather than masking it. The added test uses the file's existing TestServer pattern and asserts neither secret is captured.",
+  "verdict": null
+}

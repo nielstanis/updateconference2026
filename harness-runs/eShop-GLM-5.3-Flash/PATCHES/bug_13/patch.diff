@@ -1,0 +1,144 @@
+--- a/src/Identity.API/Configuration/Config.cs
++++ b/src/Identity.API/Configuration/Config.cs
+@@ -42,6 +42,11 @@
+             return new List<Client>
+             {
+                 new Client
+                 {
++                    // NOTE: maui is a public client. Its secret ships in the app binary
++                    // (ClientApp/Services/Settings/SettingsService.cs) and is therefore
++                    // public by definition; sourcing it from configuration would not
++                    // protect it. Converting maui to a true public client (no secret,
++                    // PKCE only) is out of scope for this change.
+                     ClientId = "maui",
+                     ClientName = "eShop MAUI OpenId Client",
+@@ -78,17 +83,17 @@
+                     ClientId = "webapp",
+                     ClientName = "WebApp Client",
+                     ClientSecrets = new List<Secret>
+                     {
+-                        new Secret("secret".Sha256())
++                        GetClientSecret(configuration, "Identity:Clients:WebApp:Secret")
+                     },
+                     ClientUri = $"{configuration["WebAppClient"]}",                             // public uri of the client
+                     AllowedGrantTypes = GrantTypes.Code,
+                     AllowAccessTokensViaBrowser = false,
+                     RequireConsent = false,
+                     AllowOfflineAccess = true,
+                     AlwaysIncludeUserClaimsInIdToken = true,
+-                    RequirePkce = false,
++                    RequirePkce = true,
+                     RedirectUris = new List<string>
+                     {
+                         $"{configuration["WebAppClient"]}/signin-oidc"
+                     },
+@@ -114,13 +119,14 @@
+                     ClientId = "webhooksclient",
+                     ClientName = "Webhooks Client",
+                     ClientSecrets = new List<Secret>
+                     {
+-                        new Secret("secret".Sha256())
++                        GetClientSecret(configuration, "Identity:Clients:WebhooksClient:Secret")
+                     },
+                     ClientUri = $"{configuration["WebhooksWebClient"]}",                             // public uri of the client
+                     AllowedGrantTypes = GrantTypes.Code,
+                     AllowAccessTokensViaBrowser = false,
+                     RequireConsent = false,
+                     AllowOfflineAccess = true,
+                     AlwaysIncludeUserClaimsInIdToken = true,
++                    RequirePkce = true,
+                     RedirectUris = new List<string>
+@@ -187,6 +193,15 @@
+                     }
+                 }
+             };
+         }
++
++        // Client secrets are no longer hardcoded in source. Each confidential client
++        // reads its own value from configuration, e.g. "Identity:Clients:WebApp:Secret",
++        // and the deployment must inject the SAME value into Identity.API and into the
++        // client application that sends it (Aspire environment variables, user
++        // secrets, ...). GetRequiredValue fails fast with a clear message if a key
++        // is missing.
++        private static Secret GetClientSecret(IConfiguration configuration, string key) =>
++            new Secret(configuration.GetRequiredValue(key));
+     }
+ }
+--- a/src/WebApp/Extensions/Extensions.cs
++++ b/src/WebApp/Extensions/Extensions.cs
+@@ -76,5 +76,7 @@
+             options.SignedOutRedirectUri = callBackUrl;
+             options.ClientId = "webapp";
+-            options.ClientSecret = "secret";
++            options.ClientSecret = configuration.GetRequiredValue("Identity:Clients:WebApp:Secret");
+             options.ResponseType = "code";
++            // Identity.API requires PKCE for this client (see Identity.API Config.cs);
++            // make sure the handler sends a code challenge with the authorization request.
++            options.UsePkce = true;
+             options.SaveTokens = true;
+--- a/src/WebhookClient/Extensions/Extensions.cs
++++ b/src/WebhookClient/Extensions/Extensions.cs
+@@ -53,4 +53,6 @@
+             options.ClientId = "webhooksclient";
+-            options.ClientSecret = "secret";
++            options.ClientSecret = configuration.GetRequiredValue("Identity:Clients:WebhooksClient:Secret");
+             options.ResponseType = "code";
++            // Identity.API requires PKCE for this client (see Identity.API Config.cs);
++            // make sure the handler sends a code challenge with the authorization request.
++            options.UsePkce = true;
+             options.SaveTokens = true;
+--- a/src/eShop.AppHost/AppHost.cs
++++ b/src/eShop.AppHost/AppHost.cs
+@@ -17,7 +17,12 @@
+ var catalogDb = postgres.AddDatabase("catalogdb");
+ var identityDb = postgres.AddDatabase("identitydb");
+ var orderDb = postgres.AddDatabase("orderingdb");
+ var webhooksDb = postgres.AddDatabase("webhooksdb");
+
++// Confidential OIDC client secrets: no hardcoded values anywhere. These Aspire secret
++// parameters are provided at run time (dashboard prompt / AppHost user secrets) and are
++// injected with the SAME value into Identity.API (validating side) and the matching
++// client application (sending side).
++var webAppClientSecret = builder.AddParameter("webapp-client-secret", secret: true);
++var webhooksClientSecret = builder.AddParameter("webhooks-client-secret", secret: true);
++
+ var launchProfileName = ShouldUseHttpForEndpoints() ? "http" : "https";
+@@ -67,3 +72,4 @@
+ var webhooksClient = builder.AddDotnetProject("webhooksclient", "../WebhookClient", o => o.LaunchProfileName = launchProfileName)
+     .WithReference(webHooksApi)
+-    .WithEnvironment("IdentityUrl", identityEndpoint);
++    .WithEnvironment("IdentityUrl", identityEndpoint)
++    .WithEnvironment("Identity__Clients__WebhooksClient__Secret", webhooksClientSecret);
+@@ -77,3 +83,4 @@
+     .WithReference(rabbitMq).WaitFor(rabbitMq)
+     .WaitFor(identityApi)
+-    .WithEnvironment("IdentityUrl", identityEndpoint);
++    .WithEnvironment("IdentityUrl", identityEndpoint)
++    .WithEnvironment("Identity__Clients__WebApp__Secret", webAppClientSecret);
+@@ -99,5 +106,7 @@
+ identityApi.WithEnvironment("BasketApiClient", basketApi.GetEndpoint("http"))
+            .WithEnvironment("OrderingApiClient", orderingApi.GetEndpoint("http"))
+            .WithEnvironment("WebhooksApiClient", webHooksApi.GetEndpoint("http"))
+            .WithEnvironment("WebhooksWebClient", webhooksClient.GetEndpoint(launchProfileName))
+-           .WithEnvironment("WebAppClient", webApp.GetEndpoint(launchProfileName));
++           .WithEnvironment("WebAppClient", webApp.GetEndpoint(launchProfileName))
++           .WithEnvironment("Identity__Clients__WebApp__Secret", webAppClientSecret)
++           .WithEnvironment("Identity__Clients__WebhooksClient__Secret", webhooksClientSecret);
+--- a/tests/Application.UnitTests/IdentityConfigurationTests.cs
++++ b/tests/Application.UnitTests/IdentityConfigurationTests.cs
+@@ -23,9 +23,13 @@
+         var values = new Dictionary<string, string?>
+         {
+             ["MauiCallback"] = "maui://callback",
+             ["WebAppClient"] = "https://webapp.test",
+             ["WebhooksWebClient"] = "https://webhooks-client.test",
+             ["BasketApiClient"] = "https://basket.test",
+             ["OrderingApiClient"] = "https://ordering.test",
+-            ["WebhooksApiClient"] = "https://webhooks.test"
++            ["WebhooksApiClient"] = "https://webhooks.test",
++            // Config.GetClients now fails fast without these (client secrets are no longer
++            // hardcoded in source); the values themselves are irrelevant to this test.
++            ["Identity:Clients:WebApp:Secret"] = "test-webapp-secret",
++            ["Identity:Clients:WebhooksClient:Secret"] = "test-webhooksclient-secret"
+         };
+         var configuration = new ConfigurationBuilder().AddInMemoryCollection(values).Build();

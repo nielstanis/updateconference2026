@@ -1,0 +1,28 @@
+--- a/src/EventBusRabbitMQ/RabbitMQEventBus.cs
++++ b/src/EventBusRabbitMQ/RabbitMQEventBus.cs
+@@ -156,22 +156,24 @@
+         var eventName = eventArgs.RoutingKey;
+         var message = Encoding.UTF8.GetString(eventArgs.Body.Span);
+ 
+         try
+         {
+-            activity?.SetTag("message", message);
++            // Never tag or log the raw body: integration events carry buyer PII
++            // (BuyerName, BuyerIdentityGuid) and span tags are exported via OTLP.
++            activity?.SetTag("messaging.message.body.size", eventArgs.Body.Length);
+ 
+             if (message.Contains("throw-fake-exception", StringComparison.InvariantCultureIgnoreCase))
+             {
+-                throw new InvalidOperationException($"Fake exception requested: \"{message}\"");
++                throw new InvalidOperationException($"Fake exception requested for event \"{eventName}\"");
+             }
+ 
+             await ProcessEvent(eventName, message);
+         }
+         catch (Exception ex)
+         {
+-            logger.LogWarning(ex, "Error Processing message \"{Message}\"", message);
++            logger.LogWarning(ex, "Error processing event {EventName} ({MessageSize} bytes)", eventName, eventArgs.Body.Length);
+ 
+             activity.SetExceptionTags(ex);
+         }

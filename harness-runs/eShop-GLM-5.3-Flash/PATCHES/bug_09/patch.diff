@@ -1,0 +1,86 @@
+--- a/src/Ordering.API/Program.cs
++++ b/src/Ordering.API/Program.cs
+@@ -13,6 +13,19 @@ var withApiVersioning = builder.Services.AddApiVersioning(options =>
+ });
+ 
+ builder.AddDefaultOpenApi(withApiVersioning);
++
++// FAIL-CLOSED BY DESIGN: no token issuer in this solution currently grants the
++// "admin" role claim (Identity.API's ProfileService emits no role claim and
++// Ordering.API has no role store), so this policy denies every request until an
++// operator maps real admin principals (e.g. role assignment in Identity.API with
++// the role claim emitted into the "orders" audience token).
++builder.Services.AddAuthorization(options =>
++{
++    options.AddPolicy("admin", policy =>
++    {
++        policy.RequireAuthenticatedUser();
++        policy.RequireRole("admin");
++    });
++});
+ 
+ var app = builder.Build();
+--- a/src/Ordering.API/Apis/OrdersApi.cs
++++ b/src/Ordering.API/Apis/OrdersApi.cs
+@@ -9,9 +9,16 @@
+     public static RouteGroupBuilder MapOrdersApiV1(this IEndpointRouteBuilder app)
+     {
+         var api = app.MapGroup("api/orders").HasApiVersion(1.0);
+ 
+         api.MapPut("/cancel", CancelOrderAsync);
+-        api.MapPut("/ship", ShipOrderAsync);
++        // Ship is an administrative action ("administrator executes ship order",
++        // see ShipOrderCommandHandler). Require the fail-closed "admin" policy
++        // (Program.cs) on top of the group-level authenticated-user requirement.
++        // /cancel is a customer action and intentionally keeps only the group
++        // requirement; it is covered by a separate finding.
++        api.MapPut("/ship", ShipOrderAsync)
++           .RequireAuthorization("admin");
+         api.MapGet("{orderId:int}", GetOrderAsync);
+         api.MapGet("/", GetOrdersByUserAsync);
+         api.MapGet("/cardtypes", GetCardTypesAsync);
+--- a/tests/Ordering.FunctionalTests/OrderingApiTests.cs
++++ b/tests/Ordering.FunctionalTests/OrderingApiTests.cs
+@@ -75,9 +75,11 @@
+         var response = await _httpClient.PutAsync("api/orders/ship", content, TestContext.Current.CancellationToken);
+         var s = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+ 
+         // Assert
+-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
++        // Authorization now short-circuits before the endpoint: the auto-authenticated
++        // test user carries no "admin" role claim, so the request is rejected with 403.
++        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+     }
+ 
+     [Fact]
+     public async Task ShipNonExistentOrderFails()
+@@ -89,9 +91,9 @@
+         var response = await _httpClient.PutAsync("api/orders/ship", content, TestContext.Current.CancellationToken);
+ 
+         // Assert
+-        Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
++        // Same as above: the "admin" policy rejects the request before the handler runs.
++        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+     }
+ 
++    [Fact]
++    public async Task ShipOrderRequiresAdminRole()
++    {
++        // Arrange: the fixture's AutoAuthorizeMiddleware yields an authenticated
++        // user WITHOUT any role claim, i.e. an ordinary customer.
++        var content = new StringContent(BuildOrder(), UTF8Encoding.UTF8, "application/json")
++        {
++            Headers = { { "x-requestid", Guid.NewGuid().ToString() } }
++        };
++
++        // Act
++        var response = await _httpClient.PutAsync("api/orders/ship", content, TestContext.Current.CancellationToken);
++
++        // Assert: fail-closed — no admin claim, no ship. 403 (not 401) because the
++        // caller IS authenticated; the admin policy is what fails.
++        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
++    }
++
+     [Fact]
+     public async Task GetAllOrdersCardType()
+     {

@@ -1,0 +1,21 @@
+{
+  "id": "f003",
+  "source": "TRIAGE.json#f003",
+  "title": "Catalog create/update/delete endpoints have no authentication and are reachable from the internet via mobile-bff",
+  "file": "src/Catalog.API/Apis/CatalogApi.cs",
+  "line": 100,
+  "category": "auth-bypass",
+  "severity": "HIGH",
+  "owner_hint": "component: src/Catalog.API/; no CODEOWNERS; top committer Mike Kistler (3/11)",
+  "mode": "static",
+  "verified": "static_review_only",
+  "review": "ACCEPT",
+  "style_score": 7,
+  "out_of_scope_hunks": [],
+  "rationale": "Root cause: CatalogApi.cs:100-117 maps the four catalog write routes with no authorization metadata, and Catalog.API Extensions.AddApplicationServices never calls AddDefaultAuthentication (unlike Basket/Ordering/Webhooks), so the service has no auth at all. The patch adds AddDefaultAuthentication, puts .RequireAuthorization(policy => policy.RequireRole(\"Admin\")) on PUT v1, PUT v2, POST and DELETE (plain RequireAuthorization is insufficient because any self-registered user can get a token), and passes Identity__Url/Audience/Scopes to catalog-api via the AppHost rather than appsettings (to avoid breaking build-time OpenAPI generation). GET routes stay anonymous. Fails closed if Identity config is missing (auth-tagged endpoints 500). No admin role claim is issued by Identity.API today, so catalog writes are effectively disabled until an operator provisions one. Restricting mobile-bff catalog routes to GET and narrowing SetValues to a DTO are left as follow-ups. Role name aligned to \"Admin\" (same as bug_03) by the orchestrator after review.",
+  "variants_checked": "Only four write routes exist in Catalog.API (all covered); GETs intentionally anonymous; Ordering/Webhooks already group-protected (gaps are f001/f002/f011); Basket already authenticated; mobile-bff catalog routes only proxy; overlaps with f031 (CreateItem Id) and f006 (pricing) noted.",
+  "bypass_considered": "Anonymous write via catalog-api or mobile-bff catch-all now 401; authenticated non-admin now 403; api-version switching does not help since each versioned route carries the policy; missing Identity config makes auth-tagged endpoints fail; forged JWTs fail signature/issuer validation, contingent on f004 being fixed.",
+  "test_note": "tests/Catalog.FunctionalTests/CatalogApiTests.cs CatalogItemWriteEndpointsRequireAdminRole (401 anonymous, 403 customer, v1 and v2). CatalogApiFixture adds dummy Identity config and a test-only startup filter signing requests in from an X-Test-Role header; CreateHttpClient defaults to role Admin. Conflicts with bug_08 (f031), which edits the same test file and CreateHttpClient callers. Not built or run.",
+  "review_reason": "CatalogApi.cs adds RequireAuthorization(RequireRole(\"Admin\")) to all four write routes and Extensions.cs adds the AddDefaultAuthentication registration they need, fixing the root cause (no auth in Catalog.API at all). AppHost Identity__* wiring is required; the X-Test-Role middleware is test-only. Owners should know Identity.API issues no Admin role and defines no catalog scope, so writes fail closed for everyone once deployed, and shared ValidateAudience=false leaves the role check as the only guard.",
+  "verdict": null
+}

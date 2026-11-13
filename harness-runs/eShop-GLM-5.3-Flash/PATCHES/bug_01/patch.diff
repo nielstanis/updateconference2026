@@ -1,0 +1,83 @@
+--- a/src/Ordering.API/Application/Commands/CancelOrderCommandHandler.cs
++++ b/src/Ordering.API/Application/Commands/CancelOrderCommandHandler.cs
+@@ -3,11 +3,14 @@ namespace eShop.Ordering.API.Application.Commands;
+ // Regular CommandHandler
+ public class CancelOrderCommandHandler : IRequestHandler<CancelOrderCommand, bool>
+ {
+     private readonly IOrderRepository _orderRepository;
++    private readonly IBuyerRepository _buyerRepository;
++    private readonly IIdentityService _identityService;
+ 
+-    public CancelOrderCommandHandler(IOrderRepository orderRepository)
++    public CancelOrderCommandHandler(IOrderRepository orderRepository, IBuyerRepository buyerRepository, IIdentityService identityService)
+     {
+         _orderRepository = orderRepository;
++        _buyerRepository = buyerRepository;
++        _identityService = identityService;
+     }
+ 
+     /// <summary>
+@@ -17,13 +20,19 @@ public class CancelOrderCommandHandler : IRequestHandler<CancelOrderCommand, bo
+     /// <param name="command"></param>
+     /// <returns></returns>
+     public async Task<bool> Handle(CancelOrderCommand command, CancellationToken cancellationToken)
+     {
+         var orderToUpdate = await _orderRepository.GetAsync(command.OrderNumber);
+         if (orderToUpdate == null)
+         {
+             return false;
+         }
+ 
++        // Only the buyer who placed the order is allowed to cancel it
++        var buyer = await _buyerRepository.FindAsync(_identityService.GetUserIdentity());
++        if (buyer == null || orderToUpdate.BuyerId != buyer.Id)
++        {
++            return false;
++        }
++
+         orderToUpdate.SetCancelledStatus();
+         return await _orderRepository.UnitOfWork.SaveEntitiesAsync(cancellationToken);
+     }
+--- /dev/null
++++ b/tests/Ordering.UnitTests/Application/CancelOrderCommandHandlerTest.cs
+@@ -0,0 +1,37 @@
++using eShop.Ordering.Domain.AggregatesModel.OrderAggregate;
++
++namespace eShop.Ordering.UnitTests.Application;
++
++[TestClass]
++public class CancelOrderCommandHandlerTest
++{
++    [TestMethod]
++    public async Task Handle_rejects_cancelling_order_owned_by_another_user()
++    {
++        // Arrange
++        var order = FakeOrder();
++        order.SetPaymentMethodVerified(99, 1);
++
++        var orderRepositoryMock = Substitute.For<IOrderRepository>();
++        orderRepositoryMock.GetAsync(Arg.Any<int>())
++            .Returns(order);
++
++        var buyerRepositoryMock = Substitute.For<IBuyerRepository>();
++        buyerRepositoryMock.FindAsync(Arg.Any<string>())
++            .Returns(new Buyer("attacker-identity", "attacker"));
++
++        var identityServiceMock = Substitute.For<IIdentityService>();
++        identityServiceMock.GetUserIdentity().Returns("attacker-identity");
++
++        var handler = new CancelOrderCommandHandler(orderRepositoryMock, buyerRepositoryMock, identityServiceMock);
++
++        // Act
++        var result = await handler.Handle(new CancelOrderCommand(order.Id), new CancellationToken());
++
++        //Assert
++        Assert.IsFalse(result);
++        Assert.AreEqual(OrderStatus.Submitted, order.OrderStatus);
++    }
++
++    private Order FakeOrder()
++    {
++        return new Order("1", "victim", new Address("street", "city", "state", "country", "zipcode"), 1, "12", "111", "victim", DateTime.UtcNow.AddYears(1));
++    }
++}

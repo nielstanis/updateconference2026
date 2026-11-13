@@ -1,0 +1,21 @@
+{
+  "id": "f006",
+  "source": "TRIAGE.json#f006",
+  "title": "Order item prices and product names are taken from the client request",
+  "file": "src/Ordering.API/Extensions/BasketItemExtensions.cs",
+  "line": 20,
+  "category": "business-logic",
+  "severity": "MEDIUM",
+  "owner_hint": "component: src/Ordering.API/; no CODEOWNERS; top committer Aditya Mandaleeka (1/1)",
+  "mode": "static",
+  "verified": "static_review_only",
+  "review": "ACCEPT",
+  "style_score": 7,
+  "out_of_scope_hunks": [],
+  "rationale": "Root cause CreateOrderCommandHandler.cs:44, the only place a persisted Order gets its items, passes client item.ProductName/UnitPrice into Order.AddOrderItem (values originate in CreateOrderRequest.Items via ToOrderItemDTO, which only maps). Adds ICatalogService/CatalogService, a typed HttpClient calling Catalog.API's existing read-only GET api/catalog/items/by?ids=... (the endpoint WebApp already uses for basket pricing), and the handler resolves every ProductId before doing anything else, building each OrderItem from catalog Name and Price; unknown ProductIds throw OrderingDomainException. Registered with base address https+http://catalog-api; AppHost adds .WithReference(catalogApi) to ordering-api. Fails closed: catalog unreachable or unknown product means no order is persisted (IdentifiedCommandHandler returns false; API response unchanged). Assumes api-version query param is honoured by Catalog.API. PictureUrl remains client-supplied (display-only).",
+  "variants_checked": "CreateOrderCommandHandler fixed; CreateOrderDraftCommandHandler has the same pattern but builds an unsaved draft returned to the same caller (not fixed); only two AddOrderItem callers; mapping helpers unchanged; Discount never populated from client input; textual merge conflict expected with f005 (same handler/endpoint area); uses only the read-only items/by endpoint so f003's write auth does not affect it.",
+  "bypass_considered": "Forged UnitPrice/ProductName ignored; non-existent ProductId now rejected; duplicate ProductIds priced from catalog then merged; units <= 0 still rejected by OrderItem; catalog failure rejects the order rather than falling back.",
+  "test_note": "tests/Ordering.UnitTests/Application/NewOrderCommandHandlerTest.cs Handle_uses_catalog_price_and_name_instead_of_client_supplied_values (captures the Order passed to IOrderRepository.Add); existing test and FakeOrderRequestWithBuyer helper updated. Not compiled or run; hunk counts checked by hand.",
+  "review_reason": "The handler hunk replaces item.ProductName/item.UnitPrice with catalogItem.Name/Price looked up by ProductId from catalog-api, removing trust in the client price that BasketItemExtensions.cs:20 feeds via CreateOrderCommand.cs:70; unknown products throw rather than fall back. CatalogService, DI and AppHost hunks are required wiring; the new test checks a forged 0.01 becomes the catalog's 100. Residuals: PictureUrl still client-controlled; order creation now depends on catalog-api availability; a dropped trailing space on a context line may need --ignore-whitespace.",
+  "verdict": null
+}

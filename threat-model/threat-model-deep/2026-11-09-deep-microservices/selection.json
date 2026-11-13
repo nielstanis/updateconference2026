@@ -1,0 +1,1439 @@
+{
+  "schema_version": "1.0",
+  "artifact_type": "TM_REPORT",
+  "model_id": "eshop-2026-11-09",
+  "revision": "r00-selection",
+  "parent_revision": null,
+  "status": "partial",
+  "analysis_depth": "quick",
+  "architecture_ids": [
+    "microservices",
+    "identity-federation",
+    "agentic-ai"
+  ],
+  "selected_methods": [],
+  "processed_inputs": [
+    {
+      "id": "IN-001",
+      "locator": "README.md",
+      "access": "read",
+      "coverage": "revision 913acea; read in full during evidence collection (runbook step 2); carried into selection, not re-read",
+      "reason": null
+    },
+    {
+      "id": "IN-002",
+      "locator": "src/eShop.AppHost/AppHost.cs",
+      "access": "read",
+      "coverage": "revision 913acea; read in full during evidence collection (runbook step 2); carried into selection, not re-read",
+      "reason": null
+    },
+    {
+      "id": "IN-003",
+      "locator": "src/eShop.AppHost/Extensions.cs",
+      "access": "read",
+      "coverage": "revision 913acea; read in full during evidence collection (runbook step 2); carried into selection, not re-read",
+      "reason": null
+    },
+    {
+      "id": "IN-004",
+      "locator": "src/eShop.AppHost/appsettings.json",
+      "access": "read",
+      "coverage": "revision 913acea; read in full during evidence collection (runbook step 2); carried into selection, not re-read",
+      "reason": null
+    },
+    {
+      "id": "IN-005",
+      "locator": "src/eShop.ServiceDefaults/AuthenticationExtensions.cs",
+      "access": "read",
+      "coverage": "revision 913acea; read in full during evidence collection (runbook step 2); carried into selection, not re-read",
+      "reason": null
+    },
+    {
+      "id": "IN-006",
+      "locator": "src/Ordering.API/Program.cs",
+      "access": "read",
+      "coverage": "revision 913acea; read in full during evidence collection (runbook step 2); carried into selection, not re-read",
+      "reason": null
+    },
+    {
+      "id": "IN-007",
+      "locator": "src/Ordering.API/Extensions/Extensions.cs",
+      "access": "read",
+      "coverage": "revision 913acea; read in full during evidence collection (runbook step 2); carried into selection, not re-read",
+      "reason": null
+    },
+    {
+      "id": "IN-008",
+      "locator": "src/Ordering.API/Apis/OrdersApi.cs",
+      "access": "read",
+      "coverage": "revision 913acea; read in full during evidence collection (runbook step 2); carried into selection, not re-read",
+      "reason": null
+    },
+    {
+      "id": "IN-009",
+      "locator": "src/Ordering.API/Apis/OrderServices.cs",
+      "access": "read",
+      "coverage": "revision 913acea; read in full during evidence collection (runbook step 2); carried into selection, not re-read",
+      "reason": null
+    },
+    {
+      "id": "IN-010",
+      "locator": "src/Ordering.API/Infrastructure/Services/IdentityService.cs",
+      "access": "read",
+      "coverage": "revision 913acea; read in full during evidence collection (runbook step 2); carried into selection, not re-read",
+      "reason": null
+    },
+    {
+      "id": "IN-011",
+      "locator": "src/Ordering.API/Application/Queries/OrderQueries.cs",
+      "access": "read",
+      "coverage": "revision 913acea; read in full during evidence collection (runbook step 2); carried into selection, not re-read",
+      "reason": null
+    },
+    {
+      "id": "IN-012",
+      "locator": "src/Ordering.API/Application/Commands/CreateOrderCommandHandler.cs",
+      "access": "read",
+      "coverage": "revision 913acea; read in full during evidence collection (runbook step 2); carried into selection, not re-read",
+      "reason": null
+    },
+    {
+      "id": "IN-013",
+      "locator": "src/Ordering.API/Application/Commands/ShipOrderCommandHandler.cs",
+      "access": "read",
+      "coverage": "revision 913acea; read in full during evidence collection (runbook step 2); carried into selection, not re-read",
+      "reason": null
+    },
+    {
+      "id": "IN-014",
+      "locator": "src/Ordering.API/Application/Commands/CancelOrderCommandHandler.cs",
+      "access": "read",
+      "coverage": "revision 913acea; read in full during evidence collection (runbook step 2); carried into selection, not re-read",
+      "reason": null
+    },
+    {
+      "id": "IN-015",
+      "locator": "src/Ordering.API/Application/Commands/IdentifiedCommandHandler.cs",
+      "access": "read",
+      "coverage": "revision 913acea; read in full during evidence collection (runbook step 2); carried into selection, not re-read",
+      "reason": null
+    },
+    {
+      "id": "IN-016",
+      "locator": "src/Ordering.API/appsettings.json",
+      "access": "read",
+      "coverage": "revision 913acea; read in full during evidence collection (runbook step 2); carried into selection, not re-read",
+      "reason": null
+    },
+    {
+      "id": "IN-017",
+      "locator": "src/Basket.API/Program.cs",
+      "access": "read",
+      "coverage": "revision 913acea; read in full during evidence collection (runbook step 2); carried into selection, not re-read",
+      "reason": null
+    },
+    {
+      "id": "IN-018",
+      "locator": "src/Basket.API/Grpc/BasketService.cs",
+      "access": "read",
+      "coverage": "revision 913acea; read in full during evidence collection (runbook step 2); carried into selection, not re-read",
+      "reason": null
+    },
+    {
+      "id": "IN-019",
+      "locator": "src/Basket.API/Extensions/Extensions.cs",
+      "access": "read",
+      "coverage": "revision 913acea; read in full during evidence collection (runbook step 2); carried into selection, not re-read",
+      "reason": null
+    },
+    {
+      "id": "IN-020",
+      "locator": "src/Basket.API/Extensions/ServerCallContextIdentityExtensions.cs",
+      "access": "read",
+      "coverage": "revision 913acea; read in full during evidence collection (runbook step 2); carried into selection, not re-read",
+      "reason": null
+    },
+    {
+      "id": "IN-021",
+      "locator": "src/Basket.API/Repositories/RedisBasketRepository.cs",
+      "access": "read",
+      "coverage": "revision 913acea; read in full during evidence collection (runbook step 2); carried into selection, not re-read",
+      "reason": null
+    },
+    {
+      "id": "IN-022",
+      "locator": "src/Basket.API/IntegrationEvents/EventHandling/OrderStartedIntegrationEventHandler.cs",
+      "access": "read",
+      "coverage": "revision 913acea; read in full during evidence collection (runbook step 2); carried into selection, not re-read",
+      "reason": null
+    },
+    {
+      "id": "IN-023",
+      "locator": "src/Basket.API/appsettings.json",
+      "access": "read",
+      "coverage": "revision 913acea; read in full during evidence collection (runbook step 2); carried into selection, not re-read",
+      "reason": null
+    },
+    {
+      "id": "IN-024",
+      "locator": "src/Catalog.API/Program.cs",
+      "access": "read",
+      "coverage": "revision 913acea; read in full during evidence collection (runbook step 2); carried into selection, not re-read",
+      "reason": null
+    },
+    {
+      "id": "IN-025",
+      "locator": "src/Catalog.API/Extensions/Extensions.cs",
+      "access": "read",
+      "coverage": "revision 913acea; read in full during evidence collection (runbook step 2); carried into selection, not re-read",
+      "reason": null
+    },
+    {
+      "id": "IN-026",
+      "locator": "src/Catalog.API/appsettings.json",
+      "access": "read",
+      "coverage": "revision 913acea; read in full during evidence collection (runbook step 2); carried into selection, not re-read",
+      "reason": null
+    },
+    {
+      "id": "IN-027",
+      "locator": "src/Webhooks.API/Program.cs",
+      "access": "read",
+      "coverage": "revision 913acea; read in full during evidence collection (runbook step 2); carried into selection, not re-read",
+      "reason": null
+    },
+    {
+      "id": "IN-028",
+      "locator": "src/Webhooks.API/Extensions/Extensions.cs",
+      "access": "read",
+      "coverage": "revision 913acea; read in full during evidence collection (runbook step 2); carried into selection, not re-read",
+      "reason": null
+    },
+    {
+      "id": "IN-029",
+      "locator": "src/Webhooks.API/Apis/WebHooksApi.cs",
+      "access": "read",
+      "coverage": "revision 913acea; read in full during evidence collection (runbook step 2); carried into selection, not re-read",
+      "reason": null
+    },
+    {
+      "id": "IN-030",
+      "locator": "src/Webhooks.API/Services/GrantUrlTesterService.cs",
+      "access": "read",
+      "coverage": "revision 913acea; read in full during evidence collection (runbook step 2); carried into selection, not re-read",
+      "reason": null
+    },
+    {
+      "id": "IN-031",
+      "locator": "src/Webhooks.API/Services/WebhooksSender.cs",
+      "access": "read",
+      "coverage": "revision 913acea; read in full during evidence collection (runbook step 2); carried into selection, not re-read",
+      "reason": null
+    },
+    {
+      "id": "IN-032",
+      "locator": "src/Webhooks.API/Model/WebhookSubscriptionRequest.cs",
+      "access": "read",
+      "coverage": "revision 913acea; read in full during evidence collection (runbook step 2); carried into selection, not re-read",
+      "reason": null
+    },
+    {
+      "id": "IN-033",
+      "locator": "src/Webhooks.API/Model/WebhookSubscription.cs",
+      "access": "read",
+      "coverage": "revision 913acea; read in full during evidence collection (runbook step 2); carried into selection, not re-read",
+      "reason": null
+    },
+    {
+      "id": "IN-034",
+      "locator": "src/Webhooks.API/IntegrationEvents/ProductPriceChangedIntegrationEventHandler.cs",
+      "access": "read",
+      "coverage": "revision 913acea; read in full during evidence collection (runbook step 2); carried into selection, not re-read",
+      "reason": null
+    },
+    {
+      "id": "IN-035",
+      "locator": "src/Webhooks.API/appsettings.json",
+      "access": "read",
+      "coverage": "revision 913acea; read in full during evidence collection (runbook step 2); carried into selection, not re-read",
+      "reason": null
+    },
+    {
+      "id": "IN-036",
+      "locator": "src/WebhookClient/Program.cs",
+      "access": "read",
+      "coverage": "revision 913acea; read in full during evidence collection (runbook step 2); carried into selection, not re-read",
+      "reason": null
+    },
+    {
+      "id": "IN-037",
+      "locator": "src/WebhookClient/Endpoints/AuthenticationEndpoints.cs",
+      "access": "read",
+      "coverage": "revision 913acea; read in full during evidence collection (runbook step 2); carried into selection, not re-read",
+      "reason": null
+    },
+    {
+      "id": "IN-038",
+      "locator": "src/WebhookClient/Endpoints/WebhookEndpoints.cs",
+      "access": "read",
+      "coverage": "revision 913acea; read in full during evidence collection (runbook step 2); carried into selection, not re-read",
+      "reason": null
+    },
+    {
+      "id": "IN-039",
+      "locator": "src/WebhookClient/appsettings.json",
+      "access": "read",
+      "coverage": "revision 913acea; read in full during evidence collection (runbook step 2); carried into selection, not re-read",
+      "reason": null
+    },
+    {
+      "id": "IN-040",
+      "locator": "src/Identity.API/Program.cs",
+      "access": "read",
+      "coverage": "revision 913acea; read in full during evidence collection (runbook step 2); carried into selection, not re-read",
+      "reason": null
+    },
+    {
+      "id": "IN-041",
+      "locator": "src/Identity.API/Configuration/Config.cs",
+      "access": "read",
+      "coverage": "revision 913acea; read in full during evidence collection (runbook step 2); carried into selection, not re-read",
+      "reason": null
+    },
+    {
+      "id": "IN-042",
+      "locator": "src/Identity.API/UsersSeed.cs",
+      "access": "read",
+      "coverage": "revision 913acea; read in full during evidence collection (runbook step 2); carried into selection, not re-read",
+      "reason": null
+    },
+    {
+      "id": "IN-043",
+      "locator": "src/Identity.API/Services/RedirectService.cs",
+      "access": "read",
+      "coverage": "revision 913acea; read in full during evidence collection (runbook step 2); carried into selection, not re-read",
+      "reason": null
+    },
+    {
+      "id": "IN-044",
+      "locator": "src/Identity.API/appsettings.json",
+      "access": "read",
+      "coverage": "revision 913acea; read in full during evidence collection (runbook step 2); carried into selection, not re-read",
+      "reason": null
+    },
+    {
+      "id": "IN-045",
+      "locator": "src/Identity.API/appsettings.Development.json",
+      "access": "read",
+      "coverage": "revision 913acea; read in full during evidence collection (runbook step 2); carried into selection, not re-read",
+      "reason": null
+    },
+    {
+      "id": "IN-046",
+      "locator": "src/WebApp/Program.cs",
+      "access": "read",
+      "coverage": "revision 913acea; read in full during evidence collection (runbook step 2); carried into selection, not re-read",
+      "reason": null
+    },
+    {
+      "id": "IN-047",
+      "locator": "src/WebApp/Extensions/Extensions.cs",
+      "access": "read",
+      "coverage": "revision 913acea; read in full during evidence collection (runbook step 2); carried into selection, not re-read",
+      "reason": null
+    },
+    {
+      "id": "IN-048",
+      "locator": "src/WebApp/Components/Chatbot/ChatState.cs",
+      "access": "read",
+      "coverage": "revision 913acea; read in full during evidence collection (runbook step 2); carried into selection, not re-read",
+      "reason": null
+    },
+    {
+      "id": "IN-049",
+      "locator": "src/WebApp/appsettings.json",
+      "access": "read",
+      "coverage": "revision 913acea; read in full during evidence collection (runbook step 2); carried into selection, not re-read",
+      "reason": null
+    },
+    {
+      "id": "IN-050",
+      "locator": "src/PaymentProcessor/IntegrationEvents/EventHandling/OrderStatusChangedToStockConfirmedIntegrationEventHandler.cs",
+      "access": "read",
+      "coverage": "revision 913acea; read in full during evidence collection (runbook step 2); carried into selection, not re-read",
+      "reason": null
+    },
+    {
+      "id": "IN-051",
+      "locator": "src/PaymentProcessor/PaymentOptions.cs",
+      "access": "read",
+      "coverage": "revision 913acea; read in full during evidence collection (runbook step 2); carried into selection, not re-read",
+      "reason": null
+    },
+    {
+      "id": "IN-052",
+      "locator": "src/PaymentProcessor/appsettings.json",
+      "access": "read",
+      "coverage": "revision 913acea; read in full during evidence collection (runbook step 2); carried into selection, not re-read",
+      "reason": null
+    },
+    {
+      "id": "IN-053",
+      "locator": "src/OrderProcessor/appsettings.json",
+      "access": "read",
+      "coverage": "revision 913acea; read in full during evidence collection (runbook step 2); carried into selection, not re-read",
+      "reason": null
+    },
+    {
+      "id": "IN-054",
+      "locator": "src/eShop.ServiceDefaults/HttpClientExtensions.cs",
+      "access": "partial",
+      "coverage": "revision 913acea; lines 1-60 read; remainder unread; read during evidence collection; carried into selection",
+      "reason": "Bounded evidence collection; unread extent not assessed"
+    },
+    {
+      "id": "IN-055",
+      "locator": "src/eShop.ServiceDefaults/Extensions.cs",
+      "access": "partial",
+      "coverage": "revision 913acea; grep matches plus lines 108-125 read; remainder unread; read during evidence collection; carried into selection",
+      "reason": "Bounded evidence collection; unread extent not assessed"
+    },
+    {
+      "id": "IN-056",
+      "locator": "src/Ordering.Domain/AggregatesModel/OrderAggregate/Order.cs",
+      "access": "partial",
+      "coverage": "revision 913acea; grep matches plus lines 130-153 read; remainder unread; read during evidence collection; carried into selection",
+      "reason": "Bounded evidence collection; unread extent not assessed"
+    },
+    {
+      "id": "IN-057",
+      "locator": "src/Catalog.API/Apis/CatalogApi.cs",
+      "access": "partial",
+      "coverage": "revision 913acea; lines 1-125, 251-272 (grep), 359-467 read; remainder unread; read during evidence collection; carried into selection",
+      "reason": "Bounded evidence collection; unread extent not assessed"
+    },
+    {
+      "id": "IN-058",
+      "locator": "src/Webhooks.API/Extensions/RouteHandlerBuilderExtensions.cs",
+      "access": "partial",
+      "coverage": "revision 913acea; first 37 lines read; remainder unread; read during evidence collection; carried into selection",
+      "reason": "Bounded evidence collection; unread extent not assessed"
+    },
+    {
+      "id": "IN-059",
+      "locator": "src/WebhookClient/Extensions/Extensions.cs",
+      "access": "partial",
+      "coverage": "revision 913acea; grep matches only; read during evidence collection; carried into selection",
+      "reason": "Bounded evidence collection; unread extent not assessed"
+    },
+    {
+      "id": "IN-060",
+      "locator": "src/Identity.API/Quickstart (controllers)",
+      "access": "partial",
+      "coverage": "revision 913acea; grep matches only for authorization attributes; bodies unread; read during evidence collection; carried into selection",
+      "reason": "Bounded evidence collection; unread extent not assessed"
+    },
+    {
+      "id": "IN-061",
+      "locator": "src/EventBusRabbitMQ/RabbitMQEventBus.cs",
+      "access": "partial",
+      "coverage": "revision 913acea; grep matches plus selected lines; remainder unread; read during evidence collection; carried into selection",
+      "reason": "Bounded evidence collection; unread extent not assessed"
+    },
+    {
+      "id": "IN-062",
+      "locator": "src/OrderProcessor/Services/GracePeriodManagerService.cs",
+      "access": "partial",
+      "coverage": "revision 913acea; grep matches only; read during evidence collection; carried into selection",
+      "reason": "Bounded evidence collection; unread extent not assessed"
+    },
+    {
+      "id": "IN-063",
+      "locator": "src/OrderProcessor/Extensions/Extensions.cs",
+      "access": "partial",
+      "coverage": "revision 913acea; grep matches only; read during evidence collection; carried into selection",
+      "reason": "Bounded evidence collection; unread extent not assessed"
+    },
+    {
+      "id": "IN-064",
+      "locator": "src/ClientApp/Services/Settings/SettingsService.cs",
+      "access": "partial",
+      "coverage": "revision 913acea; grep matches only; read during evidence collection; carried into selection",
+      "reason": "Bounded evidence collection; unread extent not assessed"
+    },
+    {
+      "id": "IN-065",
+      "locator": "src/ClientApp/Services/Identity/IdentityService.cs",
+      "access": "partial",
+      "coverage": "revision 913acea; grep matches only; read during evidence collection; carried into selection",
+      "reason": "Bounded evidence collection; unread extent not assessed"
+    },
+    {
+      "id": "IN-066",
+      "locator": "src/HybridApp/MauiProgram.cs",
+      "access": "partial",
+      "coverage": "revision 913acea; grep matches only; read during evidence collection; carried into selection",
+      "reason": "Bounded evidence collection; unread extent not assessed"
+    },
+    {
+      "id": "IN-067",
+      "locator": "src/HybridApp/Services/CatalogService.cs",
+      "access": "partial",
+      "coverage": "revision 913acea; grep matches only; read during evidence collection; carried into selection",
+      "reason": "Bounded evidence collection; unread extent not assessed"
+    },
+    {
+      "id": "IN-068",
+      "locator": "src/Ordering.Infrastructure/EntityConfigurations/PaymentMethodEntityTypeConfiguration.cs",
+      "access": "partial",
+      "coverage": "revision 913acea; grep match only; read during evidence collection; carried into selection",
+      "reason": "Bounded evidence collection; unread extent not assessed"
+    },
+    {
+      "id": "IN-069",
+      "locator": ".github/workflows/pr-validation.yml",
+      "access": "partial",
+      "coverage": "revision 913acea; first 30 lines read; remainder unread; read during evidence collection; carried into selection",
+      "reason": "Bounded evidence collection; unread extent not assessed"
+    },
+    {
+      "id": "IN-070",
+      "locator": ".github/workflows (other)",
+      "access": "partial",
+      "coverage": "revision 913acea; grep matches only for uses/permissions/secrets; read during evidence collection; carried into selection",
+      "reason": "Bounded evidence collection; unread extent not assessed"
+    },
+    {
+      "id": "IN-071",
+      "locator": "SYSTEM_UNDER_REVIEW.md",
+      "access": "read",
+      "coverage": "run folder evidence bundle; read in full by the selector",
+      "reason": null
+    }
+  ],
+  "unprocessed_inputs": [
+    {
+      "id": "UN-001",
+      "locator": "Identity.API Razor views, SecurityHeadersAttribute, controller bodies",
+      "access": "skipped",
+      "coverage": "revision 913acea; not inspected in this run",
+      "reason": "not read; bounded collection"
+    },
+    {
+      "id": "UN-002",
+      "locator": "Ordering validators, behaviors (Logging/Validator/Transaction), RequestManager, OrderRepository, BuyerRepository",
+      "access": "skipped",
+      "coverage": "revision 913acea; not inspected in this run",
+      "reason": "not read; bounded collection"
+    },
+    {
+      "id": "UN-003",
+      "locator": "src/Catalog.API/Services/CatalogAI.cs, Infrastructure/CatalogContextSeed.cs",
+      "access": "skipped",
+      "coverage": "revision 913acea; not inspected in this run",
+      "reason": "not read; bounded collection"
+    },
+    {
+      "id": "UN-004",
+      "locator": "src/Webhooks.API/Services/WebhooksRetriever.cs and paid/shipped event handlers",
+      "access": "skipped",
+      "coverage": "revision 913acea; not inspected in this run",
+      "reason": "not read; bounded collection"
+    },
+    {
+      "id": "UN-005",
+      "locator": "src/WebApp Blazor pages, BasketService, OrderStatusNotificationService, OrderingService",
+      "access": "skipped",
+      "coverage": "revision 913acea; not inspected in this run",
+      "reason": "not read; bounded collection"
+    },
+    {
+      "id": "UN-006",
+      "locator": "src/EventBus abstractions, src/IntegrationEventLogEF",
+      "access": "skipped",
+      "coverage": "revision 913acea; not inspected in this run",
+      "reason": "not read; bounded collection"
+    },
+    {
+      "id": "UN-007",
+      "locator": "src/ClientApp views and view models; src/HybridApp pages",
+      "access": "skipped",
+      "coverage": "revision 913acea; not inspected in this run",
+      "reason": "not read; bounded to settings/identity greps"
+    },
+    {
+      "id": "UN-008",
+      "locator": "package.json, package-lock.json, Directory.Packages.props, nuget.config",
+      "access": "skipped",
+      "coverage": "revision 913acea; not inspected in this run",
+      "reason": "listed, not read; dependency review not performed"
+    },
+    {
+      "id": "UN-009",
+      "locator": ".github/dependabot.yml, ci.yml, es-metadata.yml, .devcenter",
+      "access": "skipped",
+      "coverage": "revision 913acea; not inspected in this run",
+      "reason": "listed, not read"
+    },
+    {
+      "id": "UN-010",
+      "locator": "tests/, e2e/ (out of scope), bin/obj, EF Migrations bodies, node_modules, wwwroot",
+      "access": "skipped",
+      "coverage": "revision 913acea; not inspected in this run",
+      "reason": "excluded by runbook/scope; labeled as exclusions"
+    },
+    {
+      "id": "UN-011",
+      "locator": "Git history and working-tree state",
+      "access": "skipped",
+      "coverage": "revision 913acea; not inspected in this run",
+      "reason": "Git not used: protected prefix unsupported by installed git (--no-lazy-fetch rejected)"
+    }
+  ],
+  "attachments": [],
+  "continuation": null,
+  "model": {
+    "scope": {
+      "description": "Architecture selection for a security threat model of the eShop reference application (AdventureWorks), .NET Aspire services-based e-commerce system.",
+      "in_scope": [
+        "Aspire AppHost topology",
+        "Identity.API, Catalog.API, Basket.API, Ordering.API, OrderProcessor, PaymentProcessor, Webhooks.API, WebhookClient, WebApp, mobile-bff",
+        "RabbitMQ event bus and shared Postgres/Redis",
+        "MAUI client identity settings (bounded)",
+        "CI workflows (bounded)"
+      ],
+      "out_of_scope": [
+        "tests/ and e2e/ (not analyzed)",
+        "EF migrations, bin/obj, node_modules, wwwroot",
+        ".github/skills agent documentation",
+        "AI provider internals",
+        "deployed runtime behavior"
+      ],
+      "objectives": [
+        "Choose one primary architecture and bounded secondaries for a design-level security review"
+      ],
+      "assumptions": [
+        "Evidence is source at revision 913acea as reported by the session context",
+        "REVIEW_SCOPE is security; no methods or privacy profiles"
+      ],
+      "limitations": [
+        "Selection only: no threats, controls, treatments or verification were created.",
+        "Git was not used; working-tree state not checked.",
+        "Complete bodies of selected prompts were not read at selection time (gap G-sel-availability).",
+        "Secondary identity-federation and agentic-ai chains are recommended, not scheduled in this run."
+      ]
+    },
+    "evidence": [
+      {
+        "id": "E1",
+        "locator": "src/eShop.AppHost/AppHost.cs:1-105",
+        "source_kind": "repository",
+        "source_revision": "913acea",
+        "date": "2026-11-09",
+        "statement": "AppHost wires identity, basket, catalog, ordering, order-processor, payment-processor, webhooks, webhooksclient and webapp projects to one Postgres server (four databases), Redis and one RabbitMQ eventbus; mobile-bff is a YARP proxy.",
+        "status": "observation",
+        "purpose": "description",
+        "access": "read",
+        "limitations": "Configuration observation only; deployed topology not observed.",
+        "excerpt": null,
+        "derived_from": []
+      },
+      {
+        "id": "E2",
+        "locator": "src/eShop.AppHost/AppHost.cs:25-28,62-64,71-73",
+        "source_kind": "repository",
+        "source_revision": "913acea",
+        "date": "2026-11-09",
+        "statement": "Only identity-api, mobile-bff and webapp use WithExternalHttpEndpoints; other services have none in the AppHost.",
+        "status": "observation",
+        "purpose": "description",
+        "access": "read",
+        "limitations": "ACA ingress behavior after deployment not observed.",
+        "excerpt": null,
+        "derived_from": []
+      },
+      {
+        "id": "E3",
+        "locator": "src/eShop.AppHost/Extensions.cs:88-152",
+        "source_kind": "repository",
+        "source_revision": "913acea",
+        "date": "2026-11-09",
+        "statement": "mobile-bff routes /api/catalog/{*any}, /api/orders/{*any} and /identity/{*any} to internal services with no HTTP method match in the configuration read.",
+        "status": "observation",
+        "purpose": "implementation",
+        "access": "read",
+        "limitations": "Effective generated YARP config not observed.",
+        "excerpt": null,
+        "derived_from": []
+      },
+      {
+        "id": "E4",
+        "locator": "src/Catalog.API/Apis/CatalogApi.cs:97-117,359-453; src/Catalog.API/Program.cs; src/Catalog.API/Extensions/Extensions.cs",
+        "source_kind": "repository",
+        "source_revision": "913acea",
+        "date": "2026-11-09",
+        "statement": "Catalog PUT/POST/DELETE item routes have no authorization and Catalog.API registers no authentication.",
+        "status": "observation",
+        "purpose": "implementation",
+        "access": "read",
+        "limitations": "Absence established by text search of Program/Extensions/Apis only.",
+        "excerpt": null,
+        "derived_from": []
+      },
+      {
+        "id": "E6",
+        "locator": "src/eShop.ServiceDefaults/AuthenticationExtensions.cs:22-52",
+        "source_kind": "repository",
+        "source_revision": "913acea",
+        "date": "2026-11-09",
+        "statement": "Shared JWT bearer setup disables audience validation and HTTPS metadata requirement; omits authentication entirely when the Identity section is absent.",
+        "status": "observation",
+        "purpose": "implementation",
+        "access": "read",
+        "limitations": "",
+        "excerpt": null,
+        "derived_from": []
+      },
+      {
+        "id": "E7",
+        "locator": "src/Ordering.API/Apis/OrdersApi.cs:7-185; src/Ordering.API/Application/Queries/OrderQueries.cs:6-35",
+        "source_kind": "repository",
+        "source_revision": "913acea",
+        "date": "2026-11-09",
+        "statement": "Ordering routes require an authenticated caller but get, cancel and ship operate on client-supplied order numbers without owner or role checks; create takes UserId from the body.",
+        "status": "observation",
+        "purpose": "implementation",
+        "access": "read",
+        "limitations": "",
+        "excerpt": null,
+        "derived_from": []
+      },
+      {
+        "id": "E10",
+        "locator": "src/Basket.API/Grpc/BasketService.cs:12-69",
+        "source_kind": "repository",
+        "source_revision": "913acea",
+        "date": "2026-11-09",
+        "statement": "Basket gRPC derives the basket key from the token subject only; GetBasket is AllowAnonymous.",
+        "status": "observation",
+        "purpose": "implementation",
+        "access": "read",
+        "limitations": "",
+        "excerpt": null,
+        "derived_from": []
+      },
+      {
+        "id": "E11",
+        "locator": "src/Webhooks.API/Services/GrantUrlTesterService.cs:5-45; src/Webhooks.API/Apis/WebHooksApi.cs:35-64",
+        "source_kind": "repository",
+        "source_revision": "913acea",
+        "date": "2026-11-09",
+        "statement": "Webhooks.API issues an OPTIONS request to a caller-chosen URL and later POSTs to caller-chosen destination URLs.",
+        "status": "observation",
+        "purpose": "implementation",
+        "access": "read",
+        "limitations": "",
+        "excerpt": null,
+        "derived_from": []
+      },
+      {
+        "id": "E14",
+        "locator": "src/Identity.API/Configuration/Config.cs:40-189",
+        "source_kind": "repository",
+        "source_revision": "913acea",
+        "date": "2026-11-09",
+        "statement": "In-memory IdentityServer clients with sample secrets, one client without PKCE, implicit-flow Swagger clients, and scopes not defined as ApiScopes.",
+        "status": "observation",
+        "purpose": "implementation",
+        "access": "read",
+        "limitations": "Secret values redacted from the bundle.",
+        "excerpt": null,
+        "derived_from": []
+      },
+      {
+        "id": "E15",
+        "locator": "src/Identity.API/Program.cs:12-37",
+        "source_kind": "repository",
+        "source_revision": "913acea",
+        "date": "2026-11-09",
+        "statement": "IdentityServer runs with developer signing credential and key management disabled; seed and migrations run at startup.",
+        "status": "observation",
+        "purpose": "implementation",
+        "access": "read",
+        "limitations": "",
+        "excerpt": null,
+        "derived_from": []
+      },
+      {
+        "id": "E18",
+        "locator": "src/WebApp/Components/Chatbot/ChatState.cs:12-96; src/WebApp/Extensions/Extensions.cs:94-108",
+        "source_kind": "repository",
+        "source_revision": "913acea",
+        "date": "2026-11-09",
+        "statement": "WebApp registers model-invocable tools that return user claims, search the catalog and modify the user's basket.",
+        "status": "observation",
+        "purpose": "implementation",
+        "access": "read",
+        "limitations": "Active only when a chat model connection is configured (Foundry opt-in).",
+        "excerpt": null,
+        "derived_from": []
+      },
+      {
+        "id": "E19",
+        "locator": "src/EventBusRabbitMQ/RabbitMQEventBus.cs:44-100,190-215,250-290",
+        "source_kind": "repository",
+        "source_revision": "913acea",
+        "date": "2026-11-09",
+        "statement": "One shared RabbitMQ exchange; events are JSON without sender identity or signature and are dispatched to handlers by event type name.",
+        "status": "observation",
+        "purpose": "implementation",
+        "access": "read",
+        "limitations": "Partial file read; broker ACLs not observed.",
+        "excerpt": null,
+        "derived_from": []
+      },
+      {
+        "id": "E20",
+        "locator": "src/PaymentProcessor/IntegrationEvents/EventHandling/OrderStatusChangedToStockConfirmedIntegrationEventHandler.cs:1-37",
+        "source_kind": "repository",
+        "source_revision": "913acea",
+        "date": "2026-11-09",
+        "statement": "Payment outcome is produced from a configuration flag without a payment gateway call.",
+        "status": "observation",
+        "purpose": "implementation",
+        "access": "read",
+        "limitations": "",
+        "excerpt": null,
+        "derived_from": []
+      }
+    ],
+    "system": {
+      "assets": [
+        {
+          "id": "A-mobile-bff",
+          "kind": "service",
+          "description": "YARP gateway exposing catalog, ordering and identity routes.",
+          "basis": "observed",
+          "evidence_refs": [
+            "E3"
+          ],
+          "rationale": "Edge routing authority.",
+          "related_refs": []
+        },
+        {
+          "id": "A-webapp",
+          "kind": "service",
+          "description": "Blazor Server storefront and chatbot host.",
+          "basis": "observed",
+          "evidence_refs": [
+            "E18"
+          ],
+          "rationale": "Holds user session tokens and calls internal services.",
+          "related_refs": []
+        },
+        {
+          "id": "A-identity-api",
+          "kind": "service",
+          "description": "IdentityServer plus ASP.NET Identity user store.",
+          "basis": "observed",
+          "evidence_refs": [
+            "E14",
+            "E15"
+          ],
+          "rationale": "Token issuer for all services.",
+          "related_refs": []
+        },
+        {
+          "id": "A-catalog-api",
+          "kind": "service",
+          "description": "Catalog data service with price-change events.",
+          "basis": "observed",
+          "evidence_refs": [
+            "E4"
+          ],
+          "rationale": "Writable product data.",
+          "related_refs": []
+        },
+        {
+          "id": "A-basket-api",
+          "kind": "service",
+          "description": "gRPC basket service on Redis.",
+          "basis": "observed",
+          "evidence_refs": [
+            "E10"
+          ],
+          "rationale": "User cart state.",
+          "related_refs": []
+        },
+        {
+          "id": "A-ordering-api",
+          "kind": "service",
+          "description": "Ordering API with order state machine.",
+          "basis": "observed",
+          "evidence_refs": [
+            "E7"
+          ],
+          "rationale": "Order and payment data owner.",
+          "related_refs": []
+        },
+        {
+          "id": "A-webhooks-api",
+          "kind": "service",
+          "description": "Webhook subscription and outbound delivery service.",
+          "basis": "observed",
+          "evidence_refs": [
+            "E11"
+          ],
+          "rationale": "Server-side HTTP egress.",
+          "related_refs": []
+        },
+        {
+          "id": "A-rabbitmq",
+          "kind": "broker",
+          "description": "Shared event bus.",
+          "basis": "observed",
+          "evidence_refs": [
+            "E19"
+          ],
+          "rationale": "Carries order, stock, payment and price events.",
+          "related_refs": []
+        },
+        {
+          "id": "A-postgres",
+          "kind": "datastore",
+          "description": "Single Postgres server hosting catalog, identity, ordering and webhooks databases.",
+          "basis": "observed",
+          "evidence_refs": [
+            "E1"
+          ],
+          "rationale": "Shared data-store host.",
+          "related_refs": []
+        },
+        {
+          "id": "A-ai-model",
+          "kind": "external-service",
+          "description": "Optional chat/embedding model provider.",
+          "basis": "observed",
+          "evidence_refs": [
+            "E18"
+          ],
+          "rationale": "Receives user text and tool results when enabled.",
+          "related_refs": []
+        }
+      ],
+      "actors": [
+        {
+          "id": "ACT-anon",
+          "kind": "actor",
+          "description": "Unauthenticated internet client.",
+          "basis": "observed",
+          "evidence_refs": [
+            "E2",
+            "E3"
+          ],
+          "rationale": "Can reach external endpoints.",
+          "related_refs": []
+        },
+        {
+          "id": "ACT-customer",
+          "kind": "actor",
+          "description": "Authenticated shopper (web or mobile).",
+          "basis": "observed",
+          "evidence_refs": [
+            "E7"
+          ],
+          "rationale": "Holds access tokens for orders, basket, webhooks.",
+          "related_refs": []
+        }
+      ],
+      "data": [],
+      "zones": [
+        {
+          "id": "Z-external",
+          "kind": "zone",
+          "description": "Internet clients: browsers, MAUI apps, webhook receivers and developer tools.",
+          "basis": "observed",
+          "evidence_refs": [
+            "E2"
+          ],
+          "rationale": "Origin of externally exposed traffic.",
+          "related_refs": []
+        },
+        {
+          "id": "Z-edge",
+          "kind": "zone",
+          "description": "Externally exposed hosts: webapp, mobile-bff, identity-api.",
+          "basis": "observed",
+          "evidence_refs": [
+            "E2",
+            "E3"
+          ],
+          "rationale": "AppHost external endpoint calls.",
+          "related_refs": []
+        },
+        {
+          "id": "Z-internal",
+          "kind": "zone",
+          "description": "Internal services: catalog, basket, ordering, webhooks-api, order-processor, payment-processor.",
+          "basis": "observed",
+          "evidence_refs": [
+            "E1",
+            "E2"
+          ],
+          "rationale": "Services without external endpoint declarations.",
+          "related_refs": []
+        },
+        {
+          "id": "Z-data",
+          "kind": "zone",
+          "description": "Shared Postgres server (four databases) and Redis.",
+          "basis": "observed",
+          "evidence_refs": [
+            "E1"
+          ],
+          "rationale": "AppHost resource declarations.",
+          "related_refs": []
+        },
+        {
+          "id": "Z-broker",
+          "kind": "zone",
+          "description": "RabbitMQ eventbus shared by services.",
+          "basis": "observed",
+          "evidence_refs": [
+            "E1",
+            "E19"
+          ],
+          "rationale": "AppHost and event bus implementation.",
+          "related_refs": []
+        }
+      ],
+      "boundaries": [
+        {
+          "id": "B-edge-internal",
+          "kind": "boundary",
+          "description": "Edge hosts to internal services over service discovery HTTP/gRPC.",
+          "basis": "observed",
+          "evidence_refs": [
+            "E2",
+            "E3"
+          ],
+          "rationale": "Service-to-service authority and exposure.",
+          "related_refs": [],
+          "side_refs": [
+            "Z-edge",
+            "Z-internal"
+          ],
+          "owner_architecture": "microservices",
+          "gap_refs": []
+        },
+        {
+          "id": "B-internal-broker",
+          "kind": "boundary",
+          "description": "Internal services to RabbitMQ.",
+          "basis": "observed",
+          "evidence_refs": [
+            "E19",
+            "E20"
+          ],
+          "rationale": "Event trust between services.",
+          "related_refs": [],
+          "side_refs": [
+            "Z-internal",
+            "Z-broker"
+          ],
+          "owner_architecture": "microservices",
+          "gap_refs": []
+        },
+        {
+          "id": "B-token-trust",
+          "kind": "boundary",
+          "description": "Identity.API token issuance to resource-service validation.",
+          "basis": "observed",
+          "evidence_refs": [
+            "E6",
+            "E14"
+          ],
+          "rationale": "Token validation and client registration.",
+          "related_refs": [],
+          "side_refs": [
+            "A-identity-api",
+            "Z-internal"
+          ],
+          "owner_architecture": "identity-federation",
+          "gap_refs": []
+        },
+        {
+          "id": "B-model-tools",
+          "kind": "boundary",
+          "description": "WebApp to model provider and tool execution.",
+          "basis": "observed",
+          "evidence_refs": [
+            "E18"
+          ],
+          "rationale": "Model-driven tool authority; provider path unmapped.",
+          "related_refs": [],
+          "side_refs": [
+            "A-webapp",
+            "A-ai-model"
+          ],
+          "owner_architecture": "agentic-ai",
+          "gap_refs": [
+            "G-ub3"
+          ]
+        },
+        {
+          "id": "B-webhook-egress",
+          "kind": "boundary",
+          "description": "Webhooks.API to customer-chosen URLs.",
+          "basis": "observed",
+          "evidence_refs": [
+            "E11"
+          ],
+          "rationale": "Server-side outbound request boundary; egress policy unmapped.",
+          "related_refs": [],
+          "side_refs": [
+            "A-webhooks-api",
+            "Z-external"
+          ],
+          "owner_architecture": "microservices",
+          "gap_refs": [
+            "G-ub4"
+          ]
+        }
+      ],
+      "flows": [
+        {
+          "id": "F-bff-catalog",
+          "description": "mobile-bff forwards /api/catalog/* to catalog-api.",
+          "basis": "observed",
+          "evidence_refs": [
+            "E3"
+          ],
+          "rationale": "Route configuration.",
+          "source_ref": "A-mobile-bff",
+          "target_ref": "A-catalog-api",
+          "data_refs": [],
+          "boundary_refs": [
+            "B-edge-internal"
+          ],
+          "gap_refs": [
+            "G-ub1"
+          ]
+        },
+        {
+          "id": "F-events",
+          "description": "Services publish and consume integration events through RabbitMQ.",
+          "basis": "observed",
+          "evidence_refs": [
+            "E19"
+          ],
+          "rationale": "Event bus implementation.",
+          "source_ref": "A-ordering-api",
+          "target_ref": "A-rabbitmq",
+          "data_refs": [],
+          "boundary_refs": [
+            "B-internal-broker"
+          ],
+          "gap_refs": [
+            "G-ub2"
+          ]
+        },
+        {
+          "id": "F-webhook-send",
+          "description": "Webhooks.API sends OPTIONS and POST requests to subscriber URLs.",
+          "basis": "observed",
+          "evidence_refs": [
+            "E11"
+          ],
+          "rationale": "Grant test and sender code.",
+          "source_ref": "A-webhooks-api",
+          "target_ref": null,
+          "data_refs": [],
+          "boundary_refs": [
+            "B-webhook-egress"
+          ],
+          "gap_refs": [
+            "G-ub4"
+          ]
+        }
+      ],
+      "entry_points": [
+        {
+          "id": "EP-catalog-write",
+          "kind": "http-route",
+          "description": "Catalog item create/update/delete routes.",
+          "basis": "observed",
+          "evidence_refs": [
+            "E4"
+          ],
+          "rationale": "Candidate unauthenticated state-changing entry; exposure via mobile-bff catch-all unverified.",
+          "related_refs": [
+            "A-catalog-api",
+            "A-mobile-bff"
+          ]
+        },
+        {
+          "id": "EP-orders",
+          "kind": "http-route",
+          "description": "Order get/cancel/ship/create routes.",
+          "basis": "observed",
+          "evidence_refs": [
+            "E7"
+          ],
+          "rationale": "Authenticated but not ownership-scoped.",
+          "related_refs": [
+            "A-ordering-api"
+          ]
+        },
+        {
+          "id": "EP-webhook-register",
+          "kind": "http-route",
+          "description": "Webhook subscription create route.",
+          "basis": "observed",
+          "evidence_refs": [
+            "E11"
+          ],
+          "rationale": "Authenticated caller supplies URLs fetched by the server.",
+          "related_refs": [
+            "A-webhooks-api"
+          ]
+        },
+        {
+          "id": "EP-chat",
+          "kind": "ui",
+          "description": "Chatbot message input.",
+          "basis": "observed",
+          "evidence_refs": [
+            "E18"
+          ],
+          "rationale": "Untrusted text reaches a model with tools.",
+          "related_refs": [
+            "A-webapp"
+          ]
+        }
+      ],
+      "states": [],
+      "dependencies": []
+    },
+    "methods": [],
+    "threats": [],
+    "controls": [],
+    "requirements": [],
+    "risks": [],
+    "attack_trees": [],
+    "attack_paths": [],
+    "visualizations": [],
+    "coverage": [
+      {
+        "id": "COV-run-configuration",
+        "target_ref": null,
+        "method_ref": null,
+        "lens": "run-configuration",
+        "status": "not_applicable",
+        "reason": "Run configuration only, not analysis: REVIEW_SCOPE security; METHODS []; PRIVACY_PROFILES []; deep stages 00-05 on deep/microservices; no methods scheduled; secondary architectures are recommendations only."
+      },
+      {
+        "id": "COV-analysis-scope",
+        "target_ref": null,
+        "method_ref": null,
+        "lens": "analysis-scope",
+        "status": "partial",
+        "reason": "Selection-only scope: chooses primary and secondary architectures; no threats, treatments or verification created; no prior analysis carried."
+      },
+      {
+        "id": "COV-arch-primary",
+        "target_ref": null,
+        "method_ref": null,
+        "lens": "architecture-primary",
+        "status": "assessed",
+        "reason": "Primary architecture is exact ID microservices. Objective: decide security posture of a service-oriented e-commerce reference system whose dominant risks are inter-service authority, edge exposure and shared event/state. Evidence E1, E2, E3, E4, E7, E19, E20. Limits: deployed topology unobserved."
+      },
+      {
+        "id": "COV-arch-secondary-identity",
+        "target_ref": null,
+        "method_ref": null,
+        "lens": "architecture-secondary:identity-federation",
+        "status": "partial",
+        "reason": "Bounded subsystem: Identity.API client registry, token validation defaults and WebApp/MAUI/WebhookClient OIDC settings; boundary B-token-trust. Added value: token audience/scope/PKCE and client-credential handling not covered by microservices stages. Exclusions: account linking, external IdP flows, Razor views. Evidence E6, E14, E15. Relative effort: one pass per client registration and per resource service. Availability: frontmatter and README read; body unread."
+      },
+      {
+        "id": "COV-arch-secondary-agentic",
+        "target_ref": null,
+        "method_ref": null,
+        "lens": "architecture-secondary:agentic-ai",
+        "status": "partial",
+        "reason": "Bounded subsystem: WebApp chatbot tools and model provider; boundary B-model-tools. Added value: model-driven tool authority and claim disclosure. Exclusions: model provider internals, catalog embedding generation. Evidence E18. Relative effort: one pass per tool. Active only when Foundry/Ollama configured. Availability: README read; body unread."
+      },
+      {
+        "id": "COV-avail-microservices",
+        "target_ref": null,
+        "method_ref": null,
+        "lens": "architecture-availability:microservices",
+        "status": "assessed",
+        "reason": "Observed runnable content: deep/microservices stages 00-05 and quick/microservices.md exist in the library checkout; README and frontmatter read. Full bodies read at execution."
+      },
+      {
+        "id": "COV-avail-identity",
+        "target_ref": null,
+        "method_ref": null,
+        "lens": "architecture-availability:identity-federation",
+        "status": "partial",
+        "reason": "Library directory and README observed; complete stage bodies unverified."
+      },
+      {
+        "id": "COV-avail-agentic",
+        "target_ref": null,
+        "method_ref": null,
+        "lens": "architecture-availability:agentic-ai",
+        "status": "partial",
+        "reason": "Library directory and README observed; complete stage bodies unverified."
+      },
+      {
+        "id": "COV-selection-effort",
+        "target_ref": null,
+        "method_ref": null,
+        "lens": "selection-effort",
+        "status": "assessed",
+        "reason": "Quick baseline: one quick/microservices pass over the bundle. Deeper follow-up: six deep stages on the primary (this run), then optional per-crossing passes for identity-federation and agentic-ai secondaries. Prerequisites: SYSTEM_UNDER_REVIEW plus deployment manifests (G-ub1..G-ub4). Decision value: separates unauthenticated and mis-scoped service authority from infrastructure hardening. Omitted: no duration guarantee, no excluded-family analysis."
+      },
+      {
+        "id": "COV-excluded-families",
+        "target_ref": null,
+        "method_ref": null,
+        "lens": "architecture-excluded",
+        "status": "assessed",
+        "reason": "Excluded as primary: web (browser/session issues are real but secondary to inter-service authority; WebApp covered through boundaries), event-driven (events are an element of microservices here), payments-transactions (payment is simulated, E20), multi-tenant-saas (no tenant model observed), cicd-supply-chain (workflows are minimal, E25 in bundle), mobile (client code only partially read)."
+      },
+      {
+        "id": "COV-inspection-coverage",
+        "target_ref": null,
+        "method_ref": null,
+        "lens": "inspection-coverage",
+        "status": "partial",
+        "reason": "Evidence collected freshly this run at revision 913acea (from session context): listed files read in full or partially; unread service areas, dependency manifests and Git state are recorded in unprocessed_inputs and gaps G-sel-git; coverage is bounded, not exhaustive."
+      },
+      {
+        "id": "COV-handoff-evidence",
+        "target_ref": null,
+        "method_ref": null,
+        "lens": "handoff:evidence",
+        "status": "assessed",
+        "reason": "Evidence records E1-E20 selected for selection rationale; full evidence remains in SYSTEM_UNDER_REVIEW.md."
+      },
+      {
+        "id": "COV-handoff-inputs",
+        "target_ref": null,
+        "method_ref": null,
+        "lens": "handoff:inputs",
+        "status": "assessed",
+        "reason": "Input inventory in processed_inputs and unprocessed_inputs."
+      },
+      {
+        "id": "COV-handoff-system",
+        "target_ref": null,
+        "method_ref": null,
+        "lens": "handoff:system",
+        "status": "assessed",
+        "reason": "Minimal system records for selection only; dependencies, data and states not created."
+      },
+      {
+        "id": "COV-handoff-threats",
+        "target_ref": null,
+        "method_ref": null,
+        "lens": "handoff:threats",
+        "status": "not_assessed",
+        "reason": "Selection does not assess threats."
+      },
+      {
+        "id": "COV-handoff-treatments",
+        "target_ref": null,
+        "method_ref": null,
+        "lens": "handoff:treatments",
+        "status": "not_assessed",
+        "reason": "Selection does not propose treatments."
+      },
+      {
+        "id": "COV-handoff-verification",
+        "target_ref": null,
+        "method_ref": null,
+        "lens": "handoff:verification",
+        "status": "not_assessed",
+        "reason": "Selection does not plan verification."
+      }
+    ],
+    "conflicts": [],
+    "gaps": [
+      {
+        "id": "G-ub1",
+        "kind": "topology",
+        "description": "Whether mobile-bff or ACA ingress lets external callers reach catalog write routes and other internal APIs.",
+        "needed": "Generated ACA ingress and YARP effective configuration, or an authorized live probe.",
+        "affected_refs": [
+          "F-bff-catalog",
+          "A-mobile-bff"
+        ],
+        "status": "open",
+        "evidence_refs": []
+      },
+      {
+        "id": "G-ub2",
+        "kind": "topology",
+        "description": "Broker credentials, vhost and ACLs per service are not visible.",
+        "needed": "Deployment manifests or broker configuration.",
+        "affected_refs": [
+          "F-events",
+          "A-rabbitmq"
+        ],
+        "status": "open",
+        "evidence_refs": []
+      },
+      {
+        "id": "G-ub3",
+        "kind": "topology",
+        "description": "Network and data-handling path between WebApp and the model provider is not visible.",
+        "needed": "Provider configuration and egress rules.",
+        "affected_refs": [
+          "B-model-tools",
+          "A-ai-model"
+        ],
+        "status": "open",
+        "evidence_refs": []
+      },
+      {
+        "id": "G-ub4",
+        "kind": "topology",
+        "description": "Egress policy for Webhooks.API outbound requests is not visible.",
+        "needed": "ACA network and egress configuration.",
+        "affected_refs": [
+          "F-webhook-send",
+          "B-webhook-egress"
+        ],
+        "status": "open",
+        "evidence_refs": []
+      },
+      {
+        "id": "G-sel-availability",
+        "kind": "coverage",
+        "description": "Complete bodies of the selected deep prompts were not read at selection time; only registry listing and README/frontmatter were read, so availability is observed at frontmatter level only. Secondary identity-federation and agentic-ai prompts are recommended, not run.",
+        "needed": "Read complete prompt bodies during stage execution; run secondary chains separately if wanted.",
+        "affected_refs": [],
+        "status": "open",
+        "evidence_refs": []
+      },
+      {
+        "id": "G-sel-git",
+        "kind": "evidence",
+        "description": "Git state (revision verification, working-tree cleanliness) was not inspected.",
+        "needed": "A Git invocation that supports the protected safeguards, or a caller-supplied revision statement.",
+        "affected_refs": [],
+        "status": "open",
+        "evidence_refs": []
+      }
+    ],
+    "treatments": [],
+    "verification": [],
+    "decisions": [],
+    "changes": [],
+    "identity_map": []
+  }
+}

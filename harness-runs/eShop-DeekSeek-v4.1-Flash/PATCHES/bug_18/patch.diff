@@ -1,0 +1,48 @@
+--- a/src/Identity.API/Quickstart/Account/AccountOptions.cs
++++ b/src/Identity.API/Quickstart/Account/AccountOptions.cs
+@@ -9,7 +9,7 @@ public class AccountOptions
+     public static bool AllowRememberLogin = true;
+     public static TimeSpan RememberMeLoginDuration = TimeSpan.FromDays(30);
+ 
+-    public static bool ShowLogoutPrompt = false;
++    public static bool ShowLogoutPrompt = true;
+     public static bool AutomaticRedirectAfterSignOut = true;
+ 
+     public static string InvalidCredentialsErrorMessage = "Invalid username or password";
+--- a/src/Identity.API/Quickstart/Account/AccountController.cs
++++ b/src/Identity.API/Quickstart/Account/AccountController.cs
+@@ -149,8 +149,10 @@
+             // build a model so the logout page knows what to display
+             var vm = await BuildLogoutViewModelAsync(logoutId);
+ 
+-            if (vm.ShowLogoutPrompt == false)
++            // only skip the prompt for a logout request that IdentityServer itself created;
++            // a bare cross-site GET must never be able to sign the user out.
++            if (vm.ShowLogoutPrompt == false && User?.Identity.IsAuthenticated == true && !string.IsNullOrEmpty(logoutId))
+             {
+                 // if the request for logout was properly authenticated from IdentityServer, then
+                 // we don't need to show the prompt and can just log the user out directly.
+                 return await Logout(vm);
+--- a/tests/Application.UnitTests/IdentityConfigurationTests.cs
++++ b/tests/Application.UnitTests/IdentityConfigurationTests.cs
+@@ -1,5 +1,6 @@
+ using eShop.Identity.API.Configuration;
+ using eShop.Identity.API.Services;
++using IdentityServerHost.Quickstart.UI;
+ using Microsoft.Extensions.Configuration;
+ 
+ namespace eShop.Application.UnitTests;
+@@ -9,6 +10,13 @@
+ [TestClass]
+ public class IdentityConfigurationTests
+ {
++    [TestMethod]
++    public void LogoutPromptStaysEnabled()
++    {
++        // A bare cross-site GET to /Account/Logout must render the prompt, not sign out.
++        Assert.IsTrue(AccountOptions.ShowLogoutPrompt);
++    }
++
+     [TestMethod]
+     public void ApiResourcesAndScopesStayAligned()
+     {

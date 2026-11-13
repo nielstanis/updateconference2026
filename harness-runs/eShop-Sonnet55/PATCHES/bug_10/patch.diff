@@ -1,0 +1,76 @@
+--- a/src/Webhooks.API/IntegrationEvents/OrderStatusChangedToShippedIntegrationEvent.cs
++++ b/src/Webhooks.API/IntegrationEvents/OrderStatusChangedToShippedIntegrationEvent.cs
+@@ -3,1 +3,1 @@
+-public record OrderStatusChangedToShippedIntegrationEvent(int OrderId, string OrderStatus, string BuyerName) : IntegrationEvent;
++public record OrderStatusChangedToShippedIntegrationEvent(int OrderId, string OrderStatus, string BuyerName, string BuyerIdentityGuid) : IntegrationEvent;
+--- a/src/Webhooks.API/IntegrationEvents/OrderStatusChangedToPaidIntegrationEvent.cs
++++ b/src/Webhooks.API/IntegrationEvents/OrderStatusChangedToPaidIntegrationEvent.cs
+@@ -3,1 +3,1 @@
+-public record OrderStatusChangedToPaidIntegrationEvent(int OrderId, IEnumerable<OrderStockItem> OrderStockItems) : IntegrationEvent;
++public record OrderStatusChangedToPaidIntegrationEvent(int OrderId, IEnumerable<OrderStockItem> OrderStockItems, string BuyerIdentityGuid) : IntegrationEvent;
+--- a/src/Webhooks.API/Services/IWebhooksRetriever.cs
++++ b/src/Webhooks.API/Services/IWebhooksRetriever.cs
+@@ -5,3 +5,3 @@
+ 
+-    Task<IEnumerable<WebhookSubscription>> GetSubscriptionsOfType(WebhookType type);
++    Task<IEnumerable<WebhookSubscription>> GetSubscriptionsOfType(WebhookType type, string userId);
+ }
+--- a/src/Webhooks.API/Services/WebhooksRetriever.cs
++++ b/src/Webhooks.API/Services/WebhooksRetriever.cs
+@@ -3,6 +3,6 @@
+ public class WebhooksRetriever(WebhooksContext db) : IWebhooksRetriever
+ {
+-    public async Task<IEnumerable<WebhookSubscription>> GetSubscriptionsOfType(WebhookType type)
++    public async Task<IEnumerable<WebhookSubscription>> GetSubscriptionsOfType(WebhookType type, string userId)
+     {
+-        return await db.Subscriptions.Where(s => s.Type == type).ToListAsync();
++        return await db.Subscriptions.Where(s => s.Type == type && s.UserId == userId).ToListAsync();
+     }
+ }
+--- a/src/Webhooks.API/IntegrationEvents/OrderStatusChangedToShippedIntegrationEventHandler.cs
++++ b/src/Webhooks.API/IntegrationEvents/OrderStatusChangedToShippedIntegrationEventHandler.cs
+@@ -10,3 +10,3 @@
+     {
+-        var subscriptions = await retriever.GetSubscriptionsOfType(WebhookType.OrderShipped);
++        var subscriptions = await retriever.GetSubscriptionsOfType(WebhookType.OrderShipped, @event.BuyerIdentityGuid);
+ 
+--- a/src/Webhooks.API/IntegrationEvents/OrderStatusChangedToPaidIntegrationEventHandler.cs
++++ b/src/Webhooks.API/IntegrationEvents/OrderStatusChangedToPaidIntegrationEventHandler.cs
+@@ -10,3 +10,3 @@
+     {
+-        var subscriptions = await retriever.GetSubscriptionsOfType(WebhookType.OrderPaid);
++        var subscriptions = await retriever.GetSubscriptionsOfType(WebhookType.OrderPaid, @event.BuyerIdentityGuid);
+ 
+--- a/tests/Webhooks.FunctionalTests/WebhooksApiTests.cs
++++ b/tests/Webhooks.FunctionalTests/WebhooksApiTests.cs
+@@ -86,2 +86,31 @@
+     }
++
++    [Fact]
++    public async Task RetrieverReturnsOnlySubscriptionsOfTheOrderOwner()
++    {
++        var owner = $"owner-{Guid.NewGuid():N}";
++        using var ownerClient = CreateClient(owner);
++        using var otherClient = CreateClient($"other-{Guid.NewGuid():N}");
++        var request = new WebhookSubscriptionRequest
++        {
++            Url = "https://receiver.test/webhook",
++            GrantUrl = "https://receiver.test/check",
++            Token = "secret",
++            Event = nameof(WebhookType.OrderShipped)
++        };
++
++        Assert.Equal(HttpStatusCode.Created, (await ownerClient.PostAsJsonAsync(
++            "/api/webhooks/", request, TestContext.Current.CancellationToken)).StatusCode);
++        Assert.Equal(HttpStatusCode.Created, (await otherClient.PostAsJsonAsync(
++            "/api/webhooks/", request, TestContext.Current.CancellationToken)).StatusCode);
++
++        using var scope = fixture.Services.CreateScope();
++        var retriever = scope.ServiceProvider.GetRequiredService<IWebhooksRetriever>();
++        var subscriptions = (await retriever.GetSubscriptionsOfType(WebhookType.OrderShipped, owner)).ToList();
++
++        Assert.NotEmpty(subscriptions);
++        Assert.All(subscriptions, subscription => Assert.Equal(owner, subscription.UserId));
++    }
+ }
+

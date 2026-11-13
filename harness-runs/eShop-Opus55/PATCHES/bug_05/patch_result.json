@@ -1,0 +1,21 @@
+{
+  "id": "f005",
+  "source": "TRIAGE.json#f005",
+  "title": "CreateOrder trusts body-supplied UserId/UserName instead of the JWT subject",
+  "file": "src/Ordering.API/Apis/OrdersApi.cs",
+  "line": 141,
+  "category": "auth-bypass",
+  "severity": "MEDIUM",
+  "owner_hint": "component: src/Ordering.API/; no CODEOWNERS; recent committers Rob Conery, David Fowler (1/4 each)",
+  "mode": "static",
+  "verified": "static_review_only",
+  "review": "REJECT",
+  "style_score": 4,
+  "out_of_scope_hunks": [],
+  "rationale": "Root cause OrdersApi.cs:141: CreateOrderAsync passes client-controlled CreateOrderRequest.UserId/UserName into CreateOrderCommand, which drives OrderStartedIntegrationEvent (basket deletion), the Order aggregate and the Buyer/payment-method upsert. The endpoint now takes identity from the validated JWT via services.IdentityService (sub and User.Identity.Name) and rejects requests lacking either with 400 before any command is sent. The CreateOrderRequest record is unchanged for wire compatibility; body identity fields are ignored. Buyer.Name for new buyers now comes from the token Name claim (cosmetic). The log line at L126-130 still prints request.UserId (log text only).",
+  "variants_checked": "CreateOrderDraftAsync takes BuyerId from body but the draft handler never reads it; GetOrdersByUserAsync already uses IdentityService; get/cancel/ship are siblings f001/f002/f011; CreateOrderCommand is constructed only at OrdersApi.cs:141 in src; handler's unused IIdentityService left as-is; pricing is sibling f006; Basket.API already derives userId from sub.",
+  "bypass_considered": "Victim UserId/UserName/Buyer in the body are ignored; missing sub/name claims yield 400 before Mediator.Send; replayed x-requestid only hits the caller's own idempotency path; POST /api/orders is the only route that issues CreateOrderCommand.",
+  "test_note": "tests/Ordering.UnitTests/Application/OrdersWebApiTest.cs Create_order_uses_token_identity_not_request_body (captures the sent IdentifiedCommand and asserts token identity). Not compiled or run.",
+  "review_reason": "The OrdersApi.cs hunk fixes the root cause by replacing client-controlled request.UserId/UserName at line 141 with token identity from IdentityService (matching GetOrdersByUserAsync at line 95) and fails closed with 400 when identity is missing. Rejected only because the test hunk header declared +179,30 while the body has 27 new-side lines, so the diff was malformed; the reviewer said correcting it to +179,27 would make this an ACCEPT. Orchestrator corrected the header in PATCHES/bug_05/patch.diff after review; content unchanged.",
+  "verdict": null
+}

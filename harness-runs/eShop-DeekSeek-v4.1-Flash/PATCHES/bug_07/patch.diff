@@ -1,0 +1,102 @@
+--- a/src/Ordering.API/Apis/OrdersApi.cs
++++ b/src/Ordering.API/Apis/OrdersApi.cs
+@@ -29,6 +29,16 @@
+             return TypedResults.BadRequest("Empty GUID is not valid for request ID");
+         }
+ 
++        // Only the buyer who placed the order may cancel it. The order number comes
++        // from the request body, so ownership must be checked against the authenticated
++        // identity (the "sub" claim) rather than anything supplied by the caller.
++        var userId = services.IdentityService.GetUserIdentity();
++        if (string.IsNullOrEmpty(userId) ||
++            !await services.Queries.OrderBelongsToUserAsync(command.OrderNumber, userId))
++        {
++            return TypedResults.Problem(detail: "Order not found.", statusCode: 404);
++        }
++
+         var requestCancelOrder = new IdentifiedCommand<CancelOrderCommand, bool>(command, requestId);
+ 
+         services.Logger.LogInformation(
+--- a/src/Ordering.API/Application/Queries/IOrderQueries.cs
++++ b/src/Ordering.API/Application/Queries/IOrderQueries.cs
+@@ -4,6 +4,8 @@
+ {
+     Task<Order> GetOrderAsync(int id);
+ 
++    Task<bool> OrderBelongsToUserAsync(int orderId, string userId);
++
+     Task<IEnumerable<OrderSummary>> GetOrdersFromUserAsync(string userId);
+ 
+     Task<IEnumerable<CardType>> GetCardTypesAsync();
+--- a/src/Ordering.API/Application/Queries/OrderQueries.cs
++++ b/src/Ordering.API/Application/Queries/OrderQueries.cs
+@@ -34,6 +34,12 @@
+         };
+     }
+ 
++    public async Task<bool> OrderBelongsToUserAsync(int orderId, string userId)
++    {
++        return await context.Orders
++            .AnyAsync(o => o.Id == orderId && o.Buyer.IdentityGuid == userId);
++    }
++
+     public async Task<IEnumerable<OrderSummary>> GetOrdersFromUserAsync(string userId)
+     {
+         return await context.Orders
+--- a/tests/Ordering.UnitTests/Application/OrdersWebApiTest.cs
++++ b/tests/Ordering.UnitTests/Application/OrdersWebApiTest.cs
+@@ -27,6 +27,8 @@
+         // Arrange
+         _mediatorMock.Send(Arg.Any<IdentifiedCommand<CancelOrderCommand, bool>>(), default)
+             .Returns(Task.FromResult(true));
++        _identityServiceMock.GetUserIdentity().Returns("buyer-id");
++        _orderQueriesMock.OrderBelongsToUserAsync(1, "buyer-id").Returns(Task.FromResult(true));
+ 
+         // Act
+         var orderServices = new OrderServices(_mediatorMock, _orderQueriesMock, _identityServiceMock, _loggerMock);
+@@ -159,6 +161,8 @@
+     {
+         _mediatorMock.Send(Arg.Any<IdentifiedCommand<CancelOrderCommand, bool>>(), default)
+             .Returns(Task.FromResult(false));
++        _identityServiceMock.GetUserIdentity().Returns("buyer-id");
++        _orderQueriesMock.OrderBelongsToUserAsync(1, "buyer-id").Returns(Task.FromResult(true));
+         var services = new OrderServices(_mediatorMock, _orderQueriesMock, _identityServiceMock, _loggerMock);
+ 
+         var result = await OrdersApi.CancelOrderAsync(Guid.NewGuid(), new CancelOrderCommand(1), services);
+@@ -168,6 +172,25 @@
+     }
+ 
+     [TestMethod]
++    public async Task Cancel_order_owned_by_another_user_returns_not_found()
++    {
++        // Arrange
++        _identityServiceMock.GetUserIdentity().Returns("attacker-id");
++        _orderQueriesMock.OrderBelongsToUserAsync(1, "attacker-id")
++            .Returns(Task.FromResult(false));
++
++        // Act
++        var services = new OrderServices(_mediatorMock, _orderQueriesMock, _identityServiceMock, _loggerMock);
++        var result = await OrdersApi.CancelOrderAsync(Guid.NewGuid(), new CancelOrderCommand(1), services);
++
++        // Assert
++        var problem = Assert.IsInstanceOfType<ProblemHttpResult>(result.Result);
++        Assert.AreEqual(404, problem.StatusCode);
++        await _mediatorMock.DidNotReceive()
++            .Send(Arg.Any<IdentifiedCommand<CancelOrderCommand, bool>>(), default);
++    }
++
++    [TestMethod]
+     public async Task Ship_order_returns_problem_when_command_fails()
+     {
+         _mediatorMock.Send(Arg.Any<IdentifiedCommand<ShipOrderCommand, bool>>(), default)
+--- a/tests/Ordering.FunctionalTests/OrderingApiTests.cs
++++ b/tests/Ordering.FunctionalTests/OrderingApiTests.cs
+@@ -62,7 +62,7 @@
+         var s = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+ 
+         // Assert
+-        Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
++        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+     }
+ 
+     [Fact]

@@ -1,0 +1,721 @@
+{
+  "schemaVersion": "1.4.0",
+  "run": {
+    "tool": "0.1.0+8ba97c11cd4a3c517a46cca31e2d66899885b9b5",
+    "verdictModel": "none (no verdict model configured)",
+    "promptVersion": "1",
+    "modelCalls": 0,
+    "cacheHits": 0,
+    "rejectedReplies": 0,
+    "byOutcome": {
+      "Mitigated": 1,
+      "NeedsReview": 5
+    },
+    "byLevel": {
+      "Note": 2,
+      "Warning": 4
+    },
+    "degraded": true,
+    "preAdjudication": true
+  },
+  "findings": [
+    {
+      "findingId": "sha256:0b301fecd3b1ca0a73d31945c90641a7",
+      "ruleId": "SETYPE0918",
+      "cwe": 918,
+      "project": "Webhooks.API",
+      "sinkSymbol": "System.Net.Http.HttpClient.SendAsync(System.Net.Http.HttpRequestMessage)",
+      "sinkSymbolId": "M:System.Net.Http.HttpClient.SendAsync(System.Net.Http.HttpRequestMessage)",
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/Webhooks.API/Services/GrantUrlTesterService.cs",
+      "line": 21,
+      "matchedEntry": "System.Net.Http.HttpClient.SendAsync",
+      "rationale": "issues a request to an untrusted destination",
+      "inferredBy": null,
+      "verdict": {
+        "outcome": "NeedsReview",
+        "source": "undecided",
+        "confidence": 0,
+        "rationale": "nothing decided this: no catalogued sanitizer settles it and no model answered",
+        "answers": []
+      },
+      "severity": {
+        "level": "Warning",
+        "securitySeverity": 6,
+        "reasons": [
+          "SSRF reaches hosts the caller cannot reach directly",
+          "every entry point that reaches it requires authorization"
+        ]
+      },
+      "evidence": {
+        "guards": [
+          {
+            "condition": "CheckSameOrigin(urlHook, url)",
+            "file": "/home/niels/github/UpdateConference2026/eShop/src/Webhooks.API/Services/GrantUrlTesterService.cs",
+            "line": 7,
+            "testsTaintedValue": false,
+            "sanitizerEntry": null,
+            "sanitizerForm": null,
+            "sinkOnTrueBranch": true,
+            "sinkOnAcceptedBranch": null,
+            "sanitizerInferredBy": null
+          }
+        ],
+        "sanitizersApplied": [],
+        "authorization": "Authorized",
+        "pathConfidence": 0.95,
+        "truncated": false,
+        "callDepth": 1,
+        "arguments": []
+      },
+      "paths": [
+        {
+          "flowId": "sha256:da32b83061bbe0838f04d015506e7c57",
+          "entryPointId": "M:Webhooks.API.WebHooksApi.MapWebHooksApiV1(Microsoft.AspNetCore.Routing.IEndpointRouteBuilder)~WebHooksApi.cs:35:26",
+          "entryPointDisplay": "POST /api/webhooks",
+          "entryPointKind": "MinimalApi",
+          "sourceKind": "Body",
+          "pathConfidence": 0.95,
+          "truncated": false,
+          "steps": [
+            {
+              "description": "Body parameter 'request'",
+              "location": {
+                "file": "/home/niels/github/UpdateConference2026/eShop/src/Webhooks.API/Apis/WebHooksApi.cs",
+                "line": 35
+              },
+              "snippet": null
+            },
+            {
+              "description": "flows into temporary",
+              "location": {
+                "file": "/home/niels/github/UpdateConference2026/eShop/src/Webhooks.API/Apis/WebHooksApi.cs",
+                "line": 41
+              },
+              "snippet": "request.GrantUrl"
+            },
+            {
+              "description": "passed as 'url' to TestGrantUrl",
+              "location": {
+                "file": "/home/niels/github/UpdateConference2026/eShop/src/Webhooks.API/Apis/WebHooksApi.cs",
+                "line": 41
+              },
+              "snippet": "grantUrlTester.TestGrantUrl(request.Url, request.GrantUrl, request.Token ?? string.Empty)"
+            },
+            {
+              "description": "flows into msg",
+              "location": {
+                "file": "/home/niels/github/UpdateConference2026/eShop/src/Webhooks.API/Services/GrantUrlTesterService.cs",
+                "line": 14
+              },
+              "snippet": "new HttpRequestMessage(HttpMethod.Options, url)"
+            },
+            {
+              "description": "reaches System.Net.Http.HttpClient.SendAsync(System.Net.Http.HttpRequestMessage)",
+              "location": {
+                "file": "/home/niels/github/UpdateConference2026/eShop/src/Webhooks.API/Services/GrantUrlTesterService.cs",
+                "line": 21
+              },
+              "snippet": "client.SendAsync(msg)"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "findingId": "sha256:2556524f9374479ec25a69f06bc49c02",
+      "ruleId": "SETYPE0601",
+      "cwe": 601,
+      "project": "Identity.API",
+      "sinkSymbol": "Microsoft.AspNetCore.Mvc.ControllerBase.Redirect(string)",
+      "sinkSymbolId": "M:Microsoft.AspNetCore.Mvc.ControllerBase.Redirect(System.String)",
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/Identity.API/Quickstart/Account/AccountController.cs",
+      "line": 84,
+      "matchedEntry": "Microsoft.AspNetCore.Mvc.ControllerBase.Redirect",
+      "rationale": "redirects to an untrusted absolute location",
+      "inferredBy": null,
+      "verdict": {
+        "outcome": "NeedsReview",
+        "source": "undecided",
+        "confidence": 0,
+        "rationale": "nothing decided this: no catalogued sanitizer settles it and no model answered",
+        "answers": []
+      },
+      "severity": {
+        "level": "Warning",
+        "securitySeverity": 4.7,
+        "reasons": [
+          "an open redirect needs the user to follow it"
+        ]
+      },
+      "evidence": {
+        "guards": [
+          {
+            "condition": "button != \"login\"",
+            "file": "/home/niels/github/UpdateConference2026/eShop/src/Identity.API/Quickstart/Account/AccountController.cs",
+            "line": 67,
+            "testsTaintedValue": false,
+            "sanitizerEntry": null,
+            "sanitizerForm": null,
+            "sinkOnTrueBranch": true,
+            "sinkOnAcceptedBranch": null,
+            "sanitizerInferredBy": null
+          },
+          {
+            "condition": "context != null",
+            "file": "/home/niels/github/UpdateConference2026/eShop/src/Identity.API/Quickstart/Account/AccountController.cs",
+            "line": 69,
+            "testsTaintedValue": false,
+            "sanitizerEntry": null,
+            "sanitizerForm": null,
+            "sinkOnTrueBranch": true,
+            "sinkOnAcceptedBranch": null,
+            "sanitizerInferredBy": null
+          },
+          {
+            "condition": "context.IsNativeClient()",
+            "file": "/home/niels/github/UpdateConference2026/eShop/src/Identity.API/Quickstart/Account/AccountController.cs",
+            "line": 77,
+            "testsTaintedValue": false,
+            "sanitizerEntry": null,
+            "sanitizerForm": null,
+            "sinkOnTrueBranch": false,
+            "sinkOnAcceptedBranch": null,
+            "sanitizerInferredBy": null
+          }
+        ],
+        "sanitizersApplied": [],
+        "authorization": "Anonymous",
+        "pathConfidence": 1,
+        "truncated": false,
+        "callDepth": 0,
+        "arguments": [
+          {
+            "ordinal": 0,
+            "literalPrefix": "",
+            "insertions": [
+              {
+                "type": "string",
+                "kind": null
+              }
+            ]
+          }
+        ]
+      },
+      "paths": [
+        {
+          "flowId": "sha256:9b0f78177c830e188345503aab0fc544",
+          "entryPointId": "M:IdentityServerHost.Quickstart.UI.AccountController.Login(IdentityServerHost.Quickstart.UI.LoginInputModel,System.String)",
+          "entryPointDisplay": "IdentityServerHost.Quickstart.UI.AccountController.Login(IdentityServerHost.Quickstart.UI.LoginInputModel, string)",
+          "entryPointKind": "Controller",
+          "sourceKind": "Body",
+          "pathConfidence": 1,
+          "truncated": false,
+          "steps": [
+            {
+              "description": "Body parameter 'model'",
+              "location": {
+                "file": "/home/niels/github/UpdateConference2026/eShop/src/Identity.API/Quickstart/Account/AccountController.cs",
+                "line": 61
+              },
+              "snippet": null
+            },
+            {
+              "description": "reaches Microsoft.AspNetCore.Mvc.ControllerBase.Redirect(string)",
+              "location": {
+                "file": "/home/niels/github/UpdateConference2026/eShop/src/Identity.API/Quickstart/Account/AccountController.cs",
+                "line": 84
+              },
+              "snippet": "Redirect(model.ReturnUrl)"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "findingId": "sha256:440a1f975e58a679b281ee093d05eba5",
+      "ruleId": "SETYPE0601",
+      "cwe": 601,
+      "project": "Identity.API",
+      "sinkSymbol": "Microsoft.AspNetCore.Mvc.ControllerBase.Redirect(string)",
+      "sinkSymbolId": "M:Microsoft.AspNetCore.Mvc.ControllerBase.Redirect(System.String)",
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/Identity.API/Quickstart/Consent/ConsentController.cs",
+      "line": 63,
+      "matchedEntry": "Microsoft.AspNetCore.Mvc.ControllerBase.Redirect",
+      "rationale": "redirects to an untrusted absolute location",
+      "inferredBy": null,
+      "verdict": {
+        "outcome": "NeedsReview",
+        "source": "undecided",
+        "confidence": 0,
+        "rationale": "nothing decided this: no catalogued sanitizer settles it and no model answered",
+        "answers": []
+      },
+      "severity": {
+        "level": "Note",
+        "securitySeverity": 3.7,
+        "reasons": [
+          "an open redirect needs the user to follow it",
+          "every entry point that reaches it requires authorization"
+        ]
+      },
+      "evidence": {
+        "guards": [
+          {
+            "condition": "result.IsRedirect",
+            "file": "/home/niels/github/UpdateConference2026/eShop/src/Identity.API/Quickstart/Consent/ConsentController.cs",
+            "line": 53,
+            "testsTaintedValue": true,
+            "sanitizerEntry": null,
+            "sanitizerForm": null,
+            "sinkOnTrueBranch": true,
+            "sinkOnAcceptedBranch": null,
+            "sanitizerInferredBy": null
+          },
+          {
+            "condition": "context?.IsNativeClient() == true",
+            "file": "/home/niels/github/UpdateConference2026/eShop/src/Identity.API/Quickstart/Consent/ConsentController.cs",
+            "line": 56,
+            "testsTaintedValue": false,
+            "sanitizerEntry": null,
+            "sanitizerForm": null,
+            "sinkOnTrueBranch": false,
+            "sinkOnAcceptedBranch": null,
+            "sanitizerInferredBy": null
+          }
+        ],
+        "sanitizersApplied": [],
+        "authorization": "Authorized",
+        "pathConfidence": 1,
+        "truncated": false,
+        "callDepth": 0,
+        "arguments": [
+          {
+            "ordinal": 0,
+            "literalPrefix": "",
+            "insertions": [
+              {
+                "type": "string",
+                "kind": null
+              }
+            ]
+          }
+        ]
+      },
+      "paths": [
+        {
+          "flowId": "sha256:7035e7a0dfa9bf30d2e42f91d69f87df",
+          "entryPointId": "M:IdentityServerHost.Quickstart.UI.ConsentController.Index(IdentityServerHost.Quickstart.UI.ConsentInputModel)",
+          "entryPointDisplay": "IdentityServerHost.Quickstart.UI.ConsentController.Index(IdentityServerHost.Quickstart.UI.ConsentInputModel)",
+          "entryPointKind": "Controller",
+          "sourceKind": "Body",
+          "pathConfidence": 1,
+          "truncated": false,
+          "steps": [
+            {
+              "description": "Body parameter 'model'",
+              "location": {
+                "file": "/home/niels/github/UpdateConference2026/eShop/src/Identity.API/Quickstart/Consent/ConsentController.cs",
+                "line": 49
+              },
+              "snippet": null
+            },
+            {
+              "description": "returned by ProcessConsent",
+              "location": {
+                "file": "/home/niels/github/UpdateConference2026/eShop/src/Identity.API/Quickstart/Consent/ConsentController.cs",
+                "line": 51
+              },
+              "snippet": "ProcessConsent(model)"
+            },
+            {
+              "description": "flows into result",
+              "location": {
+                "file": "/home/niels/github/UpdateConference2026/eShop/src/Identity.API/Quickstart/Consent/ConsentController.cs",
+                "line": 51
+              },
+              "snippet": "await ProcessConsent(model)"
+            },
+            {
+              "description": "reaches Microsoft.AspNetCore.Mvc.ControllerBase.Redirect(string)",
+              "location": {
+                "file": "/home/niels/github/UpdateConference2026/eShop/src/Identity.API/Quickstart/Consent/ConsentController.cs",
+                "line": 63
+              },
+              "snippet": "Redirect(result.RedirectUri)"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "findingId": "sha256:4ec2e0d865c724445c2c148ea5365daf",
+      "ruleId": "SETYPE0601",
+      "cwe": 601,
+      "project": "Identity.API",
+      "sinkSymbol": "Microsoft.AspNetCore.Mvc.ControllerBase.Redirect(string)",
+      "sinkSymbolId": "M:Microsoft.AspNetCore.Mvc.ControllerBase.Redirect(System.String)",
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/Identity.API/Quickstart/Account/AccountController.cs",
+      "line": 117,
+      "matchedEntry": "Microsoft.AspNetCore.Mvc.ControllerBase.Redirect",
+      "rationale": "redirects to an untrusted absolute location",
+      "inferredBy": null,
+      "verdict": {
+        "outcome": "Mitigated",
+        "source": "deterministic",
+        "confidence": 0.85,
+        "rationale": "the call is reachable only on the branch where Microsoft.AspNetCore.Mvc.IUrlHelper.IsLocalUrl accepted the value",
+        "answers": []
+      },
+      "severity": {
+        "level": "Note",
+        "securitySeverity": 0.7,
+        "reasons": [
+          "an open redirect needs the user to follow it",
+          "a catalogued sanitizer settles it, so this is reported for the record"
+        ]
+      },
+      "evidence": {
+        "guards": [
+          {
+            "condition": "button != \"login\"",
+            "file": "/home/niels/github/UpdateConference2026/eShop/src/Identity.API/Quickstart/Account/AccountController.cs",
+            "line": 67,
+            "testsTaintedValue": false,
+            "sanitizerEntry": null,
+            "sanitizerForm": null,
+            "sinkOnTrueBranch": false,
+            "sinkOnAcceptedBranch": null,
+            "sanitizerInferredBy": null
+          },
+          {
+            "condition": "ModelState.IsValid",
+            "file": "/home/niels/github/UpdateConference2026/eShop/src/Identity.API/Quickstart/Account/AccountController.cs",
+            "line": 93,
+            "testsTaintedValue": false,
+            "sanitizerEntry": null,
+            "sanitizerForm": null,
+            "sinkOnTrueBranch": true,
+            "sinkOnAcceptedBranch": null,
+            "sanitizerInferredBy": null
+          },
+          {
+            "condition": "result.Succeeded",
+            "file": "/home/niels/github/UpdateConference2026/eShop/src/Identity.API/Quickstart/Account/AccountController.cs",
+            "line": 96,
+            "testsTaintedValue": false,
+            "sanitizerEntry": null,
+            "sanitizerForm": null,
+            "sinkOnTrueBranch": true,
+            "sinkOnAcceptedBranch": null,
+            "sanitizerInferredBy": null
+          },
+          {
+            "condition": "context != null",
+            "file": "/home/niels/github/UpdateConference2026/eShop/src/Identity.API/Quickstart/Account/AccountController.cs",
+            "line": 101,
+            "testsTaintedValue": false,
+            "sanitizerEntry": null,
+            "sanitizerForm": null,
+            "sinkOnTrueBranch": false,
+            "sinkOnAcceptedBranch": null,
+            "sanitizerInferredBy": null
+          },
+          {
+            "condition": "Url.IsLocalUrl(model.ReturnUrl)",
+            "file": "/home/niels/github/UpdateConference2026/eShop/src/Identity.API/Quickstart/Account/AccountController.cs",
+            "line": 115,
+            "testsTaintedValue": true,
+            "sanitizerEntry": "Microsoft.AspNetCore.Mvc.IUrlHelper.IsLocalUrl",
+            "sanitizerForm": "ReturnsVerdict",
+            "sinkOnTrueBranch": true,
+            "sinkOnAcceptedBranch": true,
+            "sanitizerInferredBy": null
+          }
+        ],
+        "sanitizersApplied": [],
+        "authorization": "Anonymous",
+        "pathConfidence": 1,
+        "truncated": false,
+        "callDepth": 0,
+        "arguments": [
+          {
+            "ordinal": 0,
+            "literalPrefix": "",
+            "insertions": [
+              {
+                "type": "string",
+                "kind": null
+              }
+            ]
+          }
+        ]
+      },
+      "paths": [
+        {
+          "flowId": "sha256:3ddd965372073bdd3fc6f20c367c1516",
+          "entryPointId": "M:IdentityServerHost.Quickstart.UI.AccountController.Login(IdentityServerHost.Quickstart.UI.LoginInputModel,System.String)",
+          "entryPointDisplay": "IdentityServerHost.Quickstart.UI.AccountController.Login(IdentityServerHost.Quickstart.UI.LoginInputModel, string)",
+          "entryPointKind": "Controller",
+          "sourceKind": "Body",
+          "pathConfidence": 1,
+          "truncated": false,
+          "steps": [
+            {
+              "description": "Body parameter 'model'",
+              "location": {
+                "file": "/home/niels/github/UpdateConference2026/eShop/src/Identity.API/Quickstart/Account/AccountController.cs",
+                "line": 61
+              },
+              "snippet": null
+            },
+            {
+              "description": "reaches Microsoft.AspNetCore.Mvc.ControllerBase.Redirect(string)",
+              "location": {
+                "file": "/home/niels/github/UpdateConference2026/eShop/src/Identity.API/Quickstart/Account/AccountController.cs",
+                "line": 117
+              },
+              "snippet": "Redirect(model.ReturnUrl)"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "findingId": "sha256:bc8ead01921d064758cc9ab903b82650",
+      "ruleId": "SETYPE0601",
+      "cwe": 601,
+      "project": "Identity.API",
+      "sinkSymbol": "Microsoft.AspNetCore.Mvc.ControllerBase.Redirect(string)",
+      "sinkSymbolId": "M:Microsoft.AspNetCore.Mvc.ControllerBase.Redirect(System.String)",
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/Identity.API/Quickstart/Account/AccountController.cs",
+      "line": 111,
+      "matchedEntry": "Microsoft.AspNetCore.Mvc.ControllerBase.Redirect",
+      "rationale": "redirects to an untrusted absolute location",
+      "inferredBy": null,
+      "verdict": {
+        "outcome": "NeedsReview",
+        "source": "undecided",
+        "confidence": 0,
+        "rationale": "nothing decided this: no catalogued sanitizer settles it and no model answered",
+        "answers": []
+      },
+      "severity": {
+        "level": "Warning",
+        "securitySeverity": 4.7,
+        "reasons": [
+          "an open redirect needs the user to follow it"
+        ]
+      },
+      "evidence": {
+        "guards": [
+          {
+            "condition": "button != \"login\"",
+            "file": "/home/niels/github/UpdateConference2026/eShop/src/Identity.API/Quickstart/Account/AccountController.cs",
+            "line": 67,
+            "testsTaintedValue": false,
+            "sanitizerEntry": null,
+            "sanitizerForm": null,
+            "sinkOnTrueBranch": false,
+            "sinkOnAcceptedBranch": null,
+            "sanitizerInferredBy": null
+          },
+          {
+            "condition": "ModelState.IsValid",
+            "file": "/home/niels/github/UpdateConference2026/eShop/src/Identity.API/Quickstart/Account/AccountController.cs",
+            "line": 93,
+            "testsTaintedValue": false,
+            "sanitizerEntry": null,
+            "sanitizerForm": null,
+            "sinkOnTrueBranch": true,
+            "sinkOnAcceptedBranch": null,
+            "sanitizerInferredBy": null
+          },
+          {
+            "condition": "result.Succeeded",
+            "file": "/home/niels/github/UpdateConference2026/eShop/src/Identity.API/Quickstart/Account/AccountController.cs",
+            "line": 96,
+            "testsTaintedValue": false,
+            "sanitizerEntry": null,
+            "sanitizerForm": null,
+            "sinkOnTrueBranch": true,
+            "sinkOnAcceptedBranch": null,
+            "sanitizerInferredBy": null
+          },
+          {
+            "condition": "context != null",
+            "file": "/home/niels/github/UpdateConference2026/eShop/src/Identity.API/Quickstart/Account/AccountController.cs",
+            "line": 101,
+            "testsTaintedValue": false,
+            "sanitizerEntry": null,
+            "sanitizerForm": null,
+            "sinkOnTrueBranch": true,
+            "sinkOnAcceptedBranch": null,
+            "sanitizerInferredBy": null
+          },
+          {
+            "condition": "context.IsNativeClient()",
+            "file": "/home/niels/github/UpdateConference2026/eShop/src/Identity.API/Quickstart/Account/AccountController.cs",
+            "line": 103,
+            "testsTaintedValue": false,
+            "sanitizerEntry": null,
+            "sanitizerForm": null,
+            "sinkOnTrueBranch": false,
+            "sinkOnAcceptedBranch": null,
+            "sanitizerInferredBy": null
+          }
+        ],
+        "sanitizersApplied": [],
+        "authorization": "Anonymous",
+        "pathConfidence": 1,
+        "truncated": false,
+        "callDepth": 0,
+        "arguments": [
+          {
+            "ordinal": 0,
+            "literalPrefix": "",
+            "insertions": [
+              {
+                "type": "string",
+                "kind": null
+              }
+            ]
+          }
+        ]
+      },
+      "paths": [
+        {
+          "flowId": "sha256:3e75b5cbee6bf1e7f4a6b21ec9e3555c",
+          "entryPointId": "M:IdentityServerHost.Quickstart.UI.AccountController.Login(IdentityServerHost.Quickstart.UI.LoginInputModel,System.String)",
+          "entryPointDisplay": "IdentityServerHost.Quickstart.UI.AccountController.Login(IdentityServerHost.Quickstart.UI.LoginInputModel, string)",
+          "entryPointKind": "Controller",
+          "sourceKind": "Body",
+          "pathConfidence": 1,
+          "truncated": false,
+          "steps": [
+            {
+              "description": "Body parameter 'model'",
+              "location": {
+                "file": "/home/niels/github/UpdateConference2026/eShop/src/Identity.API/Quickstart/Account/AccountController.cs",
+                "line": 61
+              },
+              "snippet": null
+            },
+            {
+              "description": "reaches Microsoft.AspNetCore.Mvc.ControllerBase.Redirect(string)",
+              "location": {
+                "file": "/home/niels/github/UpdateConference2026/eShop/src/Identity.API/Quickstart/Account/AccountController.cs",
+                "line": 111
+              },
+              "snippet": "Redirect(model.ReturnUrl)"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "findingId": "sha256:c38aa7cb4c738a8e51ff647350b3fdbf",
+      "ruleId": "SETYPE0918",
+      "cwe": 918,
+      "project": "Webhooks.API",
+      "sinkSymbol": "System.Net.Http.HttpRequestMessage.HttpRequestMessage(System.Net.Http.HttpMethod, string?)",
+      "sinkSymbolId": "M:System.Net.Http.HttpRequestMessage.#ctor(System.Net.Http.HttpMethod,System.String)",
+      "file": "/home/niels/github/UpdateConference2026/eShop/src/Webhooks.API/Services/GrantUrlTesterService.cs",
+      "line": 14,
+      "matchedEntry": "System.Net.Http.HttpRequestMessage..ctor",
+      "rationale": "addresses a request from untrusted input",
+      "inferredBy": null,
+      "verdict": {
+        "outcome": "NeedsReview",
+        "source": "undecided",
+        "confidence": 0,
+        "rationale": "nothing decided this: no catalogued sanitizer settles it and no model answered",
+        "answers": []
+      },
+      "severity": {
+        "level": "Warning",
+        "securitySeverity": 6,
+        "reasons": [
+          "SSRF reaches hosts the caller cannot reach directly",
+          "every entry point that reaches it requires authorization"
+        ]
+      },
+      "evidence": {
+        "guards": [
+          {
+            "condition": "CheckSameOrigin(urlHook, url)",
+            "file": "/home/niels/github/UpdateConference2026/eShop/src/Webhooks.API/Services/GrantUrlTesterService.cs",
+            "line": 7,
+            "testsTaintedValue": true,
+            "sanitizerEntry": null,
+            "sanitizerForm": null,
+            "sinkOnTrueBranch": true,
+            "sinkOnAcceptedBranch": null,
+            "sanitizerInferredBy": null
+          }
+        ],
+        "sanitizersApplied": [],
+        "authorization": "Authorized",
+        "pathConfidence": 0.95,
+        "truncated": false,
+        "callDepth": 1,
+        "arguments": [
+          {
+            "ordinal": 1,
+            "literalPrefix": "",
+            "insertions": [
+              {
+                "type": "string",
+                "kind": null
+              }
+            ]
+          }
+        ]
+      },
+      "paths": [
+        {
+          "flowId": "sha256:5fbd9d3d4e57bb899766775e836f2833",
+          "entryPointId": "M:Webhooks.API.WebHooksApi.MapWebHooksApiV1(Microsoft.AspNetCore.Routing.IEndpointRouteBuilder)~WebHooksApi.cs:35:26",
+          "entryPointDisplay": "POST /api/webhooks",
+          "entryPointKind": "MinimalApi",
+          "sourceKind": "Body",
+          "pathConfidence": 0.95,
+          "truncated": false,
+          "steps": [
+            {
+              "description": "Body parameter 'request'",
+              "location": {
+                "file": "/home/niels/github/UpdateConference2026/eShop/src/Webhooks.API/Apis/WebHooksApi.cs",
+                "line": 35
+              },
+              "snippet": null
+            },
+            {
+              "description": "flows into temporary",
+              "location": {
+                "file": "/home/niels/github/UpdateConference2026/eShop/src/Webhooks.API/Apis/WebHooksApi.cs",
+                "line": 41
+              },
+              "snippet": "request.GrantUrl"
+            },
+            {
+              "description": "passed as 'url' to TestGrantUrl",
+              "location": {
+                "file": "/home/niels/github/UpdateConference2026/eShop/src/Webhooks.API/Apis/WebHooksApi.cs",
+                "line": 41
+              },
+              "snippet": "grantUrlTester.TestGrantUrl(request.Url, request.GrantUrl, request.Token ?? string.Empty)"
+            },
+            {
+              "description": "reaches System.Net.Http.HttpRequestMessage.HttpRequestMessage(System.Net.Http.HttpMethod, string?)",
+              "location": {
+                "file": "/home/niels/github/UpdateConference2026/eShop/src/Webhooks.API/Services/GrantUrlTesterService.cs",
+                "line": 14
+              },
+              "snippet": "new HttpRequestMessage(HttpMethod.Options, url)"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "id": "f022",
+  "bug_nn": "bug_14",
+  "source": "TRIAGE.json#bug_14",
+  "title": "Persistent blind SSRF: stored DestUrl is POSTed without re-validation and redirects are followed",
+  "file": "src/Webhooks.API/Services/WebhooksSender.cs",
+  "line": 32,
+  "category": "ssrf",
+  "severity": "MEDIUM",
+  "owner_hint": "top committer: Aditya Mandaleeka (1 of 1 recent commit); no CODEOWNERS entry",
+  "mode": "static",
+  "verified": "static_review_only",
+  "status": "patch",
+  "review": "ACCEPT",
+  "style_score": 7,
+  "out_of_scope_hunks": [],
+  "rationale": "Stored DestUrl is POSTed with no delivery-time validation while the default client follows redirects. The diff adds a shared validator, validates before dispatch, registers a named client with AllowAutoRedirect=false, UseProxy=false and a ConnectCallback that re-resolves and only connects to public addresses, and applies the same client to the grant tester.",
+  "variants_checked": "Sender and grant tester both use the safe client; other clients use fixed internal base addresses.",
+  "bypass_considered": "Redirect and proxy pivots are closed; DNS rebinding is closed because ConnectCallback connects to the specific validated IP. Residual: a public IP that the platform NATs inward, or IPv4-translated IPv6 forms not matched by the ::/96 test.",
+  "test_note": "Added WebhookSenderSsrfTests asserting a stored metadata DestUrl never reaches the handler.",
+  "review_reason": "Validation runs before dispatch and ConnectCallback re-resolves and pins the public address at connect time, closing the rebind/redirect/proxy bypasses. No validation is weakened; the grant-tester hunk is the same SSRF class on the same subscription flow and reuses the safe client.",
+  "verdict": null
+}

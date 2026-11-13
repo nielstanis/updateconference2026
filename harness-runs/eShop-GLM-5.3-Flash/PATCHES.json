@@ -1,0 +1,39 @@
+{
+  "patch_completed": true,
+  "mode": "static",
+  "repo": "/home/niels/github/def-proj/eShop",
+  "summary": {
+    "input_count": 23,
+    "patched": 23,
+    "no_patch": 0,
+    "accepted": 23,
+    "rejected": 0,
+    "ladder_passed": 0
+  },
+  "findings": [
+    {"id":"f001","bug":"bug_01","review":"ACCEPT","style_score":9},
+    {"id":"f002","bug":"bug_02","review":"ACCEPT","style_score":8},
+    {"id":"f003","bug":"bug_03","review":"ACCEPT","style_score":6,"note":"reviewer flags missing AutoAuthorizeStartupFilter class in the test fixture — copy from Ordering fixture before compiling"},
+    {"id":"f005","bug":"bug_04","review":"ACCEPT","style_score":9},
+    {"id":"f007","bug":"bug_05","review":"ACCEPT","style_score":8},
+    {"id":"f008","bug":"bug_06","review":"ACCEPT","style_score":8},
+    {"id":"f009","bug":"bug_07","review":"ACCEPT","style_score":9},
+    {"id":"f010","bug":"bug_08","review":"ACCEPT","style_score":8},
+    {"id":"f012","bug":"bug_09","review":"ACCEPT","style_score":8},
+    {"id":"f014","bug":"bug_10","review":"ACCEPT","style_score":9},
+    {"id":"f015","bug":"bug_11","review":"ACCEPT","style_score":8},
+    {"id":"f017","bug":"bug_12","review":"ACCEPT","style_score":8},
+    {"id":"f018","bug":"bug_13","review":"ACCEPT","style_score":8},
+    {"id":"f019","bug":"bug_14","review":"ACCEPT","style_score":8},
+    {"id":"f021","bug":"bug_15","review":"ACCEPT","style_score":8},
+    {"id":"f023","bug":"bug_16","review":"ACCEPT","style_score":9},
+    {"id":"f024","bug":"bug_17","review":"ACCEPT","style_score":9},
+    {"id":"f027","bug":"bug_18","review":"ACCEPT","style_score":9},
+    {"id":"f030","bug":"bug_19","review":"ACCEPT","style_score":9},
+    {"id":"f032","bug":"bug_20","review":"ACCEPT","style_score":9},
+    {"id":"f037","bug":"bug_21","review":"ACCEPT","style_score":8},
+    {"id":"f038","bug":"bug_22","review":"ACCEPT","style_score":8},
+    {"id":"f054","bug":"bug_23","review":"ACCEPT","style_score":8}
+  ],
+  "note": "Full per-finding detail (file, line, category, severity, rationale, variants_checked, bypass_considered, test_note, review_reason) lives in ./PATCHES/bug_NN/patch_result.json and the human-readable ./PATCHES.md."
+}

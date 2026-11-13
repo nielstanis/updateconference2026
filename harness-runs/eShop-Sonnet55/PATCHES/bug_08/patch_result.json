@@ -1,0 +1,22 @@
+{
+  "id": "f018",
+  "source": "TRIAGE.json#8",
+  "title": "Seeded accounts alice and bob with fixed known password \"Pass123$\" are created on every startup",
+  "file": "src/Identity.API/UsersSeed.cs",
+  "line": 35,
+  "category": "default credentials",
+  "severity": "MEDIUM",
+  "owner_hint": "top committers: Aditya Mandaleeka, Rob Conery, toyzoz (1/3 each); no CODEOWNERS entry",
+  "mode": "static",
+  "verified": "static_review_only",
+  "review": "ACCEPT",
+  "style_score": 8,
+  "out_of_scope_hunks": [
+    "tests/Application.UnitTests/UsersSeedTests.cs:1 (new test file; benign)"
+  ],
+  "rationale": "Root cause: src/Identity.API/UsersSeed.cs:6-33 and :78 unconditionally create alice and bob with the hardcoded password \"Pass123$\". Program.cs:12 registers the seeder through AddMigration, which has no environment gate, so every deployment gets the accounts. The change injects IHostEnvironment into UsersSeed and returns early from SeedAsync unless IsDevelopment(). The accounts are therefore never created in Production, Staging or any other non-Development environment. Development runs (AppHost launchSettings set ASPNETCORE_ENVIRONMENT and DOTNET_ENVIRONMENT to Development) and the Playwright flow are unchanged. If CI runs the e2e suite under a different environment name, that environment has to be set to Development, or the gate widened to allow it. I did not find a workflow that sets another name; the grep for environment variables only matched launchSettings. IHostEnvironment is already registered by the host, and the global usings already include Microsoft.Extensions.Hosting, so no DI or Program.cs change is needed. This does not remove accounts already created in an existing database; that needs a separate manual cleanup.",
+  "variants_checked": "src/Identity.API/UsersSeed.cs:SeedAsync, both alice (line 33) and bob (line 78), are covered by the single early return. A grep for UsersSeed and Pass123 was attempted but the first command failed on a shell glob, so I only confirmed usage through Program.cs:12 and the AddMigration extension in src/Shared/MigrateDbContextExtensions.cs. No other seeder or hardcoded user passwords were seen in the files read. The only other UsersSeed construction site found is the DI registration, which supplies IHostEnvironment automatically. Other services' seeders (Catalog, Ordering) do not create credentials and were not changed.",
+  "bypass_considered": "An attacker could try to reach the seeded state in a non-Development deployment. They have no input that flips the environment, because it comes from ASPNETCORE_ENVIRONMENT or DOTNET_ENVIRONMENT, which is operator-controlled. The remaining way is a deployment that is itself run as Development, and that is an accepted, documented dev configuration rather than something this change can prevent. Users already present in an existing database are untouched by this change.",
+  "test_note": "Added tests/Application.UnitTests/UsersSeedTests.cs (MSTest and NSubstitute, matching the existing project). It checks that SeedAsync with a Production environment never calls CreateAsync, which fails before the change, and that Development still creates both users. I could not build or run it here. The UserManager substitute is built with the standard nine-argument constructor (store plus eight nulls); this may need adjusting if the compiler or the NSubstitute analyzers object.",
+  "review_reason": "The UsersSeed.cs hunk adds an IHostEnvironment parameter and an early return unless IsDevelopment(), which stops Pass123$ for alice and bob (lines 33 and 78) from being seeded in Production. It is a root-cause gate with no new input or surface, and CI (playwright.yml, which runs dotnet run on the AppHost) most likely still runs in Development through the AppHost \"https\" launch profile. Remaining nits are the Login.cshtml:46 hint that still advertises the credentials, and a Development-path unit test that may fail on NSubstitute's FindByNameAsync auto-values."
+}

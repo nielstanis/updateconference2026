@@ -1,0 +1,107 @@
+--- a/src/Ordering.API/Application/Queries/IOrderQueries.cs
++++ b/src/Ordering.API/Application/Queries/IOrderQueries.cs
+@@ -3,5 +3,5 @@
+ public interface IOrderQueries
+ {
+-    Task<Order> GetOrderAsync(int id);
++    Task<Order> GetOrderAsync(int id, string userId);
+ 
+     Task<IEnumerable<OrderSummary>> GetOrdersFromUserAsync(string userId);
+--- a/src/Ordering.API/Application/Queries/OrderQueries.cs
++++ b/src/Ordering.API/Application/Queries/OrderQueries.cs
+@@ -3,11 +3,15 @@
+ public class OrderQueries(OrderingContext context)
+     : IOrderQueries
+ {
+-    public async Task<Order> GetOrderAsync(int id)
++    public async Task<Order> GetOrderAsync(int id, string userId)
+     {
++        if (string.IsNullOrEmpty(userId))
++            throw new KeyNotFoundException();
++
+         var order = await context.Orders
+             .Include(o => o.OrderItems)
+-            .FirstOrDefaultAsync(o => o.Id == id);
++            .FirstOrDefaultAsync(o => o.Id == id && o.Buyer.IdentityGuid == userId);
+       
+         if (order is null)
+             throw new KeyNotFoundException();
+--- a/src/Ordering.API/Apis/OrdersApi.cs
++++ b/src/Ordering.API/Apis/OrdersApi.cs
+@@ -79,8 +79,9 @@
+     public static async Task<Results<Ok<Order>, NotFound>> GetOrderAsync(int orderId, [AsParameters] OrderServices services)
+     {
+         try
+         {
+-            var order = await services.Queries.GetOrderAsync(orderId);
++            var userId = services.IdentityService.GetUserIdentity();
++            var order = await services.Queries.GetOrderAsync(orderId, userId);
+             return TypedResults.Ok(order);
+         }
+         catch
+--- a/tests/Ordering.UnitTests/Application/OrdersWebApiTest.cs
++++ b/tests/Ordering.UnitTests/Application/OrdersWebApiTest.cs
+@@ -105,17 +105,19 @@
+     [TestMethod]
+     public async Task Get_order_success()
+     {
+         // Arrange
+         var fakeOrderId = 123;
+         var fakeDynamicResult = new Order();
+-        _orderQueriesMock.GetOrderAsync(Arg.Any<int>())
++        _identityServiceMock.GetUserIdentity()
++            .Returns(Guid.NewGuid().ToString());
++        _orderQueriesMock.GetOrderAsync(Arg.Any<int>(), Arg.Any<string>())
+             .Returns(Task.FromResult(fakeDynamicResult));
+ 
+         // Act
+         var orderServices = new OrderServices(_mediatorMock, _orderQueriesMock, _identityServiceMock, _loggerMock);
+         var result = await OrdersApi.GetOrderAsync(fakeOrderId, orderServices);
+ 
+         // Assert
+         Assert.IsInstanceOfType<Ok<Order>>(result.Result);
+         Assert.AreSame(fakeDynamicResult, ((Ok<Order>)result.Result).Value);
+     }
+@@ -123,21 +125,42 @@
+     [TestMethod]
+     public async Task Get_order_fails()
+     {
+         // Arrange
+         var fakeOrderId = 123;
++        _identityServiceMock.GetUserIdentity()
++            .Returns(Guid.NewGuid().ToString());
+ #pragma warning disable NS5003
+-        _orderQueriesMock.GetOrderAsync(Arg.Any<int>())
++        _orderQueriesMock.GetOrderAsync(Arg.Any<int>(), Arg.Any<string>())
+             .Throws(new KeyNotFoundException());
+ #pragma warning restore NS5003
+ 
+         // Act
+         var orderServices = new OrderServices(_mediatorMock, _orderQueriesMock, _identityServiceMock, _loggerMock);
+         var result = await OrdersApi.GetOrderAsync(fakeOrderId, orderServices);
+ 
+         // Assert
+         Assert.IsInstanceOfType<NotFound>(result.Result);
+     }
++
++    [TestMethod]
++    public async Task Get_order_scopes_query_to_caller_identity()
++    {
++        // Arrange
++        var fakeOrderId = 123;
++        var fakeUserId = Guid.NewGuid().ToString();
++        _identityServiceMock.GetUserIdentity()
++            .Returns(fakeUserId);
++        _orderQueriesMock.GetOrderAsync(Arg.Any<int>(), Arg.Any<string>())
++            .Returns(Task.FromResult(new Order()));
++
++        // Act
++        var orderServices = new OrderServices(_mediatorMock, _orderQueriesMock, _identityServiceMock, _loggerMock);
++        await OrdersApi.GetOrderAsync(fakeOrderId, orderServices);
++
++        // Assert
++        await _orderQueriesMock.Received().GetOrderAsync(fakeOrderId, fakeUserId);
++    }
+ 
+     [TestMethod]
+     public async Task Get_cardTypes_success()

@@ -1,0 +1,20 @@
+{
+  "id": "f003",
+  "source": "TRIAGE.json#2",
+  "title": "GetOrder returns any order by integer id with no ownership check",
+  "file": "src/Ordering.API/Application/Queries/OrderQueries.cs",
+  "line": 5,
+  "category": "IDOR / BOLA",
+  "severity": "MEDIUM",
+  "owner_hint": "top committers: Aditya Mandaleeka, Almar Aubel, Erin McLaughlin (1/4 each); no CODEOWNERS entry",
+  "mode": "static",
+  "verified": "static_review_only",
+  "review": "ACCEPT",
+  "style_score": 9,
+  "out_of_scope_hunks": [],
+  "rationale": "Root cause: src/Ordering.API/Application/Queries/OrderQueries.cs:10 filtered only on o.Id == id, and the endpoint (src/Ordering.API/Apis/OrdersApi.cs:84) never passed the caller's identity. The fix threads the authenticated user's identity (services.IdentityService.GetUserIdentity(), the same source GetOrdersByUserAsync uses) into IOrderQueries.GetOrderAsync. The query now also requires o.Buyer.IdentityGuid == userId, matching GetOrdersFromUserAsync. A non-owner gets no row, so KeyNotFoundException is thrown, which the endpoint already maps to 404. This is the same response as a nonexistent id, so order existence does not leak. Ownership is enforced in the data query itself, so no other caller can skip it. [Likely 🟡] I could not build or run anything. The existing tests were updated for the new signature.",
+  "variants_checked": "IOrderQueries/OrderQueries:GetOrderAsync is the only by-id read, and OrdersApi.GetOrderAsync is its only production caller (grep of *.cs). GetOrdersFromUserAsync already filters by buyer, so it needs no fix. CancelOrderAsync and ShipOrderAsync take an order number via commands and do not go through this query. They may have their own ownership gap (ship is arguably an admin action), but that is a different finding, so I left it out. The two existing unit tests that mock GetOrderAsync were updated for the new signature.",
+  "bypass_considered": "Attacker enumerates sequential order ids while authenticated as another user. The userId comes from the validated token claim, not from request input, so the attacker cannot choose it. The ownership predicate sits in the same WHERE clause as the id match. A residual case: if GetUserIdentity() returned null, the predicate would be IdentityGuid IS NULL, and buyers always have a non-null IdentityGuid. Authentication is required on the route group, so the claim is present. Orders with no Buyer navigation (buyer FK missing) would also not match, so they fail closed. [Likely 🟡]",
+  "test_note": "Added Get_order_scopes_query_to_calling_user in tests/Ordering.UnitTests/Application/OrdersWebApiTest.cs. It asserts the endpoint calls GetOrderAsync(orderId, callerIdentity). It fails before the change (the two-argument overload does not compile) and passes after. The query-level filter has no data-backed unit test here, because the unit tests mock IOrderQueries. A functional test with a real OrderingContext would be needed to cover the SQL predicate.",
+  "review_reason": "The patch adds `o.Buyer.IdentityGuid == userId` to the single-order query (OrderQueries.cs:10 in the original), which closes the missing ownership check at its source. The caller at OrdersApi.cs:84 now passes the authenticated user's identity, as GetOrdersByUserAsync already does at line 95. It is the only caller. It adds no new input trust or surface. Failures still map to the existing 404 path."
+}

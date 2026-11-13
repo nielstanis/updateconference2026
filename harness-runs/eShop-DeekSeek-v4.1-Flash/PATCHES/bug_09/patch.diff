@@ -1,0 +1,78 @@
+--- a/src/Ordering.API/Apis/OrdersApi.cs
++++ b/src/Ordering.API/Apis/OrdersApi.cs
+@@ -131,7 +131,8 @@
+ 
+         if (requestId == Guid.Empty)
+         {
+-            services.Logger.LogWarning("Invalid IntegrationEvent - RequestId is missing - {@IntegrationEvent}", request);
++            // Never log the request object: CreateOrderRequest carries the PAN and CVV.
++            services.Logger.LogWarning("Invalid CreateOrderRequest - RequestId is missing - UserId: {UserId}", request.UserId);
+             return TypedResults.BadRequest("RequestId is missing.");
+         }
+ 
+@@ -182,4 +183,15 @@
+     string CardSecurityNumber,
+     int CardTypeId,
+     string Buyer,
+-    List<BasketItem> Items);
++    List<BasketItem> Items)
++{
++    // Records synthesize a ToString() over all properties; keep PAN/CVV out of it.
++    public override string ToString() =>
++        $"{nameof(CreateOrderRequest)} {{ {nameof(UserId)} = {UserId}, " +
++        $"{nameof(CardNumber)} = {MaskCardNumber(CardNumber)}, {nameof(CardSecurityNumber)} = **** }}";
++
++    private static string MaskCardNumber(string cardNumber)
++        => string.IsNullOrEmpty(cardNumber) || cardNumber.Length <= 4
++            ? "****"
++            : cardNumber.Substring(cardNumber.Length - 4).PadLeft(cardNumber.Length, 'X');
++}
+--- a/src/Ordering.API/Application/Commands/CreateOrderCommand.cs
++++ b/src/Ordering.API/Application/Commands/CreateOrderCommand.cs
+@@ -80,5 +80,15 @@
+         CardExpiration = cardExpiration;
+         CardSecurityNumber = cardSecurityNumber;
+         CardTypeId = cardTypeId;
+     }
++
++    // The full command must never be serialized into logs: CardNumber/CardSecurityNumber are card data.
++    public override string ToString() =>
++        $"{nameof(CreateOrderCommand)} {{ {nameof(UserId)} = {UserId}, " +
++        $"{nameof(CardNumber)} = {MaskCardNumber(CardNumber)}, {nameof(CardSecurityNumber)} = **** }}";
++
++    private static string MaskCardNumber(string cardNumber)
++        => string.IsNullOrEmpty(cardNumber) || cardNumber.Length <= 4
++            ? "****"
++            : cardNumber.Substring(cardNumber.Length - 4).PadLeft(cardNumber.Length, 'X');
+ }
+--- a/tests/Ordering.UnitTests/Application/OrdersWebApiTest.cs
++++ b/tests/Ordering.UnitTests/Application/OrdersWebApiTest.cs
+@@ -179,4 +179,28 @@
+         var problem = Assert.IsInstanceOfType<ProblemHttpResult>(result.Result);
+         Assert.AreEqual(500, problem.StatusCode);
+     }
++
++    [TestMethod]
++    public async Task Create_order_does_not_log_pan_or_cvv()
++    {
++        // Arrange
++        const string cardNumber = "4111111111111111";
++        const string cardSecurityNumber = "737";
++        var request = new CreateOrderRequest("user-1", "TestUser", "City", "Street", "State", "Country", "Zip",
++            cardNumber, "Test User", DateTime.UtcNow.AddYears(1), cardSecurityNumber, 1, "TestUser", new List<BasketItem>());
++        var services = new OrderServices(_mediatorMock, _orderQueriesMock, _identityServiceMock, _loggerMock);
++
++        // Act - an empty request id takes the warning path that used to log the whole request
++        await OrdersApi.CreateOrderAsync(Guid.Empty, request, services);
++
++        // Assert - the log state must never contain the full PAN or the CVV
++        var loggedState = string.Join("\n", _loggerMock.ReceivedCalls()
++            .SelectMany(call => call.GetArguments())
++            .Select(argument => argument?.ToString()));
++
++        Assert.IsFalse(loggedState.Contains(cardNumber), "The full card number must not be logged.");
++        Assert.IsFalse(loggedState.Contains(cardSecurityNumber), "The card security number must not be logged.");
++        Assert.IsFalse(request.ToString().Contains(cardNumber));
++        Assert.IsFalse(request.ToString().Contains(cardSecurityNumber));
++    }
+ }

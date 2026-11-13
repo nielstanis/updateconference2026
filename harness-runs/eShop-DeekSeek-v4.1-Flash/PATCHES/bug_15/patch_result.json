@@ -1,0 +1,23 @@
+{
+  "id": "f035",
+  "bug_nn": "bug_15",
+  "source": "TRIAGE.json#bug_15",
+  "title": "Full raw integration-event bodies (buyer name, identity GUID) are written to span tags and logs",
+  "file": "src/EventBusRabbitMQ/RabbitMQEventBus.cs",
+  "line": 161,
+  "category": "information-disclosure",
+  "severity": "MEDIUM",
+  "owner_hint": "top committer: iem365-michael (1 of 1 recent commit); no CODEOWNERS entry",
+  "mode": "static",
+  "verified": "static_review_only",
+  "status": "patch",
+  "review": "ACCEPT",
+  "style_score": 8,
+  "out_of_scope_hunks": [],
+  "rationale": "Line 161 tags every consumed body and line 172 logs it on failure; events carry BuyerName and BuyerIdentityGuid. The diff replaces the body tag with the byte size, removes the body from the warning log, and stops embedding it in the fake-exception message, while leaving decode and dispatch unchanged.",
+  "variants_checked": "ProcessEvent already logs only the event name; DeserializeMessage does not log; the remaining body sinks were the tag, the exception text and the warning.",
+  "bypass_considered": "Exception text still flows into span exception tags, but the self-generated exception no longer contains the body; a JsonException leaks position, not content.",
+  "test_note": "No suitable test project exists for EventBusRabbitMQ; suggested a broker-free unit test asserting no message tag and size metadata.",
+  "review_reason": "All three body sinks in OnMessageReceived are replaced with non-identifying metadata while decode, dispatch, and the fake-exception trigger are unchanged. No new input surface and no validation weakened.",
+  "verdict": null
+}

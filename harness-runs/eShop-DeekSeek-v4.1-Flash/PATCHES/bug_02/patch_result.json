@@ -1,0 +1,23 @@
+{
+  "id": "f003",
+  "bug_nn": "bug_02",
+  "source": "TRIAGE.json#bug_02",
+  "title": "RSA token-signing private key committed to the repository and used as the live signing credential",
+  "file": "src/Identity.API/tempkey.jwk",
+  "line": 1,
+  "category": "hardcoded-secret",
+  "severity": "HIGH",
+  "owner_hint": "top committer: Aditya Mandaleeka (1 of 1 recent commit); no CODEOWNERS entry",
+  "mode": "static",
+  "verified": "static_review_only",
+  "status": "patch",
+  "review": "ACCEPT",
+  "style_score": 7,
+  "out_of_scope_hunks": [],
+  "rationale": "The committed full RSA private JWK is loaded unconditionally via AddDeveloperSigningCredential while key management is disabled. The diff deletes tempkey.jwk, drops its Content Include from Identity.API.csproj, gitignores the name, and replaces the loader with a development-only in-memory credential (persistKey:false) plus a non-development AddSigningCredential(LoadPkcs12FromFile(...)) path that fails closed when config is missing.",
+  "variants_checked": "Only one signing-credential call site and only one .jwk file in the tree; AppHost passes no signing material; ServiceDefaults validation needed no change for this root cause.",
+  "bypass_considered": "A Development deployment now gets a fresh unknown in-memory key, so the old committed kid no longer validates; non-Development without configured certificate throws at startup. Residual: rotate and purge the key from history and published artifacts.",
+  "test_note": "Added IdentityApiDoesNotContainASigningKeyFile asserting no *.jwk under src/Identity.API.",
+  "review_reason": "Deletes the committed key and its build-output copy and replaces the unconditional developer credential with dev-only ephemeral material plus a fail-closed production certificate path; no checks removed. Remaining work is operational key rotation/history purge, plus a BOM and a brittle CallerFilePath-based test.",
+  "verdict": null
+}

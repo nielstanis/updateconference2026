@@ -1,0 +1,450 @@
+{
+  "summary": {
+    "symbols": 63,
+    "flowsReachingThem": 206,
+    "flowsTotal": 368
+  },
+  "symbols": [
+    {
+      "symbol": "System.Linq.Queryable.Where\u003CeShop.Catalog.API.Model.CatalogItem\u003E(System.Linq.IQueryable\u003CeShop.Catalog.API.Model.CatalogItem\u003E, System.Linq.Expressions.Expression\u003CSystem.Func\u003CeShop.Catalog.API.Model.CatalogItem, bool\u003E\u003E)",
+      "symbolId": "M:System.Linq.Queryable.Where\u0060\u00601(System.Linq.IQueryable{\u0060\u00600},System.Linq.Expressions.Expression{System.Func{\u0060\u00600,System.Boolean}})",
+      "assembly": "System.Linq.Queryable",
+      "assemblyVersion": "10.0.0.0",
+      "flowCount": 28
+    },
+    {
+      "symbol": "System.Linq.Queryable.Skip\u003CeShop.Catalog.API.Model.CatalogItem\u003E(System.Linq.IQueryable\u003CeShop.Catalog.API.Model.CatalogItem\u003E, int)",
+      "symbolId": "M:System.Linq.Queryable.Skip\u0060\u00601(System.Linq.IQueryable{\u0060\u00600},System.Int32)",
+      "assembly": "System.Linq.Queryable",
+      "assemblyVersion": "10.0.0.0",
+      "flowCount": 11
+    },
+    {
+      "symbol": "System.Linq.Queryable.Take\u003CeShop.Catalog.API.Model.CatalogItem\u003E(System.Linq.IQueryable\u003CeShop.Catalog.API.Model.CatalogItem\u003E, int)",
+      "symbolId": "M:System.Linq.Queryable.Take\u0060\u00601(System.Linq.IQueryable{\u0060\u00600},System.Int32)",
+      "assembly": "System.Linq.Queryable",
+      "assemblyVersion": "10.0.0.0",
+      "flowCount": 11
+    },
+    {
+      "symbol": "System.Collections.Generic.KeyValuePair\u003Cstring, object\u003E.KeyValuePair(string, object)",
+      "symbolId": "M:System.Collections.Generic.KeyValuePair\u00602.#ctor(\u00600,\u00601)",
+      "assembly": "System.Runtime",
+      "assemblyVersion": "10.0.0.0",
+      "flowCount": 10
+    },
+    {
+      "symbol": "Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.LongCountAsync\u003CeShop.Catalog.API.Model.CatalogItem\u003E(System.Linq.IQueryable\u003CeShop.Catalog.API.Model.CatalogItem\u003E, System.Threading.CancellationToken)",
+      "symbolId": "M:Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.LongCountAsync\u0060\u00601(System.Linq.IQueryable{\u0060\u00600},System.Threading.CancellationToken)",
+      "assembly": "Microsoft.EntityFrameworkCore",
+      "assemblyVersion": "10.0.12.0",
+      "flowCount": 9
+    },
+    {
+      "symbol": "Microsoft.Extensions.Logging.LoggerExtensions.LogTrace(Microsoft.Extensions.Logging.ILogger, string?, params object?[])",
+      "symbolId": "M:Microsoft.Extensions.Logging.LoggerExtensions.LogTrace(Microsoft.Extensions.Logging.ILogger,System.String,System.Object[])",
+      "assembly": "Microsoft.Extensions.Logging.Abstractions",
+      "assemblyVersion": "10.0.0.0",
+      "flowCount": 9
+    },
+    {
+      "symbol": "Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.Include\u003CeShop.Catalog.API.Model.CatalogItem, eShop.Catalog.API.Model.CatalogBrand?\u003E(System.Linq.IQueryable\u003CeShop.Catalog.API.Model.CatalogItem\u003E, System.Linq.Expressions.Expression\u003CSystem.Func\u003CeShop.Catalog.API.Model.CatalogItem, eShop.Catalog.API.Model.CatalogBrand?\u003E\u003E)",
+      "symbolId": "M:Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.Include\u0060\u00602(System.Linq.IQueryable{\u0060\u00600},System.Linq.Expressions.Expression{System.Func{\u0060\u00600,\u0060\u00601}})",
+      "assembly": "Microsoft.EntityFrameworkCore",
+      "assemblyVersion": "10.0.12.0",
+      "flowCount": 8
+    },
+    {
+      "symbol": "System.Security.Claims.ClaimsPrincipal.FindFirst(string)",
+      "symbolId": "M:System.Security.Claims.ClaimsPrincipal.FindFirst(System.String)",
+      "assembly": "System.Security.Claims",
+      "assemblyVersion": "10.0.0.0",
+      "flowCount": 8
+    },
+    {
+      "symbol": "Duende.IdentityServer.Services.IIdentityServerInteractionService.GetAuthorizationContextAsync(string?)",
+      "symbolId": "M:Duende.IdentityServer.Services.IIdentityServerInteractionService.GetAuthorizationContextAsync(System.String)",
+      "assembly": "Duende.IdentityServer",
+      "assemblyVersion": "7.0.0.0",
+      "flowCount": 7
+    },
+    {
+      "symbol": "Microsoft.Extensions.Logging.ILogger.IsEnabled(Microsoft.Extensions.Logging.LogLevel)",
+      "symbolId": "M:Microsoft.Extensions.Logging.ILogger.IsEnabled(Microsoft.Extensions.Logging.LogLevel)",
+      "assembly": "Microsoft.Extensions.Logging.Abstractions",
+      "assemblyVersion": "10.0.0.0",
+      "flowCount": 7
+    },
+    {
+      "symbol": "Duende.IdentityServer.Services.IEventService.RaiseAsync(Duende.IdentityServer.Events.Event)",
+      "symbolId": "M:Duende.IdentityServer.Services.IEventService.RaiseAsync(Duende.IdentityServer.Events.Event)",
+      "assembly": "Duende.IdentityServer",
+      "assemblyVersion": "7.0.0.0",
+      "flowCount": 5
+    },
+    {
+      "symbol": "Microsoft.Extensions.AI.EmbeddingGeneratorExtensions.GenerateVectorAsync\u003Cstring, float\u003E(Microsoft.Extensions.AI.IEmbeddingGenerator\u003Cstring, Microsoft.Extensions.AI.Embedding\u003Cfloat\u003E\u003E, string, Microsoft.Extensions.AI.EmbeddingGenerationOptions?, System.Threading.CancellationToken)",
+      "symbolId": "M:Microsoft.Extensions.AI.EmbeddingGeneratorExtensions.GenerateVectorAsync\u0060\u00602(Microsoft.Extensions.AI.IEmbeddingGenerator{\u0060\u00600,Microsoft.Extensions.AI.Embedding{\u0060\u00601}},\u0060\u00600,Microsoft.Extensions.AI.EmbeddingGenerationOptions,System.Threading.CancellationToken)",
+      "assembly": "Microsoft.Extensions.AI.Abstractions",
+      "assemblyVersion": "10.10.0.0",
+      "flowCount": 5
+    },
+    {
+      "symbol": "Duende.IdentityServer.Services.IDeviceFlowInteractionService.GetAuthorizationContextAsync(string)",
+      "symbolId": "M:Duende.IdentityServer.Services.IDeviceFlowInteractionService.GetAuthorizationContextAsync(System.String)",
+      "assembly": "Duende.IdentityServer",
+      "assemblyVersion": "7.0.0.0",
+      "flowCount": 4
+    },
+    {
+      "symbol": "MediatR.ISender.Send\u003Cbool\u003E(MediatR.IRequest\u003Cbool\u003E, System.Threading.CancellationToken)",
+      "symbolId": "M:MediatR.ISender.Send\u0060\u00601(MediatR.IRequest{\u0060\u00600},System.Threading.CancellationToken)",
+      "assembly": "MediatR",
+      "assemblyVersion": "13.0.0.0",
+      "flowCount": 4
+    },
+    {
+      "symbol": "System.Linq.Enumerable.Contains\u003Cstring\u003E(System.Collections.Generic.IEnumerable\u003Cstring\u003E, string)",
+      "symbolId": "M:System.Linq.Enumerable.Contains\u0060\u00601(System.Collections.Generic.IEnumerable{\u0060\u00600},\u0060\u00600)",
+      "assembly": "System.Linq",
+      "assemblyVersion": "10.0.0.0",
+      "flowCount": 4
+    },
+    {
+      "symbol": "System.Linq.Queryable.OrderBy\u003CeShop.Catalog.API.Model.CatalogItem, double\u003E(System.Linq.IQueryable\u003CeShop.Catalog.API.Model.CatalogItem\u003E, System.Linq.Expressions.Expression\u003CSystem.Func\u003CeShop.Catalog.API.Model.CatalogItem, double\u003E\u003E)",
+      "symbolId": "M:System.Linq.Queryable.OrderBy\u0060\u00602(System.Linq.IQueryable{\u0060\u00600},System.Linq.Expressions.Expression{System.Func{\u0060\u00600,\u0060\u00601}})",
+      "assembly": "System.Linq.Queryable",
+      "assemblyVersion": "10.0.0.0",
+      "flowCount": 4
+    },
+    {
+      "symbol": "System.Linq.Queryable.Select\u003CeShop.Catalog.API.Model.CatalogItem, \u003Canonymous type: eShop.Catalog.API.Model.CatalogItem Item, double Distance\u003E\u003E(System.Linq.IQueryable\u003CeShop.Catalog.API.Model.CatalogItem\u003E, System.Linq.Expressions.Expression\u003CSystem.Func\u003CeShop.Catalog.API.Model.CatalogItem, \u003Canonymous type: eShop.Catalog.API.Model.CatalogItem Item, double Distance\u003E\u003E\u003E)",
+      "symbolId": "M:System.Linq.Queryable.Select\u0060\u00602(System.Linq.IQueryable{\u0060\u00600},System.Linq.Expressions.Expression{System.Func{\u0060\u00600,\u0060\u00601}})",
+      "assembly": "System.Linq.Queryable",
+      "assemblyVersion": "10.0.0.0",
+      "flowCount": 4
+    },
+    {
+      "symbol": "Duende.IdentityServer.Services.IIdentityServerInteractionService.GetLogoutContextAsync(string?)",
+      "symbolId": "M:Duende.IdentityServer.Services.IIdentityServerInteractionService.GetLogoutContextAsync(System.String)",
+      "assembly": "Duende.IdentityServer",
+      "assemblyVersion": "7.0.0.0",
+      "flowCount": 3
+    },
+    {
+      "symbol": "StackExchange.Redis.RedisKey.Append(StackExchange.Redis.RedisKey)",
+      "symbolId": "M:StackExchange.Redis.RedisKey.Append(StackExchange.Redis.RedisKey)",
+      "assembly": "StackExchange.Redis",
+      "assemblyVersion": "2.0.0.0",
+      "flowCount": 3
+    },
+    {
+      "symbol": "Duende.IdentityServer.Events.ConsentGrantedEvent.ConsentGrantedEvent(string, string, System.Collections.Generic.IEnumerable\u003Cstring\u003E, System.Collections.Generic.IEnumerable\u003Cstring\u003E, bool)",
+      "symbolId": "M:Duende.IdentityServer.Events.ConsentGrantedEvent.#ctor(System.String,System.String,System.Collections.Generic.IEnumerable{System.String},System.Collections.Generic.IEnumerable{System.String},System.Boolean)",
+      "assembly": "Duende.IdentityServer",
+      "assemblyVersion": "7.0.0.0",
+      "flowCount": 2
+    },
+    {
+      "symbol": "Duende.IdentityServer.Models.ConsentResponse.Description.set",
+      "symbolId": "M:Duende.IdentityServer.Models.ConsentResponse.set_Description(System.String)",
+      "assembly": "Duende.IdentityServer",
+      "assemblyVersion": "7.0.0.0",
+      "flowCount": 2
+    },
+    {
+      "symbol": "Duende.IdentityServer.Models.ConsentResponse.RememberConsent.set",
+      "symbolId": "M:Duende.IdentityServer.Models.ConsentResponse.set_RememberConsent(System.Boolean)",
+      "assembly": "Duende.IdentityServer",
+      "assemblyVersion": "7.0.0.0",
+      "flowCount": 2
+    },
+    {
+      "symbol": "Duende.IdentityServer.Models.ConsentResponse.ScopesValuesConsented.set",
+      "symbolId": "M:Duende.IdentityServer.Models.ConsentResponse.set_ScopesValuesConsented(System.Collections.Generic.IEnumerable{System.String})",
+      "assembly": "Duende.IdentityServer",
+      "assemblyVersion": "7.0.0.0",
+      "flowCount": 2
+    },
+    {
+      "symbol": "MediatR.IPublisher.Publish\u003CMediatR.INotification\u003E(MediatR.INotification, System.Threading.CancellationToken)",
+      "symbolId": "M:MediatR.IPublisher.Publish\u0060\u00601(\u0060\u00600,System.Threading.CancellationToken)",
+      "assembly": "MediatR",
+      "assemblyVersion": "13.0.0.0",
+      "flowCount": 2
+    },
+    {
+      "symbol": "Microsoft.AspNetCore.Authentication.AuthenticationProperties.RedirectUri.set",
+      "symbolId": "M:Microsoft.AspNetCore.Authentication.AuthenticationProperties.set_RedirectUri(System.String)",
+      "assembly": "Microsoft.AspNetCore.Authentication.Abstractions",
+      "assemblyVersion": "10.0.0.0",
+      "flowCount": 2
+    },
+    {
+      "symbol": "Microsoft.AspNetCore.Mvc.ControllerBase.SignOut(Microsoft.AspNetCore.Authentication.AuthenticationProperties, params string[])",
+      "symbolId": "M:Microsoft.AspNetCore.Mvc.ControllerBase.SignOut(Microsoft.AspNetCore.Authentication.AuthenticationProperties,System.String[])",
+      "assembly": "Microsoft.AspNetCore.Mvc.Core",
+      "assemblyVersion": "10.0.0.0",
+      "flowCount": 2
+    },
+    {
+      "symbol": "Microsoft.AspNetCore.Mvc.ProblemDetails.Detail.set",
+      "symbolId": "M:Microsoft.AspNetCore.Mvc.ProblemDetails.set_Detail(System.String)",
+      "assembly": "Microsoft.AspNetCore.Http.Abstractions",
+      "assemblyVersion": "10.0.0.0",
+      "flowCount": 2
+    },
+    {
+      "symbol": "Microsoft.AspNetCore.Mvc.UrlHelperExtensions.Action(Microsoft.AspNetCore.Mvc.IUrlHelper, string?, object?)",
+      "symbolId": "M:Microsoft.AspNetCore.Mvc.UrlHelperExtensions.Action(Microsoft.AspNetCore.Mvc.IUrlHelper,System.String,System.Object)",
+      "assembly": "Microsoft.AspNetCore.Mvc.Core",
+      "assemblyVersion": "10.0.0.0",
+      "flowCount": 2
+    },
+    {
+      "symbol": "Microsoft.AspNetCore.Mvc.ViewFeatures.ViewDataDictionary.this[string].set",
+      "symbolId": "M:Microsoft.AspNetCore.Mvc.ViewFeatures.ViewDataDictionary.set_Item(System.String,System.Object)",
+      "assembly": "Microsoft.AspNetCore.Mvc.ViewFeatures",
+      "assemblyVersion": "10.0.0.0",
+      "flowCount": 2
+    },
+    {
+      "symbol": "Microsoft.EntityFrameworkCore.ChangeTracking.ChangeTracker.Entries\u003CeShop.Ordering.Domain.Seedwork.Entity\u003E()",
+      "symbolId": "M:Microsoft.EntityFrameworkCore.ChangeTracking.ChangeTracker.Entries\u0060\u00601",
+      "assembly": "Microsoft.EntityFrameworkCore",
+      "assemblyVersion": "10.0.12.0",
+      "flowCount": 2
+    },
+    {
+      "symbol": "Microsoft.EntityFrameworkCore.ChangeTracking.PropertyValues.SetValues(object)",
+      "symbolId": "M:Microsoft.EntityFrameworkCore.ChangeTracking.PropertyValues.SetValues(System.Object)",
+      "assembly": "Microsoft.EntityFrameworkCore",
+      "assemblyVersion": "10.0.12.0",
+      "flowCount": 2
+    },
+    {
+      "symbol": "Microsoft.EntityFrameworkCore.DbContext.Entry\u003CeShop.Catalog.API.Model.CatalogItem\u003E(eShop.Catalog.API.Model.CatalogItem)",
+      "symbolId": "M:Microsoft.EntityFrameworkCore.DbContext.Entry\u0060\u00601(\u0060\u00600)",
+      "assembly": "Microsoft.EntityFrameworkCore",
+      "assemblyVersion": "10.0.12.0",
+      "flowCount": 2
+    },
+    {
+      "symbol": "StackExchange.Redis.IDatabaseAsync.StringGetLeaseAsync(StackExchange.Redis.RedisKey, StackExchange.Redis.CommandFlags)",
+      "symbolId": "M:StackExchange.Redis.IDatabaseAsync.StringGetLeaseAsync(StackExchange.Redis.RedisKey,StackExchange.Redis.CommandFlags)",
+      "assembly": "StackExchange.Redis",
+      "assemblyVersion": "2.0.0.0",
+      "flowCount": 2
+    },
+    {
+      "symbol": "System.Linq.Enumerable.Sum\u003CeShop.Catalog.API.Model.CatalogFacetCount\u003E(System.Collections.Generic.IEnumerable\u003CeShop.Catalog.API.Model.CatalogFacetCount\u003E, System.Func\u003CeShop.Catalog.API.Model.CatalogFacetCount, int\u003E)",
+      "symbolId": "M:System.Linq.Enumerable.Sum\u0060\u00601(System.Collections.Generic.IEnumerable{\u0060\u00600},System.Func{\u0060\u00600,System.Int32})",
+      "assembly": "System.Linq",
+      "assemblyVersion": "10.0.0.0",
+      "flowCount": 2
+    },
+    {
+      "symbol": "System.Linq.Queryable.GroupBy\u003CeShop.Catalog.API.Model.CatalogItem, int\u003E(System.Linq.IQueryable\u003CeShop.Catalog.API.Model.CatalogItem\u003E, System.Linq.Expressions.Expression\u003CSystem.Func\u003CeShop.Catalog.API.Model.CatalogItem, int\u003E\u003E)",
+      "symbolId": "M:System.Linq.Queryable.GroupBy\u0060\u00602(System.Linq.IQueryable{\u0060\u00600},System.Linq.Expressions.Expression{System.Func{\u0060\u00600,\u0060\u00601}})",
+      "assembly": "System.Linq.Queryable",
+      "assemblyVersion": "10.0.0.0",
+      "flowCount": 2
+    },
+    {
+      "symbol": "System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(object?, System.Type, System.Text.Json.JsonSerializerOptions?)",
+      "symbolId": "M:System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(System.Object,System.Type,System.Text.Json.JsonSerializerOptions)",
+      "assembly": "System.Text.Json",
+      "assemblyVersion": "10.0.0.0",
+      "flowCount": 2
+    },
+    {
+      "symbol": "System.Uri.IsWellFormedUriString(string?, System.UriKind)",
+      "symbolId": "M:System.Uri.IsWellFormedUriString(System.String,System.UriKind)",
+      "assembly": "System.Runtime",
+      "assemblyVersion": "10.0.0.0",
+      "flowCount": 2
+    },
+    {
+      "symbol": "Aspire.Hosting.DistributedApplication.CreateBuilder(string[])",
+      "symbolId": "M:Aspire.Hosting.DistributedApplication.CreateBuilder(System.String[])",
+      "assembly": "Aspire.Hosting",
+      "assemblyVersion": "13.6.0.0",
+      "flowCount": 1
+    },
+    {
+      "symbol": "Duende.IdentityServer.Events.GrantsRevokedEvent.GrantsRevokedEvent(string, string)",
+      "symbolId": "M:Duende.IdentityServer.Events.GrantsRevokedEvent.#ctor(System.String,System.String)",
+      "assembly": "Duende.IdentityServer",
+      "assemblyVersion": "7.0.0.0",
+      "flowCount": 1
+    },
+    {
+      "symbol": "Duende.IdentityServer.Events.UserLoginFailureEvent.UserLoginFailureEvent(string, string, bool, string)",
+      "symbolId": "M:Duende.IdentityServer.Events.UserLoginFailureEvent.#ctor(System.String,System.String,System.Boolean,System.String)",
+      "assembly": "Duende.IdentityServer",
+      "assemblyVersion": "7.0.0.0",
+      "flowCount": 1
+    },
+    {
+      "symbol": "Duende.IdentityServer.Events.UserLoginSuccessEvent.UserLoginSuccessEvent(string, string, string, bool, string)",
+      "symbolId": "M:Duende.IdentityServer.Events.UserLoginSuccessEvent.#ctor(System.String,System.String,System.String,System.Boolean,System.String)",
+      "assembly": "Duende.IdentityServer",
+      "assemblyVersion": "7.0.0.0",
+      "flowCount": 1
+    },
+    {
+      "symbol": "Duende.IdentityServer.Services.IDeviceFlowInteractionService.HandleRequestAsync(string, Duende.IdentityServer.Models.ConsentResponse)",
+      "symbolId": "M:Duende.IdentityServer.Services.IDeviceFlowInteractionService.HandleRequestAsync(System.String,Duende.IdentityServer.Models.ConsentResponse)",
+      "assembly": "Duende.IdentityServer",
+      "assemblyVersion": "7.0.0.0",
+      "flowCount": 1
+    },
+    {
+      "symbol": "Duende.IdentityServer.Services.IIdentityServerInteractionService.GetErrorContextAsync(string?)",
+      "symbolId": "M:Duende.IdentityServer.Services.IIdentityServerInteractionService.GetErrorContextAsync(System.String)",
+      "assembly": "Duende.IdentityServer",
+      "assemblyVersion": "7.0.0.0",
+      "flowCount": 1
+    },
+    {
+      "symbol": "Duende.IdentityServer.Services.IIdentityServerInteractionService.GrantConsentAsync(Duende.IdentityServer.Models.AuthorizationRequest, Duende.IdentityServer.Models.ConsentResponse, string?)",
+      "symbolId": "M:Duende.IdentityServer.Services.IIdentityServerInteractionService.GrantConsentAsync(Duende.IdentityServer.Models.AuthorizationRequest,Duende.IdentityServer.Models.ConsentResponse,System.String)",
+      "assembly": "Duende.IdentityServer",
+      "assemblyVersion": "7.0.0.0",
+      "flowCount": 1
+    },
+    {
+      "symbol": "Duende.IdentityServer.Services.IIdentityServerInteractionService.IsValidReturnUrl(string?)",
+      "symbolId": "M:Duende.IdentityServer.Services.IIdentityServerInteractionService.IsValidReturnUrl(System.String)",
+      "assembly": "Duende.IdentityServer",
+      "assemblyVersion": "7.0.0.0",
+      "flowCount": 1
+    },
+    {
+      "symbol": "Duende.IdentityServer.Services.IIdentityServerInteractionService.RevokeUserConsentAsync(string?)",
+      "symbolId": "M:Duende.IdentityServer.Services.IIdentityServerInteractionService.RevokeUserConsentAsync(System.String)",
+      "assembly": "Duende.IdentityServer",
+      "assemblyVersion": "7.0.0.0",
+      "flowCount": 1
+    },
+    {
+      "symbol": "Grpc.Core.RpcException.RpcException(Grpc.Core.Status)",
+      "symbolId": "M:Grpc.Core.RpcException.#ctor(Grpc.Core.Status)",
+      "assembly": "Grpc.Core.Api",
+      "assemblyVersion": "2.0.0.0",
+      "flowCount": 1
+    },
+    {
+      "symbol": "Grpc.Core.Status.Status(Grpc.Core.StatusCode, string)",
+      "symbolId": "M:Grpc.Core.Status.#ctor(Grpc.Core.StatusCode,System.String)",
+      "assembly": "Grpc.Core.Api",
+      "assemblyVersion": "2.0.0.0",
+      "flowCount": 1
+    },
+    {
+      "symbol": "Microsoft.AspNetCore.Http.HeaderDictionaryExtensions.Append(Microsoft.AspNetCore.Http.IHeaderDictionary, string, Microsoft.Extensions.Primitives.StringValues)",
+      "symbolId": "M:Microsoft.AspNetCore.Http.HeaderDictionaryExtensions.Append(Microsoft.AspNetCore.Http.IHeaderDictionary,System.String,Microsoft.Extensions.Primitives.StringValues)",
+      "assembly": "Microsoft.AspNetCore.Http.Abstractions",
+      "assemblyVersion": "10.0.0.0",
+      "flowCount": 1
+    },
+    {
+      "symbol": "Microsoft.AspNetCore.Identity.UserManager\u003CeShop.Identity.API.Models.ApplicationUser\u003E.FindByNameAsync(string)",
+      "symbolId": "M:Microsoft.AspNetCore.Identity.UserManager\u00601.FindByNameAsync(System.String)",
+      "assembly": "Microsoft.Extensions.Identity.Core",
+      "assemblyVersion": "10.0.0.0",
+      "flowCount": 1
+    },
+    {
+      "symbol": "Microsoft.AspNetCore.Mvc.ControllerBase.Challenge(Microsoft.AspNetCore.Authentication.AuthenticationProperties, params string[])",
+      "symbolId": "M:Microsoft.AspNetCore.Mvc.ControllerBase.Challenge(Microsoft.AspNetCore.Authentication.AuthenticationProperties,System.String[])",
+      "assembly": "Microsoft.AspNetCore.Mvc.Core",
+      "assemblyVersion": "10.0.0.0",
+      "flowCount": 1
+    },
+    {
+      "symbol": "Microsoft.EntityFrameworkCore.DbSet\u003CeShop.Catalog.API.Model.CatalogItem\u003E.Remove(eShop.Catalog.API.Model.CatalogItem)",
+      "symbolId": "M:Microsoft.EntityFrameworkCore.DbSet\u00601.Remove(\u00600)",
+      "assembly": "Microsoft.EntityFrameworkCore",
+      "assemblyVersion": "10.0.12.0",
+      "flowCount": 1
+    },
+    {
+      "symbol": "Microsoft.Extensions.Logging.ILogger.BeginScope\u003CSystem.Collections.Generic.List\u003CSystem.Collections.Generic.KeyValuePair\u003Cstring, object\u003E\u003E\u003E(System.Collections.Generic.List\u003CSystem.Collections.Generic.KeyValuePair\u003Cstring, object\u003E\u003E)",
+      "symbolId": "M:Microsoft.Extensions.Logging.ILogger.BeginScope\u0060\u00601(\u0060\u00600)",
+      "assembly": "Microsoft.Extensions.Logging.Abstractions",
+      "assemblyVersion": "10.0.0.0",
+      "flowCount": 1
+    },
+    {
+      "symbol": "StackExchange.Redis.IDatabaseAsync.KeyDeleteAsync(StackExchange.Redis.RedisKey, StackExchange.Redis.CommandFlags)",
+      "symbolId": "M:StackExchange.Redis.IDatabaseAsync.KeyDeleteAsync(StackExchange.Redis.RedisKey,StackExchange.Redis.CommandFlags)",
+      "assembly": "StackExchange.Redis",
+      "assemblyVersion": "2.0.0.0",
+      "flowCount": 1
+    },
+    {
+      "symbol": "StackExchange.Redis.IDatabaseAsync.StringSetAsync(StackExchange.Redis.RedisKey, StackExchange.Redis.RedisValue, StackExchange.Redis.Expiration, StackExchange.Redis.ValueCondition, StackExchange.Redis.CommandFlags)",
+      "symbolId": "M:StackExchange.Redis.IDatabaseAsync.StringSetAsync(StackExchange.Redis.RedisKey,StackExchange.Redis.RedisValue,StackExchange.Redis.Expiration,StackExchange.Redis.ValueCondition,StackExchange.Redis.CommandFlags)",
+      "assembly": "StackExchange.Redis",
+      "assemblyVersion": "2.0.0.0",
+      "flowCount": 1
+    },
+    {
+      "symbol": "System.Collections.Concurrent.ConcurrentQueue\u003CeShop.WebhookClient.Services.WebHookReceived\u003E.Enqueue(eShop.WebhookClient.Services.WebHookReceived)",
+      "symbolId": "M:System.Collections.Concurrent.ConcurrentQueue\u00601.Enqueue(\u00600)",
+      "assembly": "System.Collections.Concurrent",
+      "assemblyVersion": "10.0.0.0",
+      "flowCount": 1
+    },
+    {
+      "symbol": "System.ComponentModel.DataAnnotations.ValidationResult.ValidationResult(string?, System.Collections.Generic.IEnumerable\u003Cstring\u003E?)",
+      "symbolId": "M:System.ComponentModel.DataAnnotations.ValidationResult.#ctor(System.String,System.Collections.Generic.IEnumerable{System.String})",
+      "assembly": "System.ComponentModel.Annotations",
+      "assemblyVersion": "10.0.0.0",
+      "flowCount": 1
+    },
+    {
+      "symbol": "System.Enum.Parse\u003CWebhooks.API.Model.WebhookType\u003E(string, bool)",
+      "symbolId": "M:System.Enum.Parse\u0060\u00601(System.String,System.Boolean)",
+      "assembly": "System.Runtime",
+      "assemblyVersion": "10.0.0.0",
+      "flowCount": 1
+    },
+    {
+      "symbol": "System.Enum.TryParse\u003CWebhooks.API.Model.WebhookType\u003E(string?, bool, out Webhooks.API.Model.WebhookType)",
+      "symbolId": "M:System.Enum.TryParse\u0060\u00601(System.String,System.Boolean,\u0060\u00600@)",
+      "assembly": "System.Runtime",
+      "assemblyVersion": "10.0.0.0",
+      "flowCount": 1
+    },
+    {
+      "symbol": "System.Linq.Enumerable.Sum\u003CeShop.Ordering.Domain.AggregatesModel.OrderAggregate.OrderItem\u003E(System.Collections.Generic.IEnumerable\u003CeShop.Ordering.Domain.AggregatesModel.OrderAggregate.OrderItem\u003E, System.Func\u003CeShop.Ordering.Domain.AggregatesModel.OrderAggregate.OrderItem, decimal\u003E)",
+      "symbolId": "M:System.Linq.Enumerable.Sum\u0060\u00601(System.Collections.Generic.IEnumerable{\u0060\u00600},System.Func{\u0060\u00600,System.Decimal})",
+      "assembly": "System.Linq",
+      "assemblyVersion": "10.0.0.0",
+      "flowCount": 1
+    },
+    {
+      "symbol": "System.Linq.Queryable.SingleOrDefault\u003CeShop.Catalog.API.Model.CatalogItem\u003E(System.Linq.IQueryable\u003CeShop.Catalog.API.Model.CatalogItem\u003E, System.Linq.Expressions.Expression\u003CSystem.Func\u003CeShop.Catalog.API.Model.CatalogItem, bool\u003E\u003E)",
+      "symbolId": "M:System.Linq.Queryable.SingleOrDefault\u0060\u00601(System.Linq.IQueryable{\u0060\u00600},System.Linq.Expressions.Expression{System.Func{\u0060\u00600,System.Boolean}})",
+      "assembly": "System.Linq.Queryable",
+      "assemblyVersion": "10.0.0.0",
+      "flowCount": 1
+    },
+    {
+      "symbol": "System.Net.Http.Headers.HttpHeaders.Add(string, string?)",
+      "symbolId": "M:System.Net.Http.Headers.HttpHeaders.Add(System.String,System.String)",
+      "assembly": "System.Net.Http",
+      "assemblyVersion": "10.0.0.0",
+      "flowCount": 1
+    },
+    {
+      "symbol": "System.Text.Json.JsonSerializer.SerializeToUtf8Bytes\u003CeShop.Basket.API.Model.CustomerBasket\u003E(eShop.Basket.API.Model.CustomerBasket, System.Text.Json.Serialization.Metadata.JsonTypeInfo\u003CeShop.Basket.API.Model.CustomerBasket\u003E)",
+      "symbolId": "M:System.Text.Json.JsonSerializer.SerializeToUtf8Bytes\u0060\u00601(\u0060\u00600,System.Text.Json.Serialization.Metadata.JsonTypeInfo{\u0060\u00600})",
+      "assembly": "System.Text.Json",
+      "assemblyVersion": "10.0.0.0",
+      "flowCount": 1
+    }
+  ]
+}

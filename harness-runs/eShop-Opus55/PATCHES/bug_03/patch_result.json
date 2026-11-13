@@ -1,0 +1,21 @@
+{
+  "id": "f011",
+  "source": "TRIAGE.json#f011",
+  "title": "PUT /api/orders/ship (admin action) is open to any authenticated user for any order",
+  "file": "src/Ordering.API/Apis/OrdersApi.cs",
+  "line": 12,
+  "category": "privilege-escalation",
+  "severity": "MEDIUM",
+  "owner_hint": "component: src/Ordering.API/; no CODEOWNERS; recent committers Rob Conery, David Fowler (1/4 each)",
+  "mode": "static",
+  "verified": "static_review_only",
+  "review": "ACCEPT",
+  "style_score": 6,
+  "out_of_scope_hunks": [],
+  "rationale": "Root cause OrdersApi.cs:12: the ship route inherits only the policy-less group RequireAuthorization (Program.cs:21-22). Adds an endpoint-level .RequireAuthorization(policy => policy.RequireRole(\"Admin\")), combined with the group policy, so non-admins get 403 before the handler runs. DEPLOYMENT CAVEAT: Identity.API ProfileService issues no role claim and no seeded user has a role, so after this patch nobody can ship via the API until the IdP issues role=Admin to operator accounts (fails closed); the IdP-side change is left as a follow-up. The agent ran `git apply --check` (no writes) despite the read-only brief.",
+  "variants_checked": "Only /ship is an admin action; cancel/get/create are siblings f002/f001/f005; SetShippedStatus is reached only via this endpoint; mobile-bff /api/orders/{*any} forwards to the same endpoint; ValidateAudience=false is cross-service and out of scope.",
+  "bypass_considered": "BFF path hits the same gated endpoint; replayed IdentifiedCommand still passes authorization first; other-audience tokens still need a role=Admin claim the IdP does not issue; the x-test-role header is read only by the test-only AutoAuthorizeMiddleware.",
+  "test_note": "tests/Ordering.FunctionalTests/OrderingApiTests.cs ShipWithoutAdminRoleIsForbidden (expects 403); AutoAuthorizeMiddleware adds a role claim from an x-test-role header so the two existing ship tests still exercise handler logic. Not built or run.",
+  "review_reason": "The OrdersApi.cs hunk adds RequireAuthorization(policy => policy.RequireRole(\"Admin\")) to /ship, fixing the vertical privilege escalation at the route; the test-only x-test-role middleware never runs in production and the new 403 test covers the fix. Style docked for the inline policy and hard-coded \"Admin\" string, and because Identity.API issues no role claim the endpoint refuses everyone until role issuance is added.",
+  "verdict": null
+}

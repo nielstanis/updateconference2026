@@ -1,0 +1,252 @@
+{
+  "summary": {
+    "entitiesWrittenWithUntrustedData": 5,
+    "entitiesAlsoRead": 5,
+    "readSitesTotal": 24,
+    "writeSitesNamingNoEntity": 7,
+    "readSitesNamingNoEntity": 0,
+    "elapsedMs": 373,
+    "note": "No path is claimed between a write and a read. The write side is tainted and comes from the flow set; the read side is every call site in scope and is not known to be tainted. An entity appearing here means untrusted input reaches storage and that storage is read somewhere, which is worth a look, not a finding."
+  },
+  "entities": [
+    {
+      "entity": "CatalogItem",
+      "entityType": "eShop.Catalog.API.Model.CatalogItem",
+      "writes": [
+        {
+          "symbol": "Microsoft.EntityFrameworkCore.DbSet\u003CeShop.Catalog.API.Model.CatalogItem\u003E.Add(eShop.Catalog.API.Model.CatalogItem)",
+          "entryPointDisplay": "eShop.Catalog.API.CatalogApi.CreateItem(CatalogServices, eShop.Catalog.API.Model.CatalogItem)",
+          "entryPointId": "M:eShop.Catalog.API.CatalogApi.CreateItem(CatalogServices,eShop.Catalog.API.Model.CatalogItem)",
+          "sourceKind": "Body",
+          "project": "Catalog.API",
+          "file": "/home/niels/github/UpdateConference2026/eShop/src/Catalog.API/Apis/CatalogApi.cs",
+          "line": 433,
+          "snippet": "services.Context.CatalogItems.Add(item)"
+        }
+      ],
+      "reads": [
+        {
+          "symbol": "System.Linq.IQueryable\u003CeShop.Catalog.API.Model.CatalogItem\u003E.ToListAsync\u003CeShop.Catalog.API.Model.CatalogItem\u003E(System.Threading.CancellationToken)",
+          "project": "Catalog.API",
+          "file": "/home/niels/github/UpdateConference2026/eShop/src/Catalog.API/Apis/CatalogApi.cs",
+          "line": 159,
+          "snippet": "root .Include(ci =\u003E ci.CatalogBrand) .OrderBy(c =\u003E c.Name) .Skip(pageSize * pageIndex) .Take(pageSize) .ToListAsync()"
+        },
+        {
+          "symbol": "System.Linq.IQueryable\u003CeShop.Catalog.API.Model.CatalogItem\u003E.ToListAsync\u003CeShop.Catalog.API.Model.CatalogItem\u003E(System.Threading.CancellationToken)",
+          "project": "Catalog.API",
+          "file": "/home/niels/github/UpdateConference2026/eShop/src/Catalog.API/Apis/CatalogApi.cs",
+          "line": 212,
+          "snippet": "services.Context.CatalogItems.Where(item =\u003E ids.Contains(item.Id)).ToListAsync()"
+        },
+        {
+          "symbol": "System.Linq.IQueryable\u003CeShop.Catalog.API.Model.CatalogItem\u003E.SingleOrDefaultAsync\u003CeShop.Catalog.API.Model.CatalogItem\u003E(System.Linq.Expressions.Expression\u003CSystem.Func\u003CeShop.Catalog.API.Model.CatalogItem, bool\u003E\u003E, System.Threading.CancellationToken)",
+          "project": "Catalog.API",
+          "file": "/home/niels/github/UpdateConference2026/eShop/src/Catalog.API/Apis/CatalogApi.cs",
+          "line": 229,
+          "snippet": "services.Context.CatalogItems.Include(ci =\u003E ci.CatalogBrand).SingleOrDefaultAsync(ci =\u003E ci.Id == id)"
+        },
+        {
+          "symbol": "Microsoft.EntityFrameworkCore.DbSet\u003CeShop.Catalog.API.Model.CatalogItem\u003E.FindAsync(params object?[]?)",
+          "project": "Catalog.API",
+          "file": "/home/niels/github/UpdateConference2026/eShop/src/Catalog.API/Apis/CatalogApi.cs",
+          "line": 256,
+          "snippet": "context.CatalogItems.FindAsync(id)"
+        },
+        {
+          "symbol": "System.Linq.IQueryable\u003CeShop.Catalog.API.Model.CatalogItem\u003E.ToListAsync\u003CeShop.Catalog.API.Model.CatalogItem\u003E(System.Threading.CancellationToken)",
+          "project": "Catalog.API",
+          "file": "/home/niels/github/UpdateConference2026/eShop/src/Catalog.API/Apis/CatalogApi.cs",
+          "line": 329,
+          "snippet": "services.Context.CatalogItems .Where(c =\u003E c.Embedding != null) .OrderBy(c =\u003E c.Embedding!.CosineDistance(vector)) .Skip(pageSize * pageIndex) .Take(pageSize) .T ..."
+        },
+        {
+          "symbol": "System.Linq.IQueryable\u003CeShop.Catalog.API.Model.CatalogItem\u003E.SingleOrDefaultAsync\u003CeShop.Catalog.API.Model.CatalogItem\u003E(System.Linq.Expressions.Expression\u003CSystem.Func\u003CeShop.Catalog.API.Model.CatalogItem, bool\u003E\u003E, System.Threading.CancellationToken)",
+          "project": "Catalog.API",
+          "file": "/home/niels/github/UpdateConference2026/eShop/src/Catalog.API/Apis/CatalogApi.cs",
+          "line": 379,
+          "snippet": "services.Context.CatalogItems.SingleOrDefaultAsync(i =\u003E i.Id == id)"
+        },
+        {
+          "symbol": "Microsoft.EntityFrameworkCore.DbSet\u003CeShop.Catalog.API.Model.CatalogItem\u003E.Find(params object?[]?)",
+          "project": "Catalog.API",
+          "file": "/home/niels/github/UpdateConference2026/eShop/src/Catalog.API/IntegrationEvents/EventHandling/OrderStatusChangedToAwaitingValidationIntegrationEventHandler.cs",
+          "line": 17,
+          "snippet": "catalogContext.CatalogItems.Find(orderStockItem.ProductId)"
+        },
+        {
+          "symbol": "Microsoft.EntityFrameworkCore.DbSet\u003CeShop.Catalog.API.Model.CatalogItem\u003E.Find(params object?[]?)",
+          "project": "Catalog.API",
+          "file": "/home/niels/github/UpdateConference2026/eShop/src/Catalog.API/IntegrationEvents/EventHandling/OrderStatusChangedToPaidIntegrationEventHandler.cs",
+          "line": 15,
+          "snippet": "catalogContext.CatalogItems.Find(orderStockItem.ProductId)"
+        }
+      ]
+    },
+    {
+      "entity": "WebhookSubscription",
+      "entityType": "Webhooks.API.Model.WebhookSubscription",
+      "writes": [
+        {
+          "symbol": "Microsoft.EntityFrameworkCore.DbContext.Add\u003CWebhooks.API.Model.WebhookSubscription\u003E(Webhooks.API.Model.WebhookSubscription)",
+          "entryPointDisplay": "POST /api/webhooks",
+          "entryPointId": "M:Webhooks.API.WebHooksApi.MapWebHooksApiV1(Microsoft.AspNetCore.Routing.IEndpointRouteBuilder)~WebHooksApi.cs:35:26",
+          "sourceKind": "Body",
+          "project": "Webhooks.API",
+          "file": "/home/niels/github/UpdateConference2026/eShop/src/Webhooks.API/Apis/WebHooksApi.cs",
+          "line": 54,
+          "snippet": "context.Add(subscription)"
+        }
+      ],
+      "reads": [
+        {
+          "symbol": "System.Linq.IQueryable\u003CWebhooks.API.Model.WebhookSubscription\u003E.ToListAsync\u003CWebhooks.API.Model.WebhookSubscription\u003E(System.Threading.CancellationToken)",
+          "project": "Webhooks.API",
+          "file": "/home/niels/github/UpdateConference2026/eShop/src/Webhooks.API/Apis/WebHooksApi.cs",
+          "line": 16,
+          "snippet": "context.Subscriptions.Where(s =\u003E s.UserId == userId).ToListAsync()"
+        },
+        {
+          "symbol": "System.Linq.IQueryable\u003CWebhooks.API.Model.WebhookSubscription\u003E.SingleOrDefaultAsync\u003CWebhooks.API.Model.WebhookSubscription\u003E(System.Linq.Expressions.Expression\u003CSystem.Func\u003CWebhooks.API.Model.WebhookSubscription, bool\u003E\u003E, System.Threading.CancellationToken)",
+          "project": "Webhooks.API",
+          "file": "/home/niels/github/UpdateConference2026/eShop/src/Webhooks.API/Apis/WebHooksApi.cs",
+          "line": 26,
+          "snippet": "context.Subscriptions .SingleOrDefaultAsync(s =\u003E s.Id == id \u0026\u0026 s.UserId == userId)"
+        },
+        {
+          "symbol": "System.Linq.IQueryable\u003CWebhooks.API.Model.WebhookSubscription\u003E.SingleOrDefaultAsync\u003CWebhooks.API.Model.WebhookSubscription\u003E(System.Linq.Expressions.Expression\u003CSystem.Func\u003CWebhooks.API.Model.WebhookSubscription, bool\u003E\u003E, System.Threading.CancellationToken)",
+          "project": "Webhooks.API",
+          "file": "/home/niels/github/UpdateConference2026/eShop/src/Webhooks.API/Apis/WebHooksApi.cs",
+          "line": 72,
+          "snippet": "context.Subscriptions.SingleOrDefaultAsync(s =\u003E s.Id == id \u0026\u0026 s.UserId == userId)"
+        },
+        {
+          "symbol": "System.Linq.IQueryable\u003CWebhooks.API.Model.WebhookSubscription\u003E.ToListAsync\u003CWebhooks.API.Model.WebhookSubscription\u003E(System.Threading.CancellationToken)",
+          "project": "Webhooks.API",
+          "file": "/home/niels/github/UpdateConference2026/eShop/src/Webhooks.API/Services/WebhooksRetriever.cs",
+          "line": 7,
+          "snippet": "db.Subscriptions.Where(s =\u003E s.Type == type).ToListAsync()"
+        }
+      ]
+    },
+    {
+      "entity": "Buyer",
+      "entityType": "eShop.Ordering.Domain.AggregatesModel.BuyerAggregate.Buyer",
+      "writes": [
+        {
+          "symbol": "Microsoft.EntityFrameworkCore.DbSet\u003CeShop.Ordering.Domain.AggregatesModel.BuyerAggregate.Buyer\u003E.Add(eShop.Ordering.Domain.AggregatesModel.BuyerAggregate.Buyer)",
+          "entryPointDisplay": "eShop.Ordering.API.Application.DomainEventHandlers.ValidateOrAddBuyerAggregateWhenOrderStartedDomainEventHandler.Handle(eShop.Ordering.Domain.Events.OrderStartedDomainEvent, System.Threading.CancellationToken)",
+          "entryPointId": "M:eShop.Ordering.API.Application.DomainEventHandlers.ValidateOrAddBuyerAggregateWhenOrderStartedDomainEventHandler.Handle(eShop.Ordering.Domain.Events.OrderStartedDomainEvent,System.Threading.CancellationToken)",
+          "sourceKind": "Message",
+          "project": "Ordering.API",
+          "file": "/home/niels/github/UpdateConference2026/eShop/src/Ordering.Infrastructure/Repositories/BuyerRepository.cs",
+          "line": 18,
+          "snippet": "_context.Buyers                 .Add(buyer)"
+        }
+      ],
+      "reads": [
+        {
+          "symbol": "System.Linq.IQueryable\u003CeShop.Ordering.Domain.AggregatesModel.BuyerAggregate.Buyer\u003E.SingleOrDefaultAsync\u003CeShop.Ordering.Domain.AggregatesModel.BuyerAggregate.Buyer\u003E(System.Threading.CancellationToken)",
+          "project": "Ordering.Infrastructure",
+          "file": "/home/niels/github/UpdateConference2026/eShop/src/Ordering.Infrastructure/Repositories/BuyerRepository.cs",
+          "line": 35,
+          "snippet": "_context.Buyers .Include(b =\u003E b.PaymentMethods) .Where(b =\u003E b.IdentityGuid == identity) .SingleOrDefaultAsync()"
+        },
+        {
+          "symbol": "System.Linq.IQueryable\u003CeShop.Ordering.Domain.AggregatesModel.BuyerAggregate.Buyer\u003E.SingleOrDefaultAsync\u003CeShop.Ordering.Domain.AggregatesModel.BuyerAggregate.Buyer\u003E(System.Threading.CancellationToken)",
+          "project": "Ordering.Infrastructure",
+          "file": "/home/niels/github/UpdateConference2026/eShop/src/Ordering.Infrastructure/Repositories/BuyerRepository.cs",
+          "line": 45,
+          "snippet": "_context.Buyers .Include(b =\u003E b.PaymentMethods) .Where(b =\u003E b.Id == id) .SingleOrDefaultAsync()"
+        }
+      ]
+    },
+    {
+      "entity": "Order",
+      "entityType": "eShop.Ordering.Domain.AggregatesModel.OrderAggregate.Order",
+      "writes": [
+        {
+          "symbol": "Microsoft.EntityFrameworkCore.DbSet\u003CeShop.Ordering.Domain.AggregatesModel.OrderAggregate.Order\u003E.Add(eShop.Ordering.Domain.AggregatesModel.OrderAggregate.Order)",
+          "entryPointDisplay": "eShop.Ordering.API.Application.Commands.CreateOrderCommandHandler.Handle(eShop.Ordering.API.Application.Commands.CreateOrderCommand, System.Threading.CancellationToken)",
+          "entryPointId": "M:eShop.Ordering.API.Application.Commands.CreateOrderCommandHandler.Handle(eShop.Ordering.API.Application.Commands.CreateOrderCommand,System.Threading.CancellationToken)",
+          "sourceKind": "Message",
+          "project": "Ordering.API",
+          "file": "/home/niels/github/UpdateConference2026/eShop/src/Ordering.Infrastructure/Repositories/OrderRepository.cs",
+          "line": 17,
+          "snippet": "_context.Orders.Add(order)"
+        }
+      ],
+      "reads": [
+        {
+          "symbol": "System.Linq.IQueryable\u003CeShop.Ordering.Domain.AggregatesModel.OrderAggregate.Order\u003E.FirstOrDefaultAsync\u003CeShop.Ordering.Domain.AggregatesModel.OrderAggregate.Order\u003E(System.Linq.Expressions.Expression\u003CSystem.Func\u003CeShop.Ordering.Domain.AggregatesModel.OrderAggregate.Order, bool\u003E\u003E, System.Threading.CancellationToken)",
+          "project": "Ordering.API",
+          "file": "/home/niels/github/UpdateConference2026/eShop/src/Ordering.API/Application/Queries/OrderQueries.cs",
+          "line": 8,
+          "snippet": "context.Orders .Include(o =\u003E o.OrderItems) .FirstOrDefaultAsync(o =\u003E o.Id == id)"
+        },
+        {
+          "symbol": "Microsoft.EntityFrameworkCore.DbSet\u003CeShop.Ordering.Domain.AggregatesModel.OrderAggregate.Order\u003E.FindAsync(params object?[]?)",
+          "project": "Ordering.Infrastructure",
+          "file": "/home/niels/github/UpdateConference2026/eShop/src/Ordering.Infrastructure/Repositories/OrderRepository.cs",
+          "line": 23,
+          "snippet": "_context.Orders.FindAsync(orderId)"
+        }
+      ]
+    },
+    {
+      "entity": "IntegrationEventLogEntry",
+      "entityType": "eShop.IntegrationEventLogEF.IntegrationEventLogEntry",
+      "writes": [
+        {
+          "symbol": "Microsoft.EntityFrameworkCore.DbSet\u003CeShop.IntegrationEventLogEF.IntegrationEventLogEntry\u003E.Add(eShop.IntegrationEventLogEF.IntegrationEventLogEntry)",
+          "entryPointDisplay": "eShop.Ordering.API.Application.Commands.CreateOrderCommandHandler.Handle(eShop.Ordering.API.Application.Commands.CreateOrderCommand, System.Threading.CancellationToken)",
+          "entryPointId": "M:eShop.Ordering.API.Application.Commands.CreateOrderCommandHandler.Handle(eShop.Ordering.API.Application.Commands.CreateOrderCommand,System.Threading.CancellationToken)",
+          "sourceKind": "Message",
+          "project": "Ordering.API",
+          "file": "/home/niels/github/UpdateConference2026/eShop/src/IntegrationEventLogEF/Services/IntegrationEventLogService.cs",
+          "line": 41,
+          "snippet": "_context.Set\u003CIntegrationEventLogEntry\u003E().Add(eventLogEntry)"
+        },
+        {
+          "symbol": "Microsoft.EntityFrameworkCore.DbSet\u003CeShop.IntegrationEventLogEF.IntegrationEventLogEntry\u003E.Add(eShop.IntegrationEventLogEF.IntegrationEventLogEntry)",
+          "entryPointDisplay": "eShop.Ordering.API.Application.DomainEventHandlers.OrderStatusChangedToAwaitingValidationDomainEventHandler.Handle(eShop.Ordering.Domain.Events.OrderStatusChangedToAwaitingValidationDomainEvent, System.Threading.CancellationToken)",
+          "entryPointId": "M:eShop.Ordering.API.Application.DomainEventHandlers.OrderStatusChangedToAwaitingValidationDomainEventHandler.Handle(eShop.Ordering.Domain.Events.OrderStatusChangedToAwaitingValidationDomainEvent,System.Threading.CancellationToken)",
+          "sourceKind": "Message",
+          "project": "Ordering.API",
+          "file": "/home/niels/github/UpdateConference2026/eShop/src/IntegrationEventLogEF/Services/IntegrationEventLogService.cs",
+          "line": 41,
+          "snippet": "_context.Set\u003CIntegrationEventLogEntry\u003E().Add(eventLogEntry)"
+        },
+        {
+          "symbol": "Microsoft.EntityFrameworkCore.DbSet\u003CeShop.IntegrationEventLogEF.IntegrationEventLogEntry\u003E.Add(eShop.IntegrationEventLogEF.IntegrationEventLogEntry)",
+          "entryPointDisplay": "eShop.Ordering.API.Application.DomainEventHandlers.OrderStatusChangedToPaidDomainEventHandler.Handle(eShop.Ordering.Domain.Events.OrderStatusChangedToPaidDomainEvent, System.Threading.CancellationToken)",
+          "entryPointId": "M:eShop.Ordering.API.Application.DomainEventHandlers.OrderStatusChangedToPaidDomainEventHandler.Handle(eShop.Ordering.Domain.Events.OrderStatusChangedToPaidDomainEvent,System.Threading.CancellationToken)",
+          "sourceKind": "Message",
+          "project": "Ordering.API",
+          "file": "/home/niels/github/UpdateConference2026/eShop/src/IntegrationEventLogEF/Services/IntegrationEventLogService.cs",
+          "line": 41,
+          "snippet": "_context.Set\u003CIntegrationEventLogEntry\u003E().Add(eventLogEntry)"
+        },
+        {
+          "symbol": "Microsoft.EntityFrameworkCore.DbSet\u003CeShop.IntegrationEventLogEF.IntegrationEventLogEntry\u003E.Add(eShop.IntegrationEventLogEF.IntegrationEventLogEntry)",
+          "entryPointDisplay": "eShop.Ordering.API.Application.DomainEventHandlers.ValidateOrAddBuyerAggregateWhenOrderStartedDomainEventHandler.Handle(eShop.Ordering.Domain.Events.OrderStartedDomainEvent, System.Threading.CancellationToken)",
+          "entryPointId": "M:eShop.Ordering.API.Application.DomainEventHandlers.ValidateOrAddBuyerAggregateWhenOrderStartedDomainEventHandler.Handle(eShop.Ordering.Domain.Events.OrderStartedDomainEvent,System.Threading.CancellationToken)",
+          "sourceKind": "Message",
+          "project": "Ordering.API",
+          "file": "/home/niels/github/UpdateConference2026/eShop/src/IntegrationEventLogEF/Services/IntegrationEventLogService.cs",
+          "line": 41,
+          "snippet": "_context.Set\u003CIntegrationEventLogEntry\u003E().Add(eventLogEntry)"
+        }
+      ],
+      "reads": [
+        {
+          "symbol": "System.Linq.IQueryable\u003CeShop.IntegrationEventLogEF.IntegrationEventLogEntry\u003E.ToListAsync\u003CeShop.IntegrationEventLogEF.IntegrationEventLogEntry\u003E(System.Threading.CancellationToken)",
+          "project": "IntegrationEventLogEF",
+          "file": "/home/niels/github/UpdateConference2026/eShop/src/IntegrationEventLogEF/Services/IntegrationEventLogService.cs",
+          "line": 21,
+          "snippet": "_context.Set\u003CIntegrationEventLogEntry\u003E() .Where(e =\u003E e.TransactionId == transactionId \u0026\u0026 e.State == EventStateEnum.NotPublished) .ToListAsync()"
+        }
+      ]
+    }
+  ]
+}

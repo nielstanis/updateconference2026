@@ -1,0 +1,115 @@
+--- a/src/Ordering.Domain/AggregatesModel/OrderAggregate/OrderItem.cs
++++ b/src/Ordering.Domain/AggregatesModel/OrderAggregate/OrderItem.cs
+@@ -23,11 +23,19 @@
+     public OrderItem(int productId, string productName, decimal unitPrice, decimal discount, string pictureUrl, int units = 1)
+     {
+         if (units <= 0)
+         {
+             throw new OrderingDomainException("Invalid number of units");
+         }
+ 
++        if (unitPrice <= 0)
++        {
++            throw new OrderingDomainException("Invalid unit price");
++        }
++
++        if (discount < 0)
++        {
++            throw new OrderingDomainException("Discount is not valid");
++        }
++
+         if ((unitPrice * units) < discount)
+         {
+             throw new OrderingDomainException("The total of order item is lower than applied discount");
+         }
+--- a/src/Ordering.API/Application/Validations/CreateOrderCommandValidator.cs
++++ b/src/Ordering.API/Application/Validations/CreateOrderCommandValidator.cs
+@@ -14,7 +14,8 @@
+         RuleFor(command => command.CardSecurityNumber).NotEmpty().Length(3);
+         RuleFor(command => command.CardTypeId).NotEmpty();
+         RuleFor(command => command.OrderItems).Must(ContainOrderItems).WithMessage("No order items found");
++        RuleFor(command => command.OrderItems).Must(HavePositiveUnitPrices).WithMessage("All order items must have a positive unit price and a non-negative discount");
+ 
+         if (logger.IsEnabled(LogLevel.Trace))
+         {
+             logger.LogTrace("INSTANCE CREATED - {ClassName}", GetType().Name);
+         }
+@@ -29,5 +30,10 @@
+     private bool ContainOrderItems(IEnumerable<OrderItemDTO> orderItems)
+     {
+         return orderItems.Any();
+     }
++
++    private bool HavePositiveUnitPrices(IEnumerable<OrderItemDTO> orderItems)
++    {
++        return orderItems.All(item => item.UnitPrice > 0 && item.Discount >= 0);
++    }
+ }
+--- a/tests/Ordering.UnitTests/Domain/OrderAggregateTest.cs
++++ b/tests/Ordering.UnitTests/Domain/OrderAggregateTest.cs
+@@ -170,9 +170,67 @@
+         var expectedResult = 1;
+ 
+         //Act         
+         fakeOrder.AddDomainEvent(@fakeEvent);
+         fakeOrder.RemoveDomainEvent(@fakeEvent);
+         //Assert
+         Assert.HasCount(expectedResult, fakeOrder.DomainEvents);
+     }
++
++    [TestMethod]
++    public void Invalid_unit_price_zero()
++    {
++        //Arrange    
++        var productId = 1;
++        var productName = "FakeProductName";
++        var unitPrice = 0;
++        var discount = 0;
++        var pictureUrl = "FakeUrl";
++        var units = 5;
++
++        //Act - Assert
++        Assert.ThrowsExactly<OrderingDomainException>(() => new OrderItem(productId, productName, unitPrice, discount, pictureUrl, units));
++    }
++
++    [TestMethod]
++    public void Invalid_negative_unit_price()
++    {
++        //Arrange    
++        var productId = 1;
++        var productName = "FakeProductName";
++        var unitPrice = -12;
++        var discount = 0;
++        var pictureUrl = "FakeUrl";
++        var units = 5;
++
++        //Act - Assert
++        Assert.ThrowsExactly<OrderingDomainException>(() => new OrderItem(productId, productName, unitPrice, discount, pictureUrl, units));
++    }
++
++    [TestMethod]
++    public void Invalid_negative_discount_on_creation()
++    {
++        //Arrange    
++        var productId = 1;
++        var productName = "FakeProductName";
++        var unitPrice = 12;
++        var discount = -1;
++        var pictureUrl = "FakeUrl";
++        var units = 5;
++
++        //Act - Assert
++        Assert.ThrowsExactly<OrderingDomainException>(() => new OrderItem(productId, productName, unitPrice, discount, pictureUrl, units));
++    }
++
++    [TestMethod]
++    public void when_adding_item_with_invalid_price_to_order_then_throws()
++    {
++        //Arrange
++        var address = new AddressBuilder().Build();
++        var order = new OrderBuilder(address);
++
++        //Act - Assert
++        Assert.ThrowsExactly<OrderingDomainException>(() => order.AddOne(1, "cup", 0, 0, string.Empty));
++    }
+ }

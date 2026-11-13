@@ -1,0 +1,98 @@
+--- a/.gitignore
++++ b/.gitignore
+@@ -244,6 +244,7 @@
+ *.dbproj.schemaview
+ *.jfm
+ *.pfx
++tempkey.jwk
+ *.publishsettings
+ orleans.codegen.cs
+ 
+--- a/src/Identity.API/Identity.API.csproj
++++ b/src/Identity.API/Identity.API.csproj
+@@ -46,11 +46,6 @@
+   </ItemGroup>
+   
+   <ItemGroup>
+-    <!-- Don't use this in production -->
+-    <Content Include="tempkey.jwk" CopyToOutputDirectory="PreserveNewest" />
+-  </ItemGroup>
+-
+-  <ItemGroup>
+     <Compile Include="..\Shared\MigrateDbContextExtensions.cs" Link="Extensions\MigrateDbContextExtensions.cs" />
+     <Compile Include="..\Shared\ActivityExtensions.cs" Link="Extensions\ActivityExtensions.cs" />
+   </ItemGroup>
+--- a/src/Identity.API/Program.cs
++++ b/src/Identity.API/Program.cs
+@@ -1,4 +1,6 @@
+-﻿var builder = WebApplication.CreateBuilder(args);
++﻿using System.Security.Cryptography.X509Certificates;
++
++var builder = WebApplication.CreateBuilder(args);
+ 
+ builder.AddServiceDefaults();
+ 
+@@ -15,7 +17,7 @@
+         .AddEntityFrameworkStores<ApplicationDbContext>()
+         .AddDefaultTokenProviders();
+ 
+-builder.Services.AddIdentityServer(options =>
++var identityServer = builder.Services.AddIdentityServer(options =>
+ {
+     //options.IssuerUri = "null";
+     options.Authentication.CookieLifetime = TimeSpan.FromHours(2);
+@@ -32,9 +34,20 @@
+ .AddInMemoryApiScopes(Config.GetApiScopes())
+ .AddInMemoryApiResources(Config.GetApis())
+ .AddInMemoryClients(Config.GetClients(builder.Configuration))
+-.AddAspNetIdentity<ApplicationUser>()
+-// TODO: Not recommended for production - you need to store your key material somewhere secure
+-.AddDeveloperSigningCredential();
++.AddAspNetIdentity<ApplicationUser>();
++
++if (builder.Environment.IsDevelopment())
++{
++    // Development-only key generated in memory at startup; never persisted or committed.
++    identityServer.AddDeveloperSigningCredential(persistKey: false);
++}
++else
++{
++    // Signing material must come from the host's secret store, never from source control.
++    var certificatePath = builder.Configuration.GetRequiredValue("IdentityServer:SigningCertificatePath");
++    var certificatePassword = builder.Configuration["IdentityServer:SigningCertificatePassword"];
++    identityServer.AddSigningCredential(X509CertificateLoader.LoadPkcs12FromFile(certificatePath, certificatePassword));
++}
+ 
+ builder.Services.AddTransient<IProfileService, ProfileService>();
+ builder.Services.AddTransient<ILoginService<ApplicationUser>, EFLoginService>();
+--- a/tests/Application.UnitTests/IdentityConfigurationTests.cs
++++ b/tests/Application.UnitTests/IdentityConfigurationTests.cs
+@@ -1,3 +1,4 @@
++﻿using System.Runtime.CompilerServices;
+ using eShop.Identity.API.Configuration;
+ using eShop.Identity.API.Services;
+ using Microsoft.Extensions.Configuration;
+@@ -48,4 +49,18 @@
+ 
+         Assert.AreEqual(expected, service.ExtractRedirectUriFromReturnUrl(returnUrl));
+     }
++
++    [TestMethod]
++    public void IdentityApiDoesNotContainASigningKeyFile()
++    {
++        var identityApiDirectory = Path.GetFullPath(
++            Path.Combine(Path.GetDirectoryName(SourceFilePath())!, "..", "..", "src", "Identity.API"));
++
++        CollectionAssert.AreEqual(
++            Array.Empty<string>(),
++            Directory.GetFiles(identityApiDirectory, "*.jwk"),
++            "Token-signing keys must be supplied by the host, not committed to the repository.");
++    }
++
++    private static string SourceFilePath([CallerFilePath] string path = "") => path;
+ }
+--- a/src/Identity.API/tempkey.jwk
++++ /dev/null
+@@ -1 +0,0 @@
+-{"AdditionalData":{},"Alg":"RS256","Crv":null,"D":"Pf7_o1LMYwcXEWHkZ54kP4ItOYu0lhOOn4vc88XYg9XmDR8DcPxyvRLWGIuV-jSioMP59HIN5yHeDrQbG3tY2lTUynRYHdwOFVQAzQ3LpGSF4eKfMOSDU05HkWv-w2E1XWogVFAafv2F4FHeYtqWAzjjcjlYy_n0GkCcjBvIneuVqWNZQ9-eBt28cApruVfTeoE01Liz-ww4T0CQ9ujJQf9zUxhYb6WWMQ1U-A0qGK9hmh00Ymf-rxS2HuZ9o8Bps9YEvy7rCBfy6nSMB8T2I2SNCHDdlR8Oi-j_l0VQyidnfnRY0_Lio8uSKDTiUL_vBKyCREAfCEHM6TCpdixR-Q","DP":"CR-Lyp15RyQV_TmxXq2EX8mntgdnT6ROePrkNlRCSXH-AAVJQ-24OlBH0qzehzMWI9Yk72bhqZdBIC1W8SGsTxf6T3xp-MwINJwHgYftX-D9RDQCYS5o6_gFW1775Of43Zv8tsjjwwkxUKHiwH8ImbEyqv2qVhdb_yMlgFwtXCc","DQ":"ulVv9t13HB8K8jKLomSoINMaFtNGN0LS6wY93JKtwGCjcvV5lwXRiHhq0AbDOrJggg-zZVedlbXpWRokMI-hLTHc9TguYEfiJ11DvgldTB5MUfMxHau0L8ofS5YAuTSEgg4EPIrWgvVEF1ljHwLQtDSBB3CvI6UHF7rXXy9cwIk","E":"AQAB","K":null,"KeyId":"F7383A0ED7CD960EF473FD2851803938","Kid":"F7383A0ED7CD960EF473FD2851803938","Kty":"RSA","N":"p3jTfCB0YsKpqJ6CNJi0tVmFBmoyI_D7QLLsbB-TCZ3-HIXDEr_k6zKb2GJ_QP7mncdSnYpJWSv7fWPfM0bL3A6NaMLF9MDjbfD5ti9irEW1dzBvIK0YjWmfks3eq6Mb2mM6PZtNEnoCqEzjgcRkDR1vtClEzUjs1E_i7TB-Y0J_aTYpLf-eN7yA1Obu8zMVRSSVBIwG5W5jljzA2nxk2u9qeDq8Sn0qgGwbX8cyYGQoVWBOPx7zap4cNcL6dHILjnlVrHqAUW9NVXtBWlVDP1Gvnm2zhCVJT_gW1twNhswyFULGVQH1ZWI0NukEqHG6LpN8Ti7Hx-K8MEEv_vQBYw","Oth":null,"P":"1XZw-ufz_e5fWroi8naLluW5Ow1f-Ems8oG1WYUJkc1Q4vZWklLRqlEsDH48gqk0dEgXLE9tz0dDTo03tAPJmR1InFpusyLp2XPPJ4XLhWFCMDDb0xr4oayV1XDOi3U9eKERtcASo1IDo8zDEuY8NHFdJlNKpfJ7P0JSB0hEwoc","Q":"yNg4tO9PVrwQ0CaouP0jniFouHAEfZMyJ0vVM1xPVim7jeKysOJi79lHO7OWNSABB3hY8dLcMSiKxS3BaU0Q2ns9Gw-NLR6eqT0BN9Nzh-a0sa0iuPUWCPgsWdrqjIf4FBX0Ra-6q7_LxuWCncehUAtoLFWMkcOrEj03Gwz1lUU","QI":"UWdYA2qY622GL97_tPvrgk1VWSqoO2a0-TlGu0gK51T_Z1hqLwzG9QpTujoxnRU7Js_QUe_9cIEO72N0qliEm6A-MClM-5LUA9XleyAosb1cblLjAPqT9gfGbRRAbB3Aj3YwsgASGUiSpGVfaUuXn-OnuLoidZQXw7w9xcPuxMo","Use":null,"X":null,"X5t":null,"X5tS256":null,"X5u":null,"Y":null,"KeySize":2048,"HasPrivateKey":true,"CryptoProviderFactory":{"CryptoProviderCache":{},"CustomCryptoProvider":null,"CacheSignatureProviders":true,"SignatureProviderObjectPoolCacheSize":16}}
+\ No newline at end of file

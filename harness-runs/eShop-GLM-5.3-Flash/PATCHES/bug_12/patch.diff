@@ -1,0 +1,201 @@
+--- a/src/Webhooks.API/Services/WebhooksSender.cs
++++ b/src/Webhooks.API/Services/WebhooksSender.cs
+@@ -1,35 +1,112 @@
+-using System.Net;
+-using System.Net.Sockets;
+-
+ namespace Webhooks.API.Services;
+ 
++using System.Net;
++using System.Net.Sockets;
++
+ public class WebhooksSender(IHttpClientFactory httpClientFactory, ILogger<WebhooksSender> logger) : IWebhooksSender
+ {
+-    public async Task SendAll(IEnumerable<WebhookSubscription> receivers, WebhookData data)
+-    {
+-        var client = httpClientFactory.CreateClient();
+-        var json = JsonSerializer.Serialize(data);
+-        var tasks = receivers.Select(r => OnSendData(r, json, client));
+-        await Task.WhenAll(tasks);
+-    }
++    public const string WebhooksSenderClientName = "webhooks-sender";
++
++    public async Task SendAll(IEnumerable<WebhookSubscription> receivers, WebhookData data)
++    {
++        var client = httpClientFactory.CreateClient(WebhooksSenderClientName);
++        var json = JsonSerializer.Serialize(data);
++        var tasks = receivers.Select(r => OnSendData(r, json, client));
++        await Task.WhenAll(tasks);
++    }
++
++    private async Task OnSendData(WebhookSubscription subs, string jsonData, HttpClient client)
++    {
++        if (!Uri.TryCreate(subs.DestUrl, UriKind.Absolute, out var destination) || !await IsValidDeliveryTarget(destination))
++        {
++            logger.LogWarning("Skipping hook to {DestUrl} of type {Type} because the destination is not a valid delivery target", subs.DestUrl, subs.Type);
++            return;
++        }
++
++        var request = new HttpRequestMessage()
++        {
++            RequestUri = destination,
++            Method = HttpMethod.Post,
++            Content = new StringContent(jsonData, Encoding.UTF8, "application/json")
++        };
++
++        if (!string.IsNullOrWhiteSpace(subs.Token))
++        {
++            request.Headers.Add("X-eshop-whtoken", subs.Token);
++        }
++
++        if (logger.IsEnabled(LogLevel.Debug))
++        {
++            logger.LogDebug("Sending hook to {DestUrl} of type {Type}", subs.DestUrl, subs.Type);
++        }
++
++        await client.SendAsync(request);
++    }
++
++    private async Task<bool> IsValidDeliveryTarget(Uri destination)
++    {
++        if (destination.Scheme is not ("http" or "https"))
++        {
++            logger.LogWarning("Delivery to {DestUrl} refused because only http and https destinations are allowed", destination);
++            return false;
++        }
++
++        IPAddress[] addresses;
++        try
++        {
++            addresses = await Dns.GetHostAddressesAsync(destination.IdnHost);
++        }
++        catch (Exception ex)
++        {
++            logger.LogWarning("Delivery to {DestUrl} refused because its host could not be resolved: {ExceptionType}", destination, ex.GetType().Name);
++            return false;
++        }
++
++        if (addresses.Any(IsDisallowedAddress))
++        {
++            logger.LogWarning("Delivery to {DestUrl} refused because its host resolves to a disallowed address", destination);
++            return false;
++        }
++
++        return true;
++    }
++
++    private static bool IsDisallowedAddress(IPAddress address)
++    {
++        if (address.IsIPv4MappedToIPv6)
++        {
++            address = address.MapToIPv4();
++        }
++
++        if (IPAddress.IsLoopback(address) || address.IsIPv6LinkLocal || address.IsIPv6Multicast)
++        {
++            return true;
++        }
++
++        var octets = address.GetAddressBytes();
++
++        if (address.AddressFamily == AddressFamily.InterNetwork)
++        {
++            return octets[0] switch
++            {
++                0 => true,                                     // 0.0.0.0/8 "this network"
++                10 => true,                                    // 10.0.0.0/8 private
++                127 => true,                                   // 127.0.0.0/8 loopback
++                100 when octets[1] >= 64 => true,              // 100.64.0.0/10 shared address space
++                169 when octets[1] == 254 => true,             // 169.254.0.0/16 link-local incl. cloud metadata
++                172 when octets[1] is >= 16 and <= 31 => true, // 172.16.0.0/12 private
++                192 when octets[1] == 168 => true,             // 192.168.0.0/16 private
++                >= 224 => true,                                // multicast and reserved ranges
++                _ => false,
++            };
++        }
++
++        return octets[0] switch
++        {
++            0 => true,                           // :: unspecified
++            0xFC or 0xFD => true,                // fc00::/7 unique local
++            0xFE when octets[1] >= 0xC0 => true, // fec0::/10 deprecated site-local
++            _ => false,
++        };
++    }
+ 
+-    private Task OnSendData(WebhookSubscription subs, string jsonData, HttpClient client)
+-    {
+-        var request = new HttpRequestMessage()
+-        {
+-            RequestUri = new Uri(subs.DestUrl, UriKind.Absolute),
+-            Method = HttpMethod.Post,
+-            Content = new StringContent(jsonData, Encoding.UTF8, "application/json")
+-        };
+-
+-        if (!string.IsNullOrWhiteSpace(subs.Token))
+-        {
+-            request.Headers.Add("X-eshop-whtoken", subs.Token);
+-        }
+-
+-        if (logger.IsEnabled(LogLevel.Debug))
+-        {
+-            logger.LogDebug("Sending hook to {DestUrl} of type {Type}", subs.DestUrl, subs.Type);
+-        }
+-
+-        return client.SendAsync(request);
+-    }
+-
+ }
+--- a/src/Webhooks.API/Extensions/Extensions.cs
++++ b/src/Webhooks.API/Extensions/Extensions.cs
+@@ -14,6 +14,10 @@
+         builder.Services.AddTransient<IGrantUrlTesterService, GrantUrlTesterService>();
+         builder.Services.AddTransient<IWebhooksRetriever, WebhooksRetriever>();
+         builder.Services.AddTransient<IWebhooksSender, WebhooksSender>();
++
++        builder.Services.AddHttpClient(WebhooksSender.WebhooksSenderClientName)
++            .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false });
+     }
+ 
+     private static void AddEventBusSubscriptions(this IEventBusBuilder eventBus)
+--- a/tests/Application.UnitTests/WebhookTests.cs
++++ b/tests/Application.UnitTests/WebhookTests.cs
+@@ -40,9 +40,9 @@
+         {
+             new WebhookSubscription
+             {
+-                DestUrl = "https://receiver.test/hook",
++                DestUrl = "https://1.2.3.4/hook",
+                 Token = "token",
+                 Type = WebhookType.OrderPaid
+             }
+         };
+         var data = new WebhookData(WebhookType.OrderPaid, "payload");
+@@ -54,6 +54,27 @@
+         Assert.AreEqual(HttpMethod.Post, request.Method);
+         Assert.AreEqual("token", request.Headers.GetValues("X-eshop-whtoken").Single());
+         Assert.Contains("payload", await request.Content!.ReadAsStringAsync(TestContext.CancellationToken));
+     }
++
++    [TestMethod]
++    public async Task SenderSkipsDeliveryToDisallowedDestinations()
++    {
++        var handler = new RecordingHandler();
++        var factory = Substitute.For<IHttpClientFactory>();
++        factory.CreateClient(Arg.Any<string>()).Returns(new HttpClient(handler));
++        var sender = new WebhooksSender(factory, NullLogger<WebhooksSender>.Instance);
++        var receivers = new[]
++        {
++            new WebhookSubscription { DestUrl = "https://10.0.0.5/hook", Type = WebhookType.OrderPaid },
++            new WebhookSubscription { DestUrl = "https://169.254.169.254/latest/meta-data/", Type = WebhookType.OrderPaid },
++            new WebhookSubscription { DestUrl = "https://[::1]/hook", Type = WebhookType.OrderPaid },
++            new WebhookSubscription { DestUrl = "ftp://1.2.3.4/hook", Type = WebhookType.OrderPaid }
++        };
++        var data = new WebhookData(WebhookType.OrderPaid, "payload");
++
++        await sender.SendAll(receivers, data);
++
++        Assert.HasCount(0, handler.Requests);
++    }
+ 
+     private sealed class RecordingHandler : HttpMessageHandler

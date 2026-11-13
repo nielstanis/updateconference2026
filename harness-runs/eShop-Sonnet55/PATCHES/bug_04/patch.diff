@@ -1,0 +1,61 @@
+--- a/src/Ordering.API/Apis/OrdersApi.cs
++++ b/src/Ordering.API/Apis/OrdersApi.cs
+@@ -105,6 +105,9 @@
+ 
+     public static async Task<OrderDraftDTO> CreateOrderDraftAsync(CreateOrderDraftCommand command, [AsParameters] OrderServices services)
+     {
++        // Never trust a client-supplied BuyerId; use the authenticated caller.
++        command = command with { BuyerId = services.IdentityService.GetUserIdentity() };
++
+         services.Logger.LogInformation(
+             "Sending command: {CommandName} - {IdProperty}: {CommandId} ({@Command})",
+             command.GetGenericTypeName(),
+@@ -135,10 +138,17 @@
+             return TypedResults.BadRequest("RequestId is missing.");
+         }
+ 
++        // Identity comes from the authenticated principal, never from the request body.
++        var userId = services.IdentityService.GetUserIdentity();
++        if (string.IsNullOrEmpty(userId))
++        {
++            return TypedResults.BadRequest("User identity is missing.");
++        }
++        var userName = services.IdentityService.GetUserName() ?? request.UserName;
++
+         using (services.Logger.BeginScope(new List<KeyValuePair<string, object>> { new("IdentifiedCommandId", requestId) }))
+         {
+             var maskedCCNumber = request.CardNumber.Substring(request.CardNumber.Length - 4).PadLeft(request.CardNumber.Length, 'X');
+-            var createOrderCommand = new CreateOrderCommand(request.Items, request.UserId, request.UserName, request.City, request.Street,
++            var createOrderCommand = new CreateOrderCommand(request.Items, userId, userName, request.City, request.Street,
+                 request.State, request.Country, request.ZipCode,
+                 maskedCCNumber, request.CardHolderName, request.CardExpiration,
+                 request.CardSecurityNumber, request.CardTypeId);
+--- a/tests/Ordering.UnitTests/Application/OrdersWebApiTest.cs
++++ b/tests/Ordering.UnitTests/Application/OrdersWebApiTest.cs
+@@ -179,4 +179,27 @@
+         var problem = Assert.IsInstanceOfType<ProblemHttpResult>(result.Result);
+         Assert.AreEqual(500, problem.StatusCode);
+     }
++
++    [TestMethod]
++    public async Task Create_order_ignores_body_UserId_and_uses_authenticated_identity()
++    {
++        _identityServiceMock.GetUserIdentity().Returns("attacker-sub");
++        _identityServiceMock.GetUserName().Returns("attacker");
++        _mediatorMock.Send(Arg.Any<IdentifiedCommand<CreateOrderCommand, bool>>(), default)
++            .Returns(Task.FromResult(true));
++        var services = new OrderServices(_mediatorMock, _orderQueriesMock, _identityServiceMock, _loggerMock);
++        var request = new CreateOrderRequest("victim-sub", "victim", "city", "street", "state", "country", "zip",
++            "1234567890123456", "holder", DateTime.UtcNow.AddYears(1), "123", 1, "buyer", new List<BasketItem>());
++
++        await OrdersApi.CreateOrderAsync(Guid.NewGuid(), request, services);
++
++        await _mediatorMock.Received(1).Send(
++            Arg.Is<IdentifiedCommand<CreateOrderCommand, bool>>(c => c.Command.UserId == "attacker-sub"),
++            default);
++        await _mediatorMock.DidNotReceive().Send(
++            Arg.Is<IdentifiedCommand<CreateOrderCommand, bool>>(c => c.Command.UserId == "victim-sub"),
++            default);
++    }
+ }
+

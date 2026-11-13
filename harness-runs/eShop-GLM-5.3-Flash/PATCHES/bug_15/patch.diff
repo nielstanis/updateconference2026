@@ -1,0 +1,97 @@
+--- a/src/WebhookClient/Endpoints/WebhookEndpoints.cs
++++ b/src/WebhookClient/Endpoints/WebhookEndpoints.cs
+@@ -1,4 +1,5 @@
+ using Microsoft.AspNetCore.Http.HttpResults;
+ using Microsoft.AspNetCore.Mvc;
++using Microsoft.Extensions.Options;
+ 
+ namespace eShop.WebhookClient.Endpoints;
+@@ -12,3 +13,4 @@ public static class WebhookEndpoints
+         const string webhookCheckHeader = "X-eshop-whtoken";
+ 
+         var configuration = app.ServiceProvider.GetRequiredService<IConfiguration>();
+-        bool.TryParse(configuration["ValidateToken"], out var validateToken);
++        var webhookOptions = app.ServiceProvider.GetRequiredService<IOptions<WebhookClientOptions>>();
++        var validateToken = webhookOptions.Value.ValidateToken;
+         var tokenToValidate = configuration["WebhookClientOptions:Token"];
+--- a/src/WebhookClient/Services/WebhookClientOptions.cs
++++ b/src/WebhookClient/Services/WebhookClientOptions.cs
+@@ -4,5 +4,8 @@ namespace eShop.WebhookClient.Services;
+ public class WebhookClientOptions
+ {
+     public string? Token { get; set; }
+     public string? SelfUrl { get; set; }
+-    public bool ValidateToken { get; set; }
++
++    // Fails closed: validation stays on when the setting is absent. Only an
++    // explicit WebhookClientOptions:ValidateToken=false disables it.
++    public bool ValidateToken { get; set; } = true;
+ }
+--- a/src/WebhookClient/appsettings.json
++++ b/src/WebhookClient/appsettings.json
+@@ -9,4 +9,5 @@
+   "AllowedHosts": "*",
+   "WebhookClientOptions": {
+-    "Token": "6168DB8D-DC58-4094-AF24-483278923590"
++    "Token": "6168DB8D-DC58-4094-AF24-483278923590",
++    "ValidateToken": true
+   }
+ }
+--- a/tests/Application.UnitTests/WebhookClientTests.cs
++++ b/tests/Application.UnitTests/WebhookClientTests.cs
+@@ -4,5 +4,6 @@ using eShop.WebhookClient.Endpoints;
+ using Microsoft.AspNetCore.Builder;
+ using Microsoft.AspNetCore.Hosting;
+ using Microsoft.AspNetCore.TestServer;
+ using Microsoft.Extensions.DependencyInjection;
++using Microsoft.Extensions.Options.ConfigurationExtensions;
+ using System.Net;
+ using System.Net.Http.Json;
+@@ -60,7 +61,8 @@ public class WebhookClientTests
+         var builder = WebApplication.CreateBuilder();
+         builder.WebHost.UseTestServer();
+-        builder.Configuration["ValidateToken"] = "true";
++        builder.Services.AddOptions<WebhookClientOptions>().BindConfiguration(nameof(WebhookClientOptions));
++        builder.Configuration["WebhookClientOptions:ValidateToken"] = "true";
+         builder.Configuration["WebhookClientOptions:Token"] = "expected";
+         builder.Services.AddSingleton<HooksRepository>();
+         await using var app = builder.Build();
+@@ -95,6 +97,41 @@ public class WebhookClientTests
+         Assert.AreEqual("expected", received.Token);
+     }
++
++    [TestMethod]
++    public async Task WebhookEndpointsRejectHooksWhenValidationIsNotConfigured()
++    {
++        var builder = WebApplication.CreateBuilder();
++        builder.WebHost.UseTestServer();
++        builder.Services.AddOptions<WebhookClientOptions>().BindConfiguration(nameof(WebhookClientOptions));
++        builder.Services.AddSingleton<HooksRepository>();
++        await using var app = builder.Build();
++        app.MapWebhookEndpoints();
++        await app.StartAsync(TestContext.CancellationToken);
++        var client = app.GetTestClient();
++
++        using var invalidCheck = new HttpRequestMessage(HttpMethod.Options, "/check");
++        invalidCheck.Headers.Add("X-eshop-whtoken", "any");
++        var invalidCheckResponse = await client.SendAsync(invalidCheck, TestContext.CancellationToken);
++        Assert.AreEqual(HttpStatusCode.BadRequest, invalidCheckResponse.StatusCode);
++
++        var payload = new WebhookData
++        {
++            When = DateTime.UtcNow,
++            Payload = "payload",
++            Type = "OrderPaid"
++        };
++        using var rejectedRequest = new HttpRequestMessage(HttpMethod.Post, "/webhook-received")
++        {
++            Content = JsonContent.Create(payload)
++        };
++        rejectedRequest.Headers.Add("X-eshop-whtoken", "any");
++        var rejectedResponse = await client.SendAsync(rejectedRequest, TestContext.CancellationToken);
++        Assert.AreEqual(HttpStatusCode.BadRequest, rejectedResponse.StatusCode);
++
++        var repository = app.Services.GetRequiredService<HooksRepository>();
++        Assert.AreEqual(0, (await repository.GetAll()).Count());
++    }
+ }

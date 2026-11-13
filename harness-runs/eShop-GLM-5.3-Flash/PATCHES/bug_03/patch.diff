@@ -1,0 +1,201 @@
+--- a/src/Catalog.API/Extensions/Extensions.cs
++++ b/src/Catalog.API/Extensions/Extensions.cs
+@@ -5,11 +5,16 @@
+     public static void AddApplicationServices(this IHostApplicationBuilder builder)
+     {
+         // Avoid loading full database config and migrations if startup
+         // is being invoked from build-time OpenAPI generation
+         if (builder.Environment.IsBuild())
+         {
+             builder.Services.AddDbContext<CatalogContext>();
+             return;
+         }
+ 
++        // JWT bearer authentication so RequireAuthorization() on the mutating
++        // catalog endpoints is enforced. Registered on the runtime path only,
++        // because the Identity Url is injected by the AppHost via the
++        // Identity__Url environment variable and is absent during build-time
++        // OpenAPI generation.
++        builder.AddDefaultAuthentication();
++
+         builder.AddNpgsqlDbContext<CatalogContext>("catalogdb", configureDbContextOptions: dbContextOptionsBuilder =>
+--- a/src/Catalog.API/Apis/CatalogApi.cs
++++ b/src/Catalog.API/Apis/CatalogApi.cs
+@@ -97,24 +97,30 @@
+             .WithTags("Brands");
+ 
+-        // Routes for modifying catalog items.
++        // Routes for modifying catalog items. Every mutating operation requires
++        // an authenticated caller; read/browse endpoints stay anonymous for the
++        // public storefront.
+         v1.MapPut("/items", UpdateItemV1)
+             .WithName("UpdateItem")
+             .WithSummary("Create or replace a catalog item")
+             .WithDescription("Create or replace a catalog item")
+-            .WithTags("Items");
++            .WithTags("Items")
++            .RequireAuthorization();
+         v2.MapPut("/items/{id:int}", UpdateItem)
+             .WithName("UpdateItem-V2")
+             .WithSummary("Create or replace a catalog item")
+             .WithDescription("Create or replace a catalog item")
+-            .WithTags("Items");
++            .WithTags("Items")
++            .RequireAuthorization();
+         api.MapPost("/items", CreateItem)
+             .WithName("CreateItem")
+             .WithSummary("Create a catalog item")
+-            .WithDescription("Create a new item in the catalog");
++            .WithDescription("Create a new item in the catalog")
++            .RequireAuthorization();
+         api.MapDelete("/items/{id:int}", DeleteItemById)
+             .WithName("DeleteItem")
+             .WithSummary("Delete catalog item")
+-            .WithDescription("Delete the specified catalog item");
++            .WithDescription("Delete the specified catalog item")
++            .RequireAuthorization();
+ 
+         return app;
+--- a/src/Catalog.API/appsettings.json
++++ b/src/Catalog.API/appsettings.json
+@@ -21,7 +21,10 @@
+   "EventBus": {
+     "SubscriptionClientName": "Catalog"
+   },
+   "CatalogOptions": {
+     "UseCustomizationData": false
+-  }
++  },
++  "Identity": {
++    "Audience": "catalog"
++  }
+ }
+--- a/src/eShop.AppHost/AppHost.cs
++++ b/src/eShop.AppHost/AppHost.cs
+@@ -36,7 +36,8 @@
+ redis.WithParentRelationship(basketApi);
+ 
+ var catalogApi = builder.AddDotnetProject("catalog-api", "../Catalog.API")
+     .WithReference(rabbitMq).WaitFor(rabbitMq)
+-    .WithReference(catalogDb);
++    .WithReference(catalogDb)
++    .WithEnvironment("Identity__Url", identityEndpoint);
+ 
+ var orderingApi = builder.AddDotnetProject("ordering-api", "../Ordering.API")
+--- a/tests/Catalog.FunctionalTests/CatalogApiFixture.cs
++++ b/tests/Catalog.FunctionalTests/CatalogApiFixture.cs
+@@ -3,5 +3,7 @@
+ using Aspire.Hosting;
+ using Aspire.Hosting.ApplicationModel;
+ 
++using Microsoft.AspNetCore.Builder;
+ using Microsoft.AspNetCore.Mvc.Testing;
++using Microsoft.Extensions.DependencyInjection;
+ 
+ namespace eShop.Catalog.FunctionalTests;
+@@ -29,10 +29,17 @@
+         builder.ConfigureHostConfiguration(config =>
+         {
+             config.AddInMemoryCollection(new Dictionary<string, string>
+             {
+                 { $"ConnectionStrings:{Postgres.Resource.Name}", _postgresConnectionString },
++                { "Identity:Url", "http://localhost" },
+                 });
+         });
++        builder.ConfigureServices(services =>
++        {
++            services.AddSingleton<IStartupFilter>(new AutoAuthorizeStartupFilter());
++        });
+         return base.CreateHost(builder);
+     }
+--- /dev/null
++++ b/tests/Catalog.FunctionalTests/AutoAuthorizeMiddleware.cs
+@@ -0,0 +1,42 @@
++using System.Security.Claims;
++using Microsoft.AspNetCore.Builder;
++using Microsoft.AspNetCore.Http;
++
++namespace eShop.Catalog.FunctionalTests;
++
++// Mirrors the AutoAuthorize middleware used by Ordering.FunctionalTests: it
++// authenticates every request so endpoints protected by RequireAuthorization
++// can be exercised without a real identity server. Requests that carry the
++// X-Eshop-Test-Anonymous header opt out and stay unauthenticated, so negative
++// authorization tests can assert the 401 behavior of the real pipeline.
++class AutoAuthorizeMiddleware
++{
++    public const string IDENTITY_ID = "9e3163b9-1ae6-4652-9dc6-7898ab7b7a00";
++    public const string AnonymousHeader = "X-Eshop-Test-Anonymous";
++
++    private readonly RequestDelegate _next;
++
++    public AutoAuthorizeMiddleware(RequestDelegate rd)
++    {
++        _next = rd;
++    }
++
++    public async Task Invoke(HttpContext httpContext)
++    {
++        if (httpContext.Request.Headers.ContainsKey(AnonymousHeader))
++        {
++            await _next.Invoke(httpContext);
++            return;
++        }
++
++        var identity = new ClaimsIdentity("cookies");
++
++        identity.AddClaim(new Claim("sub", IDENTITY_ID));
++        identity.AddClaim(new Claim("unique_name", IDENTITY_ID));
++        identity.AddClaim(new Claim(ClaimTypes.Name, IDENTITY_ID));
++
++        httpContext.User.AddIdentity(identity);
++
++        await _next.Invoke(httpContext);
++    }
++}
+--- a/tests/Catalog.FunctionalTests/CatalogApiTests.cs
++++ b/tests/Catalog.FunctionalTests/CatalogApiTests.cs
+@@ -489,19 +489,42 @@
+     [Theory]
+     [InlineData(1.0)]
+     [InlineData(2.0)]
+     public async Task CatalogPaginationBeyondLastPageReturnsEmptyData(double version)
+     {
+         var httpClient = CreateHttpClient(new ApiVersion(version));
+ 
+         var response = await httpClient.GetAsync(
+             "/api/catalog/items?pageIndex=1000&pageSize=10",
+             TestContext.Current.CancellationToken);
+ 
+         response.EnsureSuccessStatusCode();
+         var result = await response.Content.ReadFromJsonAsync<PaginatedItems<CatalogItem>>(
+             _jsonSerializerOptions,
+             TestContext.Current.CancellationToken);
+         Assert.Empty(result!.Data);
+         Assert.Equal(1000, result.PageIndex);
+     }
++
++    [Theory]
++    [InlineData(1.0)]
++    [InlineData(2.0)]
++    public async Task UpdateCatalogItemWithoutTokenIsRejected(double version)
++    {
++        var httpClient = CreateHttpClient(new ApiVersion(version));
++
++        // Opt out of the fixture's auto-authentication: no token on the wire.
++        httpClient.DefaultRequestHeaders.Add(AutoAuthorizeMiddleware.AnonymousHeader, "true");
++
++        // The mutating routes require an authenticated caller.
++        var response = await httpClient.PutAsJsonAsync(
++            version == 1.0 ? "/api/catalog/items" : "/api/catalog/items/1",
++            new CatalogItem("Unauthorized update") { Id = 1 },
++            TestContext.Current.CancellationToken);
++        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
++
++        // Read/browse endpoints must keep working anonymously for the storefront.
++        var readResponse = await httpClient.GetAsync(
++            "/api/catalog/items?pageIndex=0&pageSize=5",
++            TestContext.Current.CancellationToken);
++        Assert.Equal(HttpStatusCode.OK, readResponse.StatusCode);
++    }
+ }

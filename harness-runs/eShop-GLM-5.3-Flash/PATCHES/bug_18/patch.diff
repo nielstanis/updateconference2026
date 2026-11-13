@@ -1,0 +1,36 @@
+--- a/src/Identity.API/UsersSeed.cs
++++ b/src/Identity.API/UsersSeed.cs
+@@ -1,8 +1,16 @@
+ 
+ namespace eShop.Identity.API;
+ 
+-public class UsersSeed(ILogger<UsersSeed> logger, UserManager<ApplicationUser> userManager) : IDbSeeder<ApplicationDbContext>
++public class UsersSeed(ILogger<UsersSeed> logger, IWebHostEnvironment environment, UserManager<ApplicationUser> userManager) : IDbSeeder<ApplicationDbContext>
+ {
+     public async Task SeedAsync(ApplicationDbContext context)
+     {
++        if (!environment.IsDevelopment())
++        {
++            // Demo accounts with a well-known password must never be seeded
++            // outside Development.
++            logger.LogInformation("Skipping demo user seeding in the {EnvironmentName} environment", environment.EnvironmentName);
++            return;
++        }
++
+         var alice = await userManager.FindByNameAsync("alice");
+ 
+         if (alice == null)
+--- a/src/Identity.API/Views/Account/Login.cshtml
++++ b/src/Identity.API/Views/Account/Login.cshtml
+@@ -43,10 +43,10 @@
+                     </div>
+                 }
+ 
+-                <p class="login-hint">The default users are alice/bob, password: Pass123$</p>
++                <p class="login-hint">Enter your registered account credentials to sign in.</p>
+ 
+                 <button class="btn btn-primary login-submit" name="button" value="login">Login</button>
+             </form>
+         </section>
+     }
+ </div>

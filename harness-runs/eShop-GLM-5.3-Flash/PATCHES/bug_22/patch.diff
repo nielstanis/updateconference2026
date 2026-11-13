@@ -1,0 +1,136 @@
+--- a/src/Webhooks.API/Services/GrantUrlTesterService.cs
++++ b/src/Webhooks.API/Services/GrantUrlTesterService.cs
+@@ -1,11 +1,24 @@
++using System.Net;
++using System.Net.Sockets;
++
+ namespace Webhooks.API.Services;
+ 
+ class GrantUrlTesterService(IHttpClientFactory factory, ILogger<IGrantUrlTesterService> logger) : IGrantUrlTesterService
+ {
+     public async Task<bool> TestGrantUrl(string urlHook, string url, string token)
+     {
++        // Both URLs are supplied by the caller of the subscription API, so
++        // before any outbound request is made, make sure both only point at
++        // hosts that resolve to public addresses. Otherwise the grant probe
++        // could be used to scan the internal network or cloud metadata.
++        if (!await IsPublicHttpUrlAsync(urlHook) || !await IsPublicHttpUrlAsync(url))
++        {
++            logger.LogWarning("Url of the hook ({UrlHook}) and/or the grant url ({Url}) point to a non-public host and can't be granted", urlHook, url);
++            return false;
++        }
++
+         if (!CheckSameOrigin(urlHook, url))
+         {
+             logger.LogWarning("Url of the hook ({UrlHook} and the grant url ({Url} do not belong to same origin)", urlHook, url);
+             return false;
+         }
+@@ -33,14 +46,107 @@
+             return false;
+         }
+     }
+ 
++    private async Task<bool> IsPublicHttpUrlAsync(string url)
++    {
++        Uri uri;
++        try
++        {
++            uri = new Uri(url, UriKind.Absolute);
++        }
++        catch (UriFormatException)
++        {
++            return false;
++        }
++
++        if (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps)
++        {
++            return false;
++        }
++
++        try
++        {
++            var addresses = await Dns.GetHostAddressesAsync(uri.IdnHost);
++
++            // The URL must resolve to something, and every resolved address
++            // must be public, so that a host with mixed records can't sneak a
++            // private one past the check.
++            return addresses.Any() && !addresses.Any(IsNonPublicAddress);
++        }
++        catch (Exception ex)
++        {
++            logger.LogWarning("Exception {TypeName} when resolving {Host}. Url can't be granted.", ex.GetType().Name, uri.IdnHost);
++
++            return false;
++        }
++    }
++
++    private static bool IsNonPublicAddress(IPAddress address)
++    {
++        if (address.IsIPv4MappedToIPv6)
++        {
++            address = address.MapToIPv4();
++        }
++
++        var bytes = address.GetAddressBytes();
++
++        return address.AddressFamily switch
++        {
++            AddressFamily.InterNetwork => IsNonPublicIPv4(bytes),
++            AddressFamily.InterNetworkV6 => IsNonPublicIPv6(bytes),
++            _ => true,
++        };
++    }
++
++    private static bool IsNonPublicIPv4(byte[] bytes)
++    {
++        switch (bytes[0])
++        {
++            case 0: return true;                                    // unspecified
++            case 10: return true;                                   // private
++            case 100: return bytes[1] >= 64 && bytes[1] < 128;      // shared address space
++            case 127: return true;                                  // loopback
++            case 169: return bytes[1] == 254;                       // link-local (includes cloud metadata)
++            case 172: return bytes[1] >= 16 && bytes[1] < 32;       // private
++            case 192: return bytes[1] == 168 || (bytes[1] == 0 && bytes[2] == 2); // private, documentation
++            case 198: return bytes[1] is 18 or 19 || (bytes[1] == 51 && bytes[2] == 100); // benchmarking, documentation
++            case 203: return bytes[1] == 0 && bytes[2] == 113;      // documentation
++            case 224 or 240: return true;                           // multicast, reserved
++            default: return false;
++        }
++    }
++
++    private static bool IsNonPublicIPv6(byte[] bytes)
++    {
++        // :: (unspecified), ::1 (loopback) and the deprecated ::/96 space
++        if (bytes[..14].All(x => x == 0)) return true;
++        // ::ffff:0:0/96 IPv4-mapped (already normalized above, kept as a guard)
++        if (bytes[..10].All(x => x == 0) && bytes[10] == 0xff && bytes[11] == 0xff) return true;
++        // 64:ff9b::/96 NAT64 translation into IPv4
++        if (bytes[0] == 0x00 && bytes[1] == 0x64 && bytes[2] == 0xff && bytes[3] == 0x9b && bytes[4..12].All(x => x == 0)) return true;
++        // fe80::/10 link-local
++        if (bytes[0] == 0xfe && (bytes[1] & 0xc0) == 0x80) return true;
++        // fec0::/10 deprecated site-local
++        if (bytes[0] == 0xfe && (bytes[1] & 0xc0) == 0xc0) return true;
++        // fc00::/7 unique-local
++        if ((bytes[0] & 0xfe) == 0xfc) return true;
++        // ff00::/8 multicast
++        if (bytes[0] == 0xff) return true;
++        // 2001::/32 Teredo and 2001:db8::/32 documentation
++        if (bytes[0] == 0x20 && bytes[1] == 0x01 && bytes[2] == 0x00 && bytes[3] == 0x00) return true;
++        if (bytes[0] == 0x20 && bytes[1] == 0x01 && bytes[2] == 0x0d && bytes[3] == 0xb8) return true;
++        // 2002::/16 6to4 (embeds an IPv4 address behind a relay)
++        if (bytes[0] == 0x20 && bytes[1] == 0x02) return true;
++
++        return false;
++    }
++
+     private static bool CheckSameOrigin(string urlHook, string url)
+     {
+         var firstUrl = new Uri(urlHook, UriKind.Absolute);
+         var secondUrl = new Uri(url, UriKind.Absolute);
+ 
+         return firstUrl.Scheme == secondUrl.Scheme &&
+             firstUrl.Port == secondUrl.Port &&
+             firstUrl.Host == secondUrl.Host;
+     }
+ }

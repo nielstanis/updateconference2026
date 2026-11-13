@@ -1,0 +1,26 @@
+{
+  "id": "f020",
+  "bug_nn": "bug_17",
+  "source": "TRIAGE.json#bug_17",
+  "title": "All confidential OIDC clients share the literal client secret \"secret\", including the public MAUI client",
+  "file": "src/Identity.API/Configuration/Config.cs",
+  "line": 52,
+  "category": "hardcoded-secret",
+  "severity": "MEDIUM",
+  "owner_hint": "top committer: Michael Stonis (1 of 1 recent commit); no CODEOWNERS entry",
+  "mode": "static",
+  "verified": "static_review_only",
+  "status": "patch",
+  "review": "REJECT",
+  "style_score": 7,
+  "out_of_scope_hunks": [
+    "src/Identity.API/Configuration/Config.cs:90",
+    "src/WebApp/Extensions/Extensions.cs:81"
+  ],
+  "rationale": "All three clients register the same literal secret and the MAUI binary ships it, with webapp also disabling PKCE. The diff loads per-client secrets from ClientSecrets:{clientId} with fail-closed lookup, makes MAUI a public client (no secret, PKCE retained), enables PKCE for webapp, and reads the relying-party secrets from configuration.",
+  "variants_checked": "Server and both relying parties plus the MAUI default changed; swagger clients are intentionally public; no other committed client-secret literals found.",
+  "bypass_considered": "MAUI remains a public client whose client_id and custom scheme are known; PKCE stops code interception but not a malicious app starting its own flow. Distinct secrets rely on operational config.",
+  "test_note": "Added ConfidentialClientsUseConfiguredSecretsAndPkce and extended the existing config dictionary.",
+  "review_reason": "Secret removal is root-cause, but the patch adds required ClientSecrets/ClientSecret keys without supplying them in appsettings or AppHost, so Identity.API and both relying parties throw at startup; the unit fixture hides it with dummy values. It also mixes in webapp PKCE changes that belong to a separate finding.",
+  "verdict": null
+}

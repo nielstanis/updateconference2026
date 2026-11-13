@@ -1,0 +1,23 @@
+{
+  "id": "f010",
+  "bug_nn": "bug_10",
+  "source": "TRIAGE.json#bug_10",
+  "title": "Order item prices and quantities are accepted from the client request, allowing arbitrary order totals",
+  "file": "src/Ordering.API/Extensions/BasketItemExtensions.cs",
+  "line": 20,
+  "category": "business-logic",
+  "severity": "MEDIUM",
+  "owner_hint": "top committer: Aditya Mandaleeka (1 of 1 recent commit); no CODEOWNERS entry",
+  "mode": "static",
+  "verified": "static_review_only",
+  "status": "patch",
+  "review": "ACCEPT",
+  "style_score": 7,
+  "out_of_scope_hunks": [],
+  "rationale": "Client unit prices flow straight into the persisted order and total. The diff adds ICatalogPriceService/CatalogPriceService to fetch authoritative prices, has CreateOrderCommandHandler resolve them before clearing the basket, fail closed on unknown products or invalid units, and persist catalog prices instead of item.UnitPrice; AppHost adds a catalog reference.",
+  "variants_checked": "Create and draft paths checked; the draft path remains a preview; cancel/ship carry no prices; the handler is the persistence choke point.",
+  "bypass_considered": "Duplicate ids collapse to one catalog price per product and unknown products are rejected before any order row or basket-clearing event is written. Residual: Units is still client-chosen but can only raise the total, and stock validation bounds it.",
+  "test_note": "Added Handle_prices_order_items_from_the_catalog (0.01 client price vs 99.95 catalog) and a stub price service for the functional fixture.",
+  "review_reason": "The handler substitutes the catalog price at the AddOrderItem call and rejects unknown or invalid items before basket clearing, so the client value no longer reaches the order total. Catalog lookups use integer ids and fail closed on partial or error responses; only nits are an HTTP call inside the DB transaction and a dead null-coalescing guard.",
+  "verdict": null
+}

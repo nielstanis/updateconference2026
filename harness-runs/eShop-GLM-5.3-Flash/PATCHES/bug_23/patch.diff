@@ -1,0 +1,60 @@
+--- a/src/WebApp/Services/OrderStatus/IntegrationEvents/EventHandling/OrderStatusChangedToCancelledIntegrationEventHandler.cs
++++ b/src/WebApp/Services/OrderStatus/IntegrationEvents/EventHandling/OrderStatusChangedToCancelledIntegrationEventHandler.cs
+@@ -10,6 +10,6 @@
+     public async Task Handle(OrderStatusChangedToCancelledIntegrationEvent @event)
+     {
+-        logger.LogInformation("Handling integration event: {IntegrationEventId} - ({@IntegrationEvent})", @event.Id, @event);
++        logger.LogInformation("Handling integration event: {IntegrationEventId} - ({IntegrationEventType})", @event.Id, @event.GetType().Name);
+         await orderStatusNotificationService.NotifyOrderStatusChangedAsync(@event.BuyerIdentityGuid);
+     }
+ }
+--- a/src/WebApp/Services/OrderStatus/IntegrationEvents/EventHandling/OrderStatusChangedToSubmittedIntegrationEventHandler.cs
++++ b/src/WebApp/Services/OrderStatus/IntegrationEvents/EventHandling/OrderStatusChangedToSubmittedIntegrationEventHandler.cs
+@@ -10,6 +10,6 @@
+     public async Task Handle(OrderStatusChangedToSubmittedIntegrationEvent @event)
+     {
+-        logger.LogInformation("Handling integration event: {IntegrationEventId} - ({@IntegrationEvent})", @event.Id, @event);
++        logger.LogInformation("Handling integration event: {IntegrationEventId} - ({IntegrationEventType})", @event.Id, @event.GetType().Name);
+         await orderStatusNotificationService.NotifyOrderStatusChangedAsync(@event.BuyerIdentityGuid);
+     }
+ }
+--- a/src/WebApp/Services/OrderStatus/IntegrationEvents/EventHandling/OrderStatusChangedToShippedIntegrationEventHandler.cs
++++ b/src/WebApp/Services/OrderStatus/IntegrationEvents/EventHandling/OrderStatusChangedToShippedIntegrationEventHandler.cs
+@@ -10,6 +10,6 @@
+     public async Task Handle(OrderStatusChangedToShippedIntegrationEvent @event)
+     {
+-        logger.LogInformation("Handling integration event: {IntegrationEventId} - ({@IntegrationEvent})", @event.Id, @event);
++        logger.LogInformation("Handling integration event: {IntegrationEventId} - ({IntegrationEventType})", @event.Id, @event.GetType().Name);
+         await orderStatusNotificationService.NotifyOrderStatusChangedAsync(@event.BuyerIdentityGuid);
+     }
+ }
+--- a/src/WebApp/Services/OrderStatus/IntegrationEvents/EventHandling/OrderStatusChangedToPaidIntegrationEventHandler.cs
++++ b/src/WebApp/Services/OrderStatus/IntegrationEvents/EventHandling/OrderStatusChangedToPaidIntegrationEventHandler.cs
+@@ -10,6 +10,6 @@
+     public async Task Handle(OrderStatusChangedToPaidIntegrationEvent @event)
+     {
+-        logger.LogInformation("Handling integration event: {IntegrationEventId} - ({@IntegrationEvent})", @event.Id, @event);
++        logger.LogInformation("Handling integration event: {IntegrationEventId} - ({IntegrationEventType})", @event.Id, @event.GetType().Name);
+         await orderStatusNotificationService.NotifyOrderStatusChangedAsync(@event.BuyerIdentityGuid);
+     }
+ }
+--- a/src/WebApp/Services/OrderStatus/IntegrationEvents/EventHandling/OrderStatusChangedToAwaitingValidationIntegrationEventHandler.cs
++++ b/src/WebApp/Services/OrderStatus/IntegrationEvents/EventHandling/OrderStatusChangedToAwaitingValidationIntegrationEventHandler.cs
+@@ -10,6 +10,6 @@
+     public async Task Handle(OrderStatusChangedToAwaitingValidationIntegrationEvent @event)
+     {
+-        logger.LogInformation("Handling integration event: {IntegrationEventId} - ({@IntegrationEvent})", @event.Id, @event);
++        logger.LogInformation("Handling integration event: {IntegrationEventId} - ({IntegrationEventType})", @event.Id, @event.GetType().Name);
+         await orderStatusNotificationService.NotifyOrderStatusChangedAsync(@event.BuyerIdentityGuid);
+     }
+ }
+--- a/src/WebApp/Services/OrderStatus/IntegrationEvents/EventHandling/OrderStatusChangedToStockConfirmedIntegrationEventHandler.cs
++++ b/src/WebApp/Services/OrderStatus/IntegrationEvents/EventHandling/OrderStatusChangedToStockConfirmedIntegrationEventHandler.cs
+@@ -10,6 +10,6 @@
+     public async Task Handle(OrderStatusChangedToStockConfirmedIntegrationEvent @event)
+     {
+-        logger.LogInformation("Handling integration event: {IntegrationEventId} - ({@IntegrationEvent})", @event.Id, @event);
++        logger.LogInformation("Handling integration event: {IntegrationEventId} - ({IntegrationEventType})", @event.Id, @event.GetType().Name);
+         await orderStatusNotificationService.NotifyOrderStatusChangedAsync(@event.BuyerIdentityGuid);
+     }
+ }

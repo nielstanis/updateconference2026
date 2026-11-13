@@ -1,0 +1,23 @@
+{
+  "id": "f009",
+  "bug_nn": "bug_11",
+  "source": "TRIAGE.json#bug_11",
+  "title": "CreateOrder trusts body-supplied UserId instead of the JWT sub claim",
+  "file": "src/Ordering.API/Apis/OrdersApi.cs",
+  "line": 141,
+  "category": "auth-bypass",
+  "severity": "MEDIUM",
+  "owner_hint": "top committer: Rob Conery (1 of 1 recent commit); no CODEOWNERS entry",
+  "mode": "static",
+  "verified": "static_review_only",
+  "status": "patch",
+  "review": "ACCEPT",
+  "style_score": 6,
+  "out_of_scope_hunks": [],
+  "rationale": "CreateOrder builds the command from body-supplied UserId/UserName while IIdentityService is unused, and the value drives the buyer identity and basket-clearing event. The diff derives userId/userName from the authenticated principal, rejects a missing subject, and removes UserId/UserName/Buyer from CreateOrderRequest; the handler prefers the principal.",
+  "variants_checked": "Create endpoint fixed; draft endpoint never writes identity; basket and webhooks already use the sub claim.",
+  "bypass_considered": "Sending victim userId/userName/buyer fields is ignored because the properties no longer exist on the server DTO and the command is built from claims; a token without sub is rejected 400. Residual in-process callers with no HttpContext fall back to the command value.",
+  "test_note": "Added Create_order_uses_authenticated_user_identity and updated the functional constructor.",
+  "review_reason": "Removes the spoofable body fields and sources identity from the validated sub claim, with a fail-closed guard. The handler hunk is redundant and its fallback fails open, but it is on the same path and unreachable from the API once the endpoint guard is in place.",
+  "verdict": null
+}
